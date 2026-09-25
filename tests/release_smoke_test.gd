@@ -27,6 +27,10 @@ func _init() -> void:
 	if gameplay.HERO_IDS.size() != 25 or int(rarity_count["ZWYKŁA"]) != 10 or int(rarity_count["PREMIUM"]) != 10 or int(rarity_count["LEGENDA"]) != 5:
 		fail("Kolekcja bohaterów powinna mieć 10 zwykłych, 10 premium i 5 legend.")
 		return
+	for pair in gameplay.HERO_SYNERGY_PAIRS:
+		if pair.size() != 2 or not gameplay.HERO_IDS.has(str(pair[0])) or not gameplay.HERO_IDS.has(str(pair[1])):
+			fail("Zespół bohaterów zawiera niepoprawną parę synergii.")
+			return
 	var campaign: Array = gameplay.append_generated_levels(handcrafted)
 	gameplay.free()
 	if campaign.size() != 1000:

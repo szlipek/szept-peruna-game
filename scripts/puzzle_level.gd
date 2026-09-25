@@ -31,12 +31,12 @@ const HERO_SKILLS := {
 	"jaromir": "Straż Przodków: obrońcy otrzymują 15% więcej obrażeń",
 	"msciwoj": "Ostrze Gromu: ogień w kombie 4+ zadaje +4 obrażenia",
 	"dobrawa": "Tkanie Run: runy zwiększają tarczę o 2",
-	"perunika": "Piorunowa Strzała: kombinacja 5+ dodaje +1 ruch co 3 tury",
+	"perunika": "Piorunowa Strzała: kombinacja 5+ dodaje +1 ruch",
 	"czernik": "Cień Kurhanu: klątwy szybciej tracą wytrzymałość",
 	"mirka": "Dar Pokoju: leczenie rozdziela 2 zdrowia na drużynę",
 	"wlodzimierz": "Kamienny Znak: kamienie mają o 1 mniej wytrzymałości",
 	"mokosza": "Matka Ziemi: liście i woda wspólnie dają +4 tarczy",
-	"stribog": "Władca Wichru: co 5. kombinacja usuwa losowy kafelek",
+	"stribog": "Władca Wichru: kombinacja 5+ zadaje +10 obrażeń",
 	"swarog": "Kuźnia Słońca: ogień i bursztyn dają +8 obrażeń",
 	"weles": "Władca Przemian: pierwsza kaskada po turze zadaje podwójne obrażenia"
 }
@@ -53,6 +53,7 @@ const TILE_COLORS := [Color("#c4523b"), Color("#4a92bd"), Color("#5f9c56"), Colo
 const TILE_SIGNS := ["✦", "≈", "♣", "◆", "ᚱ"]
 const HERO_RECRUIT_COSTS := {"brun": 1200, "mieta": 1500, "wszebor": 2200, "boruta": 2600, "dobromir": 3000, "milena": 3400, "radomir": 3800, "witosz": 4300, "jagna": 4800, "rada": 12, "welesa": 16, "zorya": 20, "jaromir": 24, "msciwoj": 28, "dobrawa": 32, "perunika": 36, "czernik": 40, "mirka": 44, "wlodzimierz": 48, "zywia": 4, "mokosza": 5, "stribog": 6, "swarog": 7, "weles": 8}
 const HERO_SYNERGIES := {"lada": "Najlepiej z Dobromirem i Mokoszą", "brun": "Najlepiej z Borutą i Swarogiem", "mieta": "Najlepiej z Mileną i Mirką", "wszebor": "Najlepiej z Brunem i Mściwojem", "boruta": "Najlepiej z Brunem i Włodzimierzem", "dobromir": "Najlepiej z Ladą i Jagną", "milena": "Najlepiej z Mietą i Mokoszą", "radomir": "Najlepiej z Radą i Swarogiem", "witosz": "Najlepiej z Peruniką i Stribogiem", "jagna": "Najlepiej z Ladą i Dobromirem", "rada": "Najlepiej z Radomirem i Swarogiem", "welesa": "Najlepiej z Czernikiem i Welesem", "zorya": "Najlepiej z Peruniką i Ladą", "jaromir": "Najlepiej z Brunem i Dobrawą", "msciwoj": "Najlepiej z Wszeborem i Brunem", "dobrawa": "Najlepiej z Żywią i Jaromirem", "perunika": "Najlepiej z Witoszem i Zoryą", "czernik": "Najlepiej z Welesą i Welesem", "mirka": "Najlepiej z Mietą i Mileną", "wlodzimierz": "Najlepiej z Borutą i Brunem", "zywia": "Najlepiej z Dobrawą i Welesem", "mokosza": "Najlepiej z Mietą i Dobromirem", "stribog": "Najlepiej z Witoszem i Peruniką", "swarog": "Najlepiej z Brunem i Radomirem", "weles": "Najlepiej z Welesą i Żywią"}
+const HERO_SYNERGY_PAIRS := [["lada", "dobromir"], ["lada", "mokosza"], ["lada", "zorya"], ["brun", "boruta"], ["brun", "swarog"], ["brun", "wszebor"], ["brun", "jaromir"], ["brun", "msciwoj"], ["brun", "wlodzimierz"], ["mieta", "milena"], ["mieta", "mirka"], ["mieta", "mokosza"], ["dobromir", "jagna"], ["radomir", "rada"], ["radomir", "swarog"], ["witosz", "perunika"], ["witosz", "stribog"], ["perunika", "zorya"], ["jaromir", "dobrawa"], ["dobrawa", "zywia"], ["welesa", "czernik"], ["welesa", "weles"], ["czernik", "weles"], ["zywia", "weles"]]
 const LEGENDARY_EVENT_MARK_COST := 4
 const ENEMY_ROLES := {
 	"Cień mchu": "scout", "Kruczy posłaniec": "scout", "Popielny chochlik": "scout", "Bursztynowy chrząszcz": "scout", "Zimny chochlik": "scout", "Mroczna ćma": "scout", "Duch jaru": "scout",
@@ -134,6 +135,7 @@ var tutorial_completed := false
 var party_health := 100
 var party_max_health := 100
 var party_shield := 0
+var enemy_attack_weakened := 0
 var hero_health := {"lada": 0, "brun": 0, "mieta": 0}
 var hero_max_health := {"lada": 0, "brun": 0, "mieta": 0}
 var last_enemy_attack_text := ""
@@ -157,7 +159,8 @@ var owned_heroes := {"lada": true, "brun": false, "mieta": false, "wszebor": fal
 var active_heroes: Array[String] = ["lada"]
 var active_turn_index := 0
 var roster_open := false
-var roster_page := 0
+var roster_filter := "all"
+var roster_hero_index := 0
 var building_levels := {"domostwa": 0, "kuznia": 0, "chata_zielarki": 0, "swiety_gaj": 0, "spichlerz": 0, "wieza_peruna": 0}
 var village_open := false
 var map_open := false
@@ -177,6 +180,7 @@ var active_region_intro: Array = []
 var active_region_intro_key := ""
 var current_battle: Dictionary = {}
 var reset_confirmation := false
+var daily_reward_day := ""
 var oak_borderland_background: Texture2D
 var board_roots_frame: Texture2D
 var tile_remove_burst: Texture2D
@@ -228,6 +232,19 @@ var roster_action_button: Texture2D
 var experience_bar_frame: Texture2D
 var roster_hero_card_frame: Texture2D
 var roster_active_badge: Texture2D
+var roster_active_button: Texture2D
+var roster_team_leafy_button: Texture2D
+var roster_arrow_left: Texture2D
+var roster_arrow_right: Texture2D
+var roster_filter_tab: Texture2D
+var roster_filter_tab_active: Texture2D
+var roster_tabs_oak_beam: Texture2D
+var roster_experience_frame: Texture2D
+var roster_hero_panel_v02: Texture2D
+var roster_section_header: Texture2D
+var roster_tabs_bar_v04: Texture2D
+var roster_tabs_active_v04: Texture2D
+var roster_tabs_inactive_v04: Texture2D
 var battle_header_oak: Texture2D
 var enemy_square_card_frame: Texture2D
 var battle_board_roots: Texture2D
@@ -328,6 +345,19 @@ func _ready() -> void:
 	experience_bar_frame = load_image_texture("res://art/ui/experience_bar_frame_v01.png")
 	roster_hero_card_frame = load_image_texture("res://art/ui/roster_hero_card_frame_v01.png")
 	roster_active_badge = load_image_texture("res://art/ui/roster_active_badge_v01.png")
+	roster_active_button = load_image_texture("res://art/ui/roster_active_button_v01.png")
+	roster_team_leafy_button = load_image_texture("res://art/ui/roster_team_leafy_button_v01.png")
+	roster_arrow_left = load_image_texture("res://art/ui/roster_arrow_left_v01.png")
+	roster_arrow_right = load_image_texture("res://art/ui/roster_arrow_right_v01.png")
+	roster_filter_tab = load_image_texture("res://art/ui/roster_filter_tab_v01.png")
+	roster_filter_tab_active = load_image_texture("res://art/ui/roster_filter_tab_active_v01.png")
+	roster_tabs_oak_beam = load_image_texture("res://art/ui/roster_tabs_oak_beam_v01.png")
+	roster_experience_frame = load_image_texture("res://art/ui/roster_experience_frame_v01.png")
+	roster_hero_panel_v02 = load_image_texture("res://art/ui/roster_hero_panel_v02.png")
+	roster_section_header = load_image_texture("res://art/ui/roster_section_header_v03.png")
+	roster_tabs_bar_v04 = load_image_texture("res://art/ui/roster_tabs_bar_v08.png")
+	roster_tabs_active_v04 = load_image_texture("res://art/ui/roster_tabs_active_v04.png")
+	roster_tabs_inactive_v04 = load_image_texture("res://art/ui/roster_tabs_inactive_v04.png")
 	battle_header_oak = load_image_texture("res://art/ui/battle_header_oak_v01.png")
 	enemy_square_card_frame = load_image_texture("res://art/ui/enemy_square_card_frame_v01.png")
 	battle_board_roots = load_image_texture("res://art/ui/battle_board_roots_v02.png")
@@ -354,10 +384,11 @@ func _ready() -> void:
 	enemy_portraits["Wilk cienia"] = load_image_texture("res://art/characters/normal_enemies/enemy_wilk_cienia_portrait_v01.png")
 	enemy_portraits["Duch dębu"] = load_image_texture("res://art/characters/normal_enemies/enemy_duch_debu_portrait_v01.png")
 	enemy_portraits["Duch dębu"] = load_image_texture("res://art/characters/normal_enemies/enemy_duch_debu_portrait_v02.png")
-	for hero_id in ["lada", "brun", "mieta", "wszebor", "rada", "zywia"]:
-		hero_portraits[hero_id] = load_image_texture("res://art/characters/hero_%s_portrait_v05.png" % hero_id)
 	for hero_id in HERO_IDS:
-		if not hero_portraits.has(hero_id):
+		var portrait := load_image_texture("res://art/characters/hero_%s_portrait_v05.png" % hero_id)
+		if portrait != null:
+			hero_portraits[hero_id] = portrait
+		else:
 			# Nowi bohaterowie zachowują pełną czytelność kart przed dostarczeniem
 			# ich indywidualnych portretów — nigdy nie rysujemy pustej sylwetki.
 			hero_portraits[hero_id] = hero_portraits.get("lada", null)
@@ -479,6 +510,7 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 		party_max_health += max_health
 		party_health += max_health
 	party_shield = 0
+	enemy_attack_weakened = 0
 	last_enemy_attack_text = ""
 	setup_enemies(level)
 	displayed_enemy_health.clear()
@@ -1047,10 +1079,17 @@ func resolve_matches(matches: Dictionary) -> void:
 			elif tile_type == 4:
 				rune_count += 1
 			var obstacle_health := int(obstacles[cell.y][cell.x])
-			if obstacle_health > 1:
-				obstacles[cell.y][cell.x] = obstacle_health - 1
+			var obstacle_damage := 1
+			if active_heroes.has("boruta") and tile_type == 0:
+				obstacle_damage += 2
+			if active_heroes.has("wlodzimierz"):
+				obstacle_damage += 1
+			if active_heroes.has("czernik") and obstacle_health == 3:
+				obstacle_damage += 2
+			if obstacle_health > obstacle_damage:
+				obstacles[cell.y][cell.x] = obstacle_health - obstacle_damage
 			else:
-				if obstacle_health == 1:
+				if obstacle_health > 0:
 					obstacles[cell.y][cell.x] = 0
 					if goal_type == "clear_obstacles":
 						goal_progress += 1
@@ -1062,10 +1101,46 @@ func resolve_matches(matches: Dictionary) -> void:
 		# Pasywne moce nowych bohaterów działają, gdy bohater jest w aktywnym składzie.
 		if active_heroes.has("rada") and amber_count > 0:
 			coins += amber_count * 2 * int(hero_levels["rada"])
+		var hero_bonus_damage := 0
+		var hero_extra_healing := 0
+		var hero_extra_shield := 0
+		var synergy_count := active_synergy_pairs().size()
+		var defender_damage_multiplier := 1.0
+		var cascade_damage_multiplier := 1
+		if active_heroes.has("milena") and water_count > 0:
+			hero_extra_healing += water_count * 2
+		if active_heroes.has("radomir") and amber_count > 0:
+			hero_bonus_damage += amber_count * 4
+		if active_heroes.has("witosz") and (has_four or has_five):
+			hero_extra_shield += 1
+		if active_heroes.has("jagna") and leaf_count > 0:
+			heal_hero(lowest_living_hero(), leaf_count)
+		if active_heroes.has("welesa") and rune_count > 0:
+			enemy_attack_weakened += rune_count
+		if active_heroes.has("zorya") and chain == 1:
+			score += 20
+		if active_heroes.has("jaromir"):
+			defender_damage_multiplier = 1.15
+		if active_heroes.has("msciwoj") and (has_four or has_five):
+			hero_bonus_damage += fire_count * 4
+		if active_heroes.has("dobrawa") and rune_count > 0:
+			hero_extra_shield += rune_count * 2
+		if active_heroes.has("perunika") and has_five:
+			moves_left += 1
+		if active_heroes.has("mirka") and water_count > 0:
+			heal_all_living_heroes(2)
+		if active_heroes.has("mokosza") and leaf_count > 0 and water_count > 0:
+			hero_extra_shield += 4
+		if active_heroes.has("stribog") and has_five:
+			hero_bonus_damage += 10
+		if active_heroes.has("swarog") and fire_count > 0 and amber_count > 0:
+			hero_bonus_damage += 8
+		if active_heroes.has("weles") and chain == 1:
+			cascade_damage_multiplier = 2
 		var region_id := str(current_battle.get("region", "debowepogranicze"))
 		var region_effect_text := ""
 		var region_bonus_damage := 0
-		var water_healing := water_count * 4
+		var water_healing := water_count * 4 + hero_extra_healing + synergy_count
 		match region_id:
 			"swiety_gaj":
 				if leaf_count > 0:
@@ -1110,7 +1185,7 @@ func resolve_matches(matches: Dictionary) -> void:
 					region_bonus_damage += rune_count * 3
 					region_effect_text = "Korona Drzewa Świata jednoczy liście i runy."
 		heal_hero(current_turn_hero(), water_healing)
-		party_shield += leaf_count * (2 + int(building_levels["swiety_gaj"]))
+		party_shield += leaf_count * (2 + int(building_levels["swiety_gaj"])) + hero_extra_shield + synergy_count
 		if region_effect_text != "" and chain == 1:
 			message = region_effect_text
 		if goal_type == "collect_amber":
@@ -1139,7 +1214,9 @@ func resolve_matches(matches: Dictionary) -> void:
 				damage += fire_count * 3 * int(hero_levels["wszebor"])
 			if active_heroes.has("zywia"):
 				damage += rune_count * 6 * int(hero_levels["zywia"])
-			deal_damage_to_enemies(damage * chain)
+			damage += hero_bonus_damage
+			var synergy_damage := int(round(float(damage * chain * cascade_damage_multiplier) * (1.0 + 0.08 * synergy_count)))
+			deal_damage_to_enemies(synergy_damage, defender_damage_multiplier)
 		collapse_board()
 		matches = find_matches()
 		chain += 1
@@ -1306,7 +1383,8 @@ func enemy_take_turn() -> void:
 	enemy_action_phase = 0
 	# Kombinacja przeciwnika jest czytelną zapowiedzią zagrożenia, nie pojedynczym
 	# ciosem kończącym walkę. Jej siła to tylko 10% wartości pokazywanej kaskady.
-	var total_damage := total_attack + int(round(float(combo_damage) * 0.10))
+	var total_damage := maxi(0, total_attack + int(round(float(combo_damage) * 0.10)) - enemy_attack_weakened)
+	enemy_attack_weakened = 0
 	var absorbed := mini(party_shield, total_damage)
 	party_shield -= absorbed
 	var damage := total_damage - absorbed
@@ -1328,14 +1406,7 @@ func refresh_party_health() -> void:
 		party_health += int(hero_health[hero_id])
 		party_max_health += int(hero_max_health[hero_id])
 
-func scout_target_hero() -> String:
-	var has_living_scout := false
-	for enemy in enemies:
-		if int(enemy.get("health", 0)) > 0 and str(enemy.get("role", "attacker")) == "scout":
-			has_living_scout = true
-			break
-	if not has_living_scout:
-		return current_turn_hero()
+func lowest_living_hero() -> String:
 	var chosen := current_turn_hero()
 	var lowest_ratio := 2.0
 	for hero_id in active_heroes:
@@ -1346,6 +1417,12 @@ func scout_target_hero() -> String:
 			lowest_ratio = ratio
 			chosen = hero_id
 	return chosen
+
+func scout_target_hero() -> String:
+	for enemy in enemies:
+		if int(enemy.get("health", 0)) > 0 and str(enemy.get("role", "attacker")) == "scout":
+			return lowest_living_hero()
+	return current_turn_hero()
 
 func heal_hero(hero_id: String, amount: int) -> void:
 	if int(hero_health.get(hero_id, 0)) <= 0:
@@ -1405,7 +1482,7 @@ func next_living_enemy_index() -> int:
 			return index
 	return -1
 
-func deal_damage_to_enemies(amount: int) -> void:
+func deal_damage_to_enemies(amount: int, defender_damage_multiplier := 1.0) -> void:
 	# Jedna fala kombinacji ma dokładnie jeden cel. Nadmiar obrażeń przepada:
 	# nie może "przelać się" na kolejnego wroga w tej samej fali.
 	var damaged_index := target_enemy_index
@@ -1415,6 +1492,8 @@ func deal_damage_to_enemies(amount: int) -> void:
 		return
 	var target: Dictionary = enemies[damaged_index]
 	var actual_damage := amount
+	if str(target.get("role", "attacker")) == "defender":
+		actual_damage = int(round(float(actual_damage) * defender_damage_multiplier))
 	if str(target.get("role", "attacker")) != "defender" and has_living_defender():
 		actual_damage = maxi(1, int(round(float(amount) * 0.55)))
 		target["guarded"] = true
@@ -1620,6 +1699,13 @@ func current_turn_hero() -> String:
 			return hero_id
 	return active_heroes[0]
 
+func active_synergy_pairs() -> Array:
+	var active_pairs: Array = []
+	for pair in HERO_SYNERGY_PAIRS:
+		if active_heroes.has(str(pair[0])) and active_heroes.has(str(pair[1])):
+			active_pairs.append(pair)
+	return active_pairs
+
 func advance_turn() -> void:
 	if active_heroes.size() > 1:
 		active_turn_index = (active_turn_index + 1) % active_heroes.size()
@@ -1798,22 +1884,56 @@ func village_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 207.0, 147.0, 175.0, 30.0)
 
 func roster_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 150.0, 790.0, 300.0, 76.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 92.0, 856.0, 184.0, 42.0)
 
-func roster_card_rect(slot: int) -> Rect2:
-	return Rect2(52, 196 + slot * 96, get_viewport_rect().size.x - 104, 96)
+func roster_detail_rect() -> Rect2:
+	return Rect2(22, 280, get_viewport_rect().size.x - 44, 492)
 
-func roster_upgrade_rect(slot: int) -> Rect2:
-	return Rect2(326.0, 211.0 + slot * 96.0, 144.0, 66.0)
+func roster_upgrade_rect() -> Rect2:
+	return Rect2(276.0, 704.0, 192.0, 54.0)
 
-func roster_page_count() -> int:
-	return int(ceili(float(HERO_IDS.size()) / 6.0))
+func roster_team_toggle_rect() -> Rect2:
+	# Liściasty przycisk celowo zachodzi na dolną krawędź sylwetki bohatera.
+	return Rect2(38.0, 668.0, 232.0, 62.0)
+
+func roster_filter_rect(index: int) -> Rect2:
+	# Szersze zakładki mieszczą nazwy, ale zachowują jeden równy rytm na telefonie.
+	var positions := [5.0, 137.0, 269.0, 401.0]
+	return Rect2(positions[index], 200.0, 132.0, 55.0)
 
 func roster_previous_page_rect() -> Rect2:
-	return Rect2(54.0, 736.0, 132.0, 36.0)
+	return Rect2(166.0, 792.0, 48.0, 40.0)
 
 func roster_next_page_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 186.0, 736.0, 132.0, 36.0)
+	return Rect2(get_viewport_rect().size.x - 214.0, 792.0, 48.0, 40.0)
+
+func roster_filter_ids() -> Array[String]:
+	var filtered: Array[String] = []
+	for hero_id in HERO_IDS:
+		if roster_filter == "all" or str(HERO_CLASSES[hero_id]) == roster_filter:
+			filtered.append(hero_id)
+	return filtered
+
+func selected_roster_hero_id() -> String:
+	var filtered := roster_filter_ids()
+	if filtered.is_empty():
+		return "lada"
+	roster_hero_index = posmod(roster_hero_index, filtered.size())
+	return filtered[roster_hero_index]
+
+func roster_filter_label(filter_id: String) -> String:
+	match filter_id:
+		"ZWYKŁA": return "STRAŻ GAJU"
+		"PREMIUM": return "WYBRAŃCY"
+		"LEGENDA": return "LEGENDY"
+	return "CAŁY KRĄG"
+
+func roster_filter_display_label(filter_id: String) -> String:
+	match filter_id:
+		"ZWYKŁA": return "STRAŻ\nGAJU"
+		"PREMIUM": return "WYBRANI\nPERUNA"
+		"LEGENDA": return "DAWNE\nLEGENDY"
+	return "CAŁY\nKRĄG"
 
 func hero_name(hero_id: String) -> String:
 	var index := HERO_IDS.find(hero_id)
@@ -1920,6 +2040,9 @@ func booster_choice_rect(index: int) -> Rect2:
 func main_menu_play_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 454.0, 375.0, 78.0)
 
+func daily_reward_rect() -> Rect2:
+	return Rect2(get_viewport_rect().size.x / 2.0 - 150.0, 395.0, 300.0, 42.0)
+
 func main_menu_map_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 541.0, 375.0, 69.0)
 
@@ -1972,73 +2095,70 @@ func handle_roster_input(position: Vector2) -> void:
 		main_menu_open = true
 		queue_redraw()
 		return
-	if is_in_button(position, roster_previous_page_rect()) and roster_page > 0:
-		roster_page -= 1
-		queue_redraw()
-		return
-	if is_in_button(position, roster_next_page_rect()) and roster_page < roster_page_count() - 1:
-		roster_page += 1
-		queue_redraw()
-		return
-	for slot in 6:
-		var index := roster_page * 6 + slot
-		if index >= HERO_IDS.size():
-			return
-		var hero_id: String = HERO_IDS[index]
-		var card := roster_card_rect(slot)
-		if is_in_button(position, card) and not is_in_button(position, roster_upgrade_rect(slot)) and bool(owned_heroes[hero_id]):
-			if active_heroes.has(hero_id):
-				if active_heroes.size() > 1:
-					active_heroes.erase(hero_id)
-					message = "%s opuszcza skład." % hero_name(hero_id)
-				else:
-					message = "Skład musi mieć co najmniej jednego bohatera."
-			elif active_heroes.size() < 3:
-				active_heroes.append(hero_id)
-				message = "%s dołącza do składu." % hero_name(hero_id)
-			save_progress()
+	var filters := ["all", "ZWYKŁA", "PREMIUM", "LEGENDA"]
+	for filter_index in filters.size():
+		if is_in_button(position, roster_filter_rect(filter_index)):
+			roster_filter = str(filters[filter_index])
+			roster_hero_index = 0
 			queue_redraw()
 			return
-		if not is_in_button(position, roster_upgrade_rect(slot)):
-			continue
-		if not bool(owned_heroes[hero_id]):
-			var recruit_cost := int(HERO_RECRUIT_COSTS.get(hero_id, 0))
-			var currency := hero_recruit_currency(hero_id)
-			var available := event_marks if currency == "marks" else (perun_sparks if currency == "sparks" else coins)
-			var can_recruit := available >= recruit_cost
-			if can_recruit:
-				if currency == "marks":
-					event_marks -= recruit_cost
-				elif currency == "sparks":
-					perun_sparks -= recruit_cost
-				else:
-					coins -= recruit_cost
-				owned_heroes[hero_id] = true
-				hero_levels[hero_id] = maxi(1, int(hero_levels[hero_id]))
-				hero_experience[hero_id] = 0
-				if active_heroes.size() < 3:
-					active_heroes.append(hero_id)
-				message = "%s dołącza do drużyny!" % hero_name(hero_id)
+	var filtered := roster_filter_ids()
+	if is_in_button(position, roster_previous_page_rect()) and not filtered.is_empty():
+		roster_hero_index = posmod(roster_hero_index - 1, filtered.size())
+		queue_redraw()
+		return
+	if is_in_button(position, roster_next_page_rect()) and not filtered.is_empty():
+		roster_hero_index = posmod(roster_hero_index + 1, filtered.size())
+		queue_redraw()
+		return
+	var hero_id := selected_roster_hero_id()
+	if is_in_button(position, roster_team_toggle_rect()) and bool(owned_heroes[hero_id]):
+		if active_heroes.has(hero_id):
+			if active_heroes.size() > 1:
+				active_heroes.erase(hero_id)
+				message = "%s opuszcza skład." % hero_name(hero_id)
 			else:
-				var currency_label := "Znaków Wydarzenia" if currency == "marks" else ("Iskier Peruna" if currency == "sparks" else "monet")
-				message = "Brakuje %d %s na rekrutację %s." % [recruit_cost - available, currency_label, hero_name(hero_id)]
-			save_progress()
-			queue_redraw()
-			return
-		if int(hero_levels[hero_id]) >= MAX_HERO_LEVEL:
-			message = "%s osiągnął maksymalny poziom %d." % [hero_name(hero_id), MAX_HERO_LEVEL]
-			queue_redraw()
-			return
-		var cost := upgrade_cost(hero_id)
-		if coins >= cost:
-			coins -= cost
-			hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
-			save_progress()
-			message = "%s osiąga poziom %d." % [hero_name(hero_id), hero_levels[hero_id]]
-		else:
-			message = "Brakuje %d monet do ulepszenia %s." % [cost - coins, hero_name(hero_id)]
+				message = "Skład musi mieć co najmniej jednego bohatera."
+		elif active_heroes.size() < 3:
+			active_heroes.append(hero_id)
+			message = "%s dołącza do składu." % hero_name(hero_id)
+		save_progress()
 		queue_redraw()
 		return
+	if not is_in_button(position, roster_upgrade_rect()):
+		return
+	if not bool(owned_heroes[hero_id]):
+		var recruit_cost := int(HERO_RECRUIT_COSTS.get(hero_id, 0))
+		var currency := hero_recruit_currency(hero_id)
+		var available := event_marks if currency == "marks" else (perun_sparks if currency == "sparks" else coins)
+		if available >= recruit_cost:
+			if currency == "marks": event_marks -= recruit_cost
+			elif currency == "sparks": perun_sparks -= recruit_cost
+			else: coins -= recruit_cost
+			owned_heroes[hero_id] = true
+			hero_levels[hero_id] = maxi(1, int(hero_levels[hero_id]))
+			hero_experience[hero_id] = 0
+			if active_heroes.size() < 3: active_heroes.append(hero_id)
+			message = "%s dołącza do drużyny!" % hero_name(hero_id)
+		else:
+			var currency_label := "Znaków Wydarzenia" if currency == "marks" else ("Iskier Peruna" if currency == "sparks" else "monet")
+			message = "Brakuje %d %s na rekrutację %s." % [recruit_cost - available, currency_label, hero_name(hero_id)]
+		save_progress()
+		queue_redraw()
+		return
+	if int(hero_levels[hero_id]) >= MAX_HERO_LEVEL:
+		message = "%s osiągnął maksymalny poziom %d." % [hero_name(hero_id), MAX_HERO_LEVEL]
+		queue_redraw()
+		return
+	var cost := upgrade_cost(hero_id)
+	if coins >= cost:
+		coins -= cost
+		hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
+		save_progress()
+		message = "%s osiąga poziom %d." % [hero_name(hero_id), hero_levels[hero_id]]
+	else:
+		message = "Brakuje %d monet do ulepszenia %s." % [cost - coins, hero_name(hero_id)]
+	queue_redraw()
 
 func handle_village_input(position: Vector2) -> void:
 	if is_in_button(position, village_close_rect()):
@@ -2143,6 +2263,9 @@ func handle_main_menu_input(position: Vector2) -> void:
 			reset_confirmation = true
 			queue_redraw()
 		return
+	if is_in_button(position, daily_reward_rect()):
+		claim_daily_reward()
+		return
 	if is_in_button(position, main_menu_play_rect()):
 		main_menu_open = false
 		start_level(maxi(0, unlocked_level - 1))
@@ -2193,6 +2316,7 @@ func reset_progress() -> void:
 	experience = 0
 	perun_sparks = 0
 	event_marks = 0
+	daily_reward_day = ""
 	claimed_boss_sparks.clear()
 	level_stars.clear()
 	seen_region_intros.clear()
@@ -2212,6 +2336,26 @@ func reset_progress() -> void:
 	start_level(0)
 	main_menu_open = true
 	message = "Postęp został zresetowany. Witaj ponownie w Dębowym Pograniczu!"
+	queue_redraw()
+
+func daily_reward_available() -> bool:
+	return daily_reward_day != Time.get_date_string_from_system()
+
+func claim_daily_reward() -> void:
+	if not daily_reward_available():
+		message = "Dzisiejszy Dar Gaju został już odebrany. Wróć jutro."
+		queue_redraw()
+		return
+	var coin_reward := 180 + mini(820, unlocked_level * 10)
+	var wood_reward := 12 + mini(48, int(unlocked_level / 20))
+	var experience_reward := 60 + mini(240, unlocked_level * 2)
+	coins += coin_reward
+	wood += wood_reward
+	experience += experience_reward
+	daily_reward_day = Time.get_date_string_from_system()
+	message = "Dar Gaju: +%d monet, +%d drewna, +%d PD." % [coin_reward, wood_reward, experience_reward]
+	save_progress()
+	play_sfx(760.0, 0.16, 0.18)
 	queue_redraw()
 
 func is_in_button(point: Vector2, rect: Rect2) -> bool:
@@ -2341,6 +2485,9 @@ func _draw() -> void:
 	draw_string(font, Vector2(44, 85), "P. %d" % int(level.get("id", level_index + 1)), HORIZONTAL_ALIGNMENT_CENTER, 96, 17, Color("#fff0c7"))
 	draw_string(font, Vector2(140, 85), str(level.get("name", "Wyprawa")), HORIZONTAL_ALIGNMENT_CENTER, 250, 17, Color("#fff0c7"))
 	draw_string(font, Vector2(458, 84), "Tura: %s" % HERO_NAMES[HERO_IDS.find(current_turn_hero())], HORIZONTAL_ALIGNMENT_CENTER, 70, 11, Color("#d8efac"))
+	var active_synergy_count := active_synergy_pairs().size()
+	if active_synergy_count > 0:
+		draw_string(font, Vector2(390, 111), "SYNERGIA +%d%%" % (active_synergy_count * 8), HORIZONTAL_ALIGNMENT_CENTER, 104, 10, Color("#f4d06d"))
 	if enemies.is_empty():
 		draw_string(font, Vector2(140, 111), "CEL: %s" % goal_label(), HORIZONTAL_ALIGNMENT_CENTER, 250, 12, Color("#b9e7ca"))
 	var turn_banner := "RUCH PRZECIWNIKA" if enemy_attack_anim > 0.0 else ("PRZETRWAJ  •  %d/%d" % [goal_progress, goal_target] if goal_type == "survive" else "TWÓJ RUCH  •  %d" % moves_left)
@@ -2630,61 +2777,96 @@ func _draw() -> void:
 			draw_button(pause_rect(), "II", true, 14)
 
 func draw_roster_overlay(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#0b1b1ad9"))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#05120ef0"))
 	draw_game_logo(Vector2(screen.x / 2.0, 72), Vector2(205, 110))
-	var panel_rect := Rect2(28, 136, screen.x - 56, 730)
-	if defeat_modal_oak != null:
-		draw_texture_rect(defeat_modal_oak, panel_rect, false, Color(0.92, 1.0, 0.94, 1.0))
-	else:
-		draw_style_box(make_panel(Color("#193d38"), Color("#e1bd6a")), panel_rect)
-	draw_string(font, Vector2(panel_rect.position.x, 188), "DRUŻYNA DĘBOWEGO POGRANICZA", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 21, Color("#f5d998"))
-	roster_page = clampi(roster_page, 0, roster_page_count() - 1)
-	for slot in 6:
-		var index := roster_page * 6 + slot
-		if index >= HERO_IDS.size():
-			break
-		var hero_id: String = HERO_IDS[index]
-		var card := roster_card_rect(slot)
-		var owned := bool(owned_heroes[hero_id])
-		var in_party := active_heroes.has(hero_id)
-		var card_tint := Color(0.94, 1.0, 0.96, 1.0) if owned else Color(0.48, 0.56, 0.50, 0.92)
-		draw_style_box(make_panel(Color("#285149") if owned else Color("#283532"), Color("#f0d57a") if in_party else Color("#719a78")), card)
-		if roster_hero_card_frame != null:
-			draw_texture_rect(roster_hero_card_frame, card.grow(7.0), false, card_tint)
-		var role: String = str(HERO_CLASSES[hero_id])
-		var skill: String = HERO_SKILLS[hero_id]
-		if hero_portraits.has(hero_id) and hero_portraits[hero_id] != null:
-			draw_texture_rect(hero_portraits[hero_id], texture_aspect_fit_rect(hero_portraits[hero_id], Rect2(57, card.position.y + 2, 76, 96)), false)
-		var roster_status := "  •  NIEZREKRUTOWANY" if not owned else ""
-		draw_string(font, Vector2(142, card.position.y + 28), "%s  •  poz. %d%s" % [hero_name(hero_id), hero_levels[hero_id], roster_status], HORIZONTAL_ALIGNMENT_LEFT, 176, 17, Color("#fff0c7"))
-		draw_string(font, Vector2(142, card.position.y + 49), "%s" % role, HORIZONTAL_ALIGNMENT_LEFT, 104, 13, Color("#cde3c0"))
-		draw_resource_amount(Vector2(246, card.position.y + 32), "experience", int(hero_experience[hero_id]), 20.0, 12, Color("#d4f7ed"))
-		draw_string(font, Vector2(306, card.position.y + 49), "/%d" % hero_experience_to_next_level(hero_id), HORIZONTAL_ALIGNMENT_LEFT, 42, 11, Color("#c5e7da"))
-		var experience_ratio := float(hero_experience[hero_id]) / float(maxi(1, hero_experience_to_next_level(hero_id)))
-		var experience_bar := Rect2(142, card.position.y + 56, 174, 28)
-		draw_rect(experience_bar, Color("#071614"))
-		draw_rect(Rect2(experience_bar.position + Vector2(6, 6), Vector2((experience_bar.size.x - 12) * experience_ratio, experience_bar.size.y - 12)), Color("#31c9c0"))
-		draw_line(experience_bar.position + Vector2(7, 6), Vector2(experience_bar.position.x + 7 + (experience_bar.size.x - 14) * experience_ratio, experience_bar.position.y + 6), Color("#d8fff1"), 2.0)
-		if experience_bar_frame != null:
-			draw_texture_rect(experience_bar_frame, experience_bar.grow(9.0), false)
+	var panel_rect := roster_detail_rect()
+	# Karta jest otwarta: przyciemnione tło gry daje kontekst, a sama postać
+	# i informacje nie są zamykane w kolejnym zielonym panelu.
+	if roster_section_header != null:
+		draw_texture_rect(roster_section_header, Rect2((screen.x - 276.0) * 0.5, 121, 276, 78), false)
+	draw_string(font, Vector2(panel_rect.position.x, 145), "KRĄG BOHATERÓW", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 22, Color("#f5d998"))
+	var filters := ["all", "ZWYKŁA", "PREMIUM", "LEGENDA"]
+	for filter_index in filters.size():
+		var filter_id := str(filters[filter_index])
+		var filter_rect := roster_filter_rect(filter_index)
+		if roster_filter == filter_id and roster_tabs_active_v04 != null:
+			var source_size := roster_tabs_active_v04.get_size()
+			draw_texture_rect_region(roster_tabs_active_v04, Rect2(filter_rect.position + Vector2(-9, -10), Vector2(filter_rect.size.x + 18.0, filter_rect.size.y + 8.0)), Rect2(Vector2.ZERO, Vector2(source_size.x, source_size.y * 0.86)))
+		elif roster_filter != filter_id:
+			if roster_tabs_inactive_v04 != null:
+				draw_texture_rect(roster_tabs_inactive_v04, filter_rect.grow(2.0), false)
+			else:
+				draw_style_box(make_panel(Color("#102a2290"), Color("#42614f")), filter_rect)
+		draw_string(font, Vector2(filter_rect.position.x, filter_rect.position.y + 34), roster_filter_label(filter_id), HORIZONTAL_ALIGNMENT_CENTER, filter_rect.size.x, 12, Color("#fff0c7") if roster_filter == filter_id else Color("#c8d2c0"))
+	var hero_id := selected_roster_hero_id()
+	var owned := bool(owned_heroes[hero_id])
+	var in_party := active_heroes.has(hero_id)
+	# Portret nie dostaje własnego tła, panelu ani ozdobnej ramy — sylwetka
+	# pozostaje czytelna i nie konkuruje z informacjami po prawej stronie.
+	var portrait_rect := Rect2(36, 304, 224, 382)
+	if hero_portraits.has(hero_id) and hero_portraits[hero_id] != null:
+		draw_texture_rect(hero_portraits[hero_id], texture_aspect_fit_rect(hero_portraits[hero_id], portrait_rect), false, Color.WHITE if owned else Color(0.58, 0.62, 0.58, 1.0))
+	var info_x := 270.0
+	var tier_name := roster_filter_label(str(HERO_CLASSES[hero_id]))
+	draw_string(font, Vector2(info_x, 332), hero_name(hero_id).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, 200, 35, Color("#ffe2a0"))
+	draw_string(font, Vector2(info_x, 351), tier_name, HORIZONTAL_ALIGNMENT_LEFT, 200, 15, Color("#f0d487"))
+	draw_string(font, Vector2(info_x, 384), "POZIOM %d / %d" % [hero_levels[hero_id], MAX_HERO_LEVEL], HORIZONTAL_ALIGNMENT_LEFT, 200, 18, Color("#d8efe1"))
+	var experience_width := draw_resource_amount(Vector2(info_x, 410), "experience", int(hero_experience[hero_id]), 25.0, 17, Color("#82eee2"))
+	draw_string(font, Vector2(info_x + experience_width + 24.0, 427), "/%d PD" % hero_experience_to_next_level(hero_id), HORIZONTAL_ALIGNMENT_LEFT, 104, 15, Color("#c5e7da"))
+	var experience_ratio := float(hero_experience[hero_id]) / float(maxi(1, hero_experience_to_next_level(hero_id)))
+	var experience_bar := Rect2(info_x, 442, 190, 20)
+	# Dwuwarstwowe zielone wypełnienie: ciemny gaj w tle, świetlista energia PD
+	# na froncie i dyskretny połysk przesuwający się wraz z animacją interfejsu.
+	draw_rect(experience_bar, Color("#071d17e8"), true)
+	draw_rect(experience_bar.grow(-1.0), Color("#1c4b35"), true)
+	var fill_rect := Rect2(experience_bar.position + Vector2(3, 3), Vector2((experience_bar.size.x - 6) * experience_ratio, experience_bar.size.y - 6))
+	if fill_rect.size.x > 0.0:
+		for gradient_row in range(int(fill_rect.size.y)):
+			var t := float(gradient_row) / float(maxi(1, int(fill_rect.size.y) - 1))
+			var fill_color := Color("#8ff6a9").lerp(Color("#168451"), t)
+			draw_line(Vector2(fill_rect.position.x, fill_rect.position.y + gradient_row), Vector2(fill_rect.end.x, fill_rect.position.y + gradient_row), fill_color, 1.0)
+		var shimmer_x := fill_rect.position.x + fmod(ui_anim_time * 38.0, maxf(1.0, fill_rect.size.x))
+		draw_line(Vector2(fill_rect.position.x + 2.0, fill_rect.position.y + 2.0), Vector2(maxf(fill_rect.position.x + 2.0, shimmer_x), fill_rect.position.y + 2.0), Color("#e4ffd6b8"), 1.0)
+	draw_rect(experience_bar, Color("#d9af52"), false, 1.0)
+	draw_rect(experience_bar.grow(-2.0), Color("#7ee294a0"), false, 1.0)
+	# Zdolność i współpraca pozostają lekkimi blokami tekstu — bez zielonych
+	# prostokątów oraz obwódek, które konkurowały z portretem.
+	draw_string(font, Vector2(info_x, 502), "ZDOLNOŚĆ", HORIZONTAL_ALIGNMENT_LEFT, 190, 16, Color("#f4d06d"))
+	draw_multiline_string(font, Vector2(info_x, 531), HERO_SKILLS[hero_id], HORIZONTAL_ALIGNMENT_LEFT, 192, 16, 21, Color("#e8f0d8"))
+	draw_string(font, Vector2(info_x, 606), "WSPÓŁPRACA", HORIZONTAL_ALIGNMENT_LEFT, 190, 16, Color("#f4d06d"))
+	draw_multiline_string(font, Vector2(info_x, 625), str(HERO_SYNERGIES.get(hero_id, "")), HORIZONTAL_ALIGNMENT_LEFT, 192, 15, 20, Color("#f0e0a1"))
+	var team_button := roster_team_toggle_rect()
+	if owned and in_party:
+		if roster_team_leafy_button != null:
+			draw_texture_rect(roster_team_leafy_button, team_button, false)
 		else:
-			draw_style_box(make_panel(Color("#0a211e"), Color("#d6b462")), experience_bar.grow(3.0))
-		draw_string(font, Vector2(142, card.position.y + 82), skill, HORIZONTAL_ALIGNMENT_LEFT, 178, 10, Color("#e0efd1"))
-		draw_string(font, Vector2(142, card.position.y + 94), str(HERO_SYNERGIES.get(hero_id, "")), HORIZONTAL_ALIGNMENT_LEFT, 178, 9, Color("#f0d487"))
-		if in_party and roster_active_badge != null:
-			var badge_pulse := 40.0 + sin(ui_anim_time * 4.0) * 2.0
-			draw_texture_rect(roster_active_badge, Rect2(92.0, card.position.y + 58.0, badge_pulse, badge_pulse), false)
-		var max_level := owned and int(hero_levels[hero_id]) >= MAX_HERO_LEVEL
-		var currency := hero_recruit_currency(hero_id)
-		var action_label := "MAKS. POZIOM" if max_level else ("Ulepsz %d" % upgrade_cost(hero_id) if owned else ("Kup %d znaków" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "marks" else ("Kup za %d Iskier" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "sparks" else "Rekrutuj %d" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)))))
-		var action_cost := upgrade_cost(hero_id) if owned else int(HERO_RECRUIT_COSTS.get(hero_id, 0))
-		var available := coins if owned or currency == "coins" else (perun_sparks if currency == "sparks" else event_marks)
-		var affordable := not max_level and available >= action_cost
-		draw_roster_action_button(roster_upgrade_rect(slot), action_label, affordable)
-	draw_button(roster_previous_page_rect(), "◀", roster_page > 0, 16)
-	draw_string(font, Vector2(0, 758), "STRONA %d / %d" % [roster_page + 1, roster_page_count()], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 12, Color("#f5d998"))
-	draw_button(roster_next_page_rect(), "▶", roster_page < roster_page_count() - 1, 16)
-	draw_roster_action_button(roster_close_rect(), "WRÓĆ DO MENU", true)
+			draw_style_box(make_panel(Color("#237158"), Color("#f4d06d")), team_button)
+		draw_string(font, Vector2(team_button.position.x, team_button.position.y + 33), "W SKŁADZIE", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 16, Color("#f4ffd7"))
+	elif owned:
+		if roster_team_leafy_button != null:
+			draw_texture_rect(roster_team_leafy_button, team_button, false)
+			draw_string(font, Vector2(team_button.position.x, team_button.position.y + 33), "+ DODAJ DO SKŁADU", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 14, Color("#f4ffd7"))
+		else:
+			draw_button(team_button, "+ DODAJ DO SKŁADU", true, 13)
+	else:
+		draw_string(font, Vector2(team_button.position.x, team_button.position.y + 31), "NIEZREKRUTOWANY", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 14, Color("#bac6b7"))
+	var max_level := owned and int(hero_levels[hero_id]) >= MAX_HERO_LEVEL
+	var currency := hero_recruit_currency(hero_id)
+	var action_label := "MAKS. POZIOM" if max_level else ("ULEPSZ • %d MONET" % upgrade_cost(hero_id) if owned else ("REKRUTUJ • %d ZNAKÓW" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "marks" else ("REKRUTUJ • %d ISKIER" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "sparks" else "REKRUTUJ • %d MONET" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)))))
+	var action_cost := upgrade_cost(hero_id) if owned else int(HERO_RECRUIT_COSTS.get(hero_id, 0))
+	var available := coins if owned or currency == "coins" else (perun_sparks if currency == "sparks" else event_marks)
+	draw_roster_action_button(roster_upgrade_rect(), action_label, not max_level and available >= action_cost)
+	var filtered := roster_filter_ids()
+	if roster_arrow_left != null:
+		draw_texture_rect(roster_arrow_left, roster_previous_page_rect(), false, Color.WHITE if filtered.size() > 1 else Color(0.42, 0.44, 0.40, 0.75))
+	else:
+		draw_button(roster_previous_page_rect(), "◀", filtered.size() > 1, 18)
+	draw_string(font, Vector2(0, 819), "%d / %d" % [roster_hero_index + 1, filtered.size()], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 16, Color("#f5d998"))
+	if roster_arrow_right != null:
+		draw_texture_rect(roster_arrow_right, roster_next_page_rect(), false, Color.WHITE if filtered.size() > 1 else Color(0.42, 0.44, 0.40, 0.75))
+	else:
+		draw_button(roster_next_page_rect(), "▶", filtered.size() > 1, 18)
+	draw_roster_action_button(roster_close_rect(), "← WRÓĆ", true)
 
 func draw_roster_action_button(rect: Rect2, label: String, enabled: bool) -> void:
 	if roster_action_button != null:
@@ -2816,6 +2998,8 @@ func draw_main_menu(screen: Vector2) -> void:
 	draw_button(reset_progress_rect(), "POTWIERDŹ" if reset_confirmation else "RESET", true, 9)
 	draw_game_logo(Vector2(screen.x / 2.0, 230), Vector2(350, 250))
 	draw_string(font, Vector2(0, 370), "Dębowe Pogranicze czeka na swój szept.", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 15, Color("#e3dfbd"))
+	var can_claim_daily := daily_reward_available()
+	draw_button(daily_reward_rect(), "ODBIERZ DZIENNY DAR GAJU" if can_claim_daily else "DAR GAJU ODEBRANY • WRÓĆ JUTRO", can_claim_daily, 13)
 	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 20)
 	draw_button(main_menu_map_rect(), "MAPA WYPRAW", true, 15)
 	draw_button(main_menu_roster_rect(), "DRUŻYNA I BOHATEROWIE", true, 15)
@@ -2879,6 +3063,7 @@ func load_progress() -> void:
 		experience = int(data.get_value("wallet", "experience", 0))
 		perun_sparks = int(data.get_value("wallet", "perun_sparks", 0))
 		event_marks = int(data.get_value("wallet", "event_marks", 0))
+		daily_reward_day = str(data.get_value("progress", "daily_reward_day", ""))
 		sfx_enabled = bool(data.get_value("settings", "sfx_enabled", true))
 		for level in levels:
 			var boss_level_id := int(level.get("id", 0))
@@ -2938,6 +3123,7 @@ func save_progress() -> void:
 	var data := ConfigFile.new()
 	data.set_value("progress", "unlocked_level", unlocked_level)
 	data.set_value("progress", "tutorial_completed", tutorial_completed)
+	data.set_value("progress", "daily_reward_day", daily_reward_day)
 	for intro_level_id in REGION_INTROS:
 		data.set_value("region_intros", "level_%d" % int(intro_level_id), bool(seen_region_intros.get(intro_level_id, false)))
 	for chapter_id in REGION_CHAPTERS:
