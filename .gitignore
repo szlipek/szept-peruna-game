@@ -1,0 +1,6 @@
+# Pliki generowane przez Godot
+.godot/
+
+# Lokalna, przenośna instalacja silnika oraz pobrane archiwum
+tools/Godot/
+tools/*.zip
