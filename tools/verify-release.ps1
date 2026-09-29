@@ -31,6 +31,12 @@ foreach ($RelativePath in $RequiredFiles) {
     Test-Requirement (Test-Path -LiteralPath (Join-Path $ProjectRoot $RelativePath)) "Brakuje wymaganego pliku: $RelativePath"
 }
 
+$SkillDirectory = Join-Path $ProjectRoot 'art/skills'
+$BaseSkillIcons = @(Get-ChildItem -LiteralPath $SkillDirectory -Filter 'skill_*.png' -File | Where-Object { $_.Name -notmatch '_r[1-5]\.png$' })
+$RankSkillIcons = @(Get-ChildItem -LiteralPath $SkillDirectory -Filter 'skill_*_r*.png' -File)
+Test-Requirement ($BaseSkillIcons.Count -eq 300) "Oczekiwano 300 bazowych ikon talentów, znaleziono $($BaseSkillIcons.Count)."
+Test-Requirement ($RankSkillIcons.Count -eq 1200) "Oczekiwano 1200 wariantów rang talentów, znaleziono $($RankSkillIcons.Count)."
+
 try {
     $Levels = Get-Content -LiteralPath (Join-Path $ProjectRoot 'data/levels.json') -Raw | ConvertFrom-Json
     Test-Requirement ($Levels.Count -ge 100) 'data/levels.json powinien zawierać co najmniej 100 ręcznie przygotowanych poziomów.'
@@ -53,6 +59,10 @@ if (-not $SkipGodot) {
         $SmokeOutput = & $Godot --headless --path $ProjectRoot --script (Join-Path $ProjectRoot 'tests/release_smoke_test.gd') 2>&1
         if ($LASTEXITCODE -ne 0 -or ($SmokeOutput -match 'ERROR: RELEASE SMOKE TEST|SCRIPT ERROR|Parse Error')) {
             $Failures.Add("Test spójności kampanii nie przeszedł.`n$SmokeOutput")
+        }
+        $TreeOutput = & $Godot --headless --path $ProjectRoot --script (Join-Path $ProjectRoot 'tests/skill_tree_ui_smoke_test.gd') 2>&1
+        if ($LASTEXITCODE -ne 0 -or ($TreeOutput -match 'SCRIPT ERROR|Parse Error|ERROR:')) {
+            $Failures.Add("Test ekranu drzewka nie przeszedł.`n$TreeOutput")
         }
     }
 }

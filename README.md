@@ -29,6 +29,8 @@ Przycisk **Osada ›** pozwala wydać monety i drewno na trwałe ulepszenia budy
 
 W menu głównym wybierz **Trening bohaterów**, aby rozegrać jedną z trzech powtarzalnych walk bez energii i bez ryzyka dla postępu. PD trafiają wyłącznie do aktywnego składu, więc można przygotować drużynę przed trudniejszą wyprawą.
 
+Na karcie posiadanego bohatera przycisk **TALENTY** otwiera drzewko trzech umiejętności. Każdy poziom od 2 do 50 daje punkt; kolejne węzły wymagają rozwinięcia poprzednich. Dotknięcie talentu pokazuje efekt i wymagania, a osobny przycisk odblokowuje go lub ulepsza. Wszystkie 300 węzłów mają własne ikony PNG i łącznie 1200 wariantów rang. Szczegóły 25 drzewek są w `docs/sciezki-umiejetnosci-bohaterow.md`.
+
 ## Reset lokalnego postępu
 
 W prawym górnym rogu menu głównego wybierz **RESET**, a następnie **POTWIERDŹ**. Resetuje to wyłącznie lokalny zapis: poziomy, waluty, bohaterów, budynki i gwiazdki. Nie można go cofnąć.

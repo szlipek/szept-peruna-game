@@ -27,6 +27,41 @@ func _init() -> void:
 	if gameplay.HERO_IDS.size() != 25 or int(rarity_count["ZWYKŁA"]) != 10 or int(rarity_count["PREMIUM"]) != 10 or int(rarity_count["LEGENDA"]) != 5:
 		fail("Kolekcja bohaterów powinna mieć 10 zwykłych, 10 premium i 5 legend.")
 		return
+	var skill_model = load("res://scripts/hero_skill_tree.gd")
+	if skill_model.HERO_TREES.size() != gameplay.HERO_IDS.size():
+		fail("Drzewko nie obejmuje wszystkich 25 bohaterów.")
+		return
+	for hero_id in gameplay.HERO_IDS:
+		if not skill_model.HERO_TREES.has(hero_id):
+			fail("Brak drzewka dla bohatera %s." % hero_id)
+			return
+		var tree := {}
+		if skill_model.can_invest(tree, 1, 0, 0) or skill_model.can_invest(tree, 38, 0, 3):
+			fail("Drzewko %s pomija wymaganie poziomu lub wcześniejszych zdolności." % hero_id)
+			return
+		var gate_tree := {}
+		for tier in 3:
+			for rank_index in skill_model.RANK_CAPS[tier]:
+				if not skill_model.invest(gate_tree, 37, 0, tier):
+					fail("Nie można przygotować wcześniejszych węzłów bohatera %s." % hero_id)
+					return
+		if skill_model.can_invest(gate_tree, 37, 0, 3) or not skill_model.can_invest(gate_tree, 38, 0, 3):
+			fail("Mistrzostwo bohatera %s nie ma właściwej bramki poziomu 38." % hero_id)
+			return
+		for tier in skill_model.RANK_CAPS.size():
+			for branch in skill_model.BRANCHES.size():
+				for rank_index in skill_model.RANK_CAPS[tier]:
+					if not skill_model.invest(tree, 50, branch, tier):
+						fail("Na poziomie 50 nie da się rozwinąć trzech umiejętności %s do maksimum." % hero_id)
+						return
+		if skill_model.points_left(tree, 50) != 1 or skill_model.invest(tree, 50, 0, 3):
+			fail("Drzewko %s przekracza budżet punktów lub limit rang." % hero_id)
+			return
+		var damaged_tree := {"moc_0": 99, "moc_3": 5, "opieka_1": 4}
+		var repaired: Dictionary = skill_model.sanitize(damaged_tree, 5)
+		if skill_model.ranks(repaired, 0, 0) != 3 or skill_model.ranks(repaired, 0, 3) != 0 or skill_model.ranks(repaired, 1, 1) != 0:
+			fail("Naprawa zapisu drzewka %s nie pilnuje zależności talentów." % hero_id)
+			return
 	for pair in gameplay.HERO_SYNERGY_PAIRS:
 		if pair.size() != 2 or not gameplay.HERO_IDS.has(str(pair[0])) or not gameplay.HERO_IDS.has(str(pair[1])):
 			fail("Zespół bohaterów zawiera niepoprawną parę synergii.")
@@ -86,6 +121,29 @@ func _init() -> void:
 	if not found_guardian or not found_grand_boss:
 		fail("W kampanii brakuje strażnika krainy albo wielkiego bossa.")
 		return
+	# Jawnie pusta lista przeciwników jest częścią reguł poziomu zadaniowego.
+	# Nie wolno zamieniać jej w awaryjną walkę podczas uruchamiania etapu.
+	var encounter_test = load("res://scripts/puzzle_level.gd").new()
+	for level in campaign:
+		encounter_test.setup_enemies(level)
+		var configured_enemies: Array = level.get("enemies", [])
+		if configured_enemies.is_empty() and not encounter_test.enemies.is_empty():
+			fail("Poziom zadaniowy %d otrzymał nieplanowanego przeciwnika." % int(level.get("id", 0)))
+			return
+		if not configured_enemies.is_empty() and encounter_test.enemies.size() != configured_enemies.size():
+			fail("Poziom %d uruchamia inną liczbę przeciwników niż zapisano w kampanii." % int(level.get("id", 0)))
+			return
+	encounter_test.setup_enemies({"id": 0, "moves": 10, "target": 100})
+	if encounter_test.enemies.size() != 1:
+		fail("Starszy poziom bez konfiguracji przeciwników nie otrzymuje bezpiecznego wroga awaryjnego.")
+		return
+	encounter_test.goal_type = "survive"
+	encounter_test.goal_progress = 2
+	encounter_test.goal_target = 6
+	if encounter_test.goal_label() != "Przetrwaj: 2 / 6 tur":
+		fail("HUD etapu przetrwania pokazuje pokonanie wrogów zamiast liczby tur.")
+		return
+	encounter_test.free()
 	# Symulacja starego/uszkodzonego zapisu: start gry musi odzyskać grywalny stan.
 	var recovery = load("res://scripts/puzzle_level.gd").new()
 	recovery.levels = campaign
@@ -110,6 +168,14 @@ func _init() -> void:
 		return
 	if int(recovery.hero_levels.get("brun", 0)) != 50 or int(recovery.building_levels.get("kuznia", 0)) != 50:
 		fail("Naprawa zapisu nie ogranicza poziomów do bezpiecznego maksimum.")
+		return
+	var coins_before_max_upgrade: int = recovery.coins
+	var wood_before_max_upgrade: int = recovery.wood
+	if recovery.try_upgrade_building("kuznia") or int(recovery.building_levels["kuznia"]) != recovery.MAX_BUILDING_LEVEL:
+		fail("Osada pozwala ulepszyć budynek ponad maksymalny poziom.")
+		return
+	if recovery.coins != coins_before_max_upgrade or recovery.wood != wood_before_max_upgrade:
+		fail("Próba ulepszenia maksymalnego budynku zużywa zasoby.")
 		return
 	recovery.free()
 	# Rdzeń match-3: wielokrotne tworzenie planszy ma być stabilne i grywalne.

@@ -1,5 +1,7 @@
 extends Node2D
 
+const SkillTree = preload("res://scripts/hero_skill_tree.gd")
+
 ## Prototyp Fazy A: plansza 8×8, zamiana sąsiednich kafelków, match-3,
 ## kaskady, punkty, limit ruchów, pięć konfiguracji poziomów i lokalny zapis.
 
@@ -10,6 +12,7 @@ const BRUN_MAX_CHARGE := 7
 const MIETA_MAX_CHARGE := 7
 const MAX_CASCADE_STEPS := 30
 const MAX_HERO_LEVEL := 50
+const MAX_BUILDING_LEVEL := 50
 const HERO_IDS := ["lada", "brun", "mieta", "wszebor", "boruta", "dobromir", "milena", "radomir", "witosz", "jagna", "rada", "welesa", "zorya", "jaromir", "msciwoj", "dobrawa", "perunika", "czernik", "mirka", "wlodzimierz", "zywia", "mokosza", "stribog", "swarog", "weles"]
 const HERO_NAMES := ["Lada", "Brun", "Mieta", "Wszebor", "Boruta", "Dobromir", "Milena", "Radomir", "Witosz", "Jagna", "Rada", "Welesa", "Zorya", "Jaromir", "Mściwoj", "Dobrawa", "Perunika", "Czernik", "Mirka", "Włodzimierz", "Żywia", "Mokosza", "Stribóg", "Swaróg", "Weles"]
 const HERO_CLASSES := {"lada": "ZWYKŁA", "brun": "ZWYKŁA", "mieta": "ZWYKŁA", "wszebor": "ZWYKŁA", "boruta": "ZWYKŁA", "dobromir": "ZWYKŁA", "milena": "ZWYKŁA", "radomir": "ZWYKŁA", "witosz": "ZWYKŁA", "jagna": "ZWYKŁA", "rada": "PREMIUM", "welesa": "PREMIUM", "zorya": "PREMIUM", "jaromir": "PREMIUM", "msciwoj": "PREMIUM", "dobrawa": "PREMIUM", "perunika": "PREMIUM", "czernik": "PREMIUM", "mirka": "PREMIUM", "wlodzimierz": "PREMIUM", "zywia": "LEGENDA", "mokosza": "LEGENDA", "stribog": "LEGENDA", "swarog": "LEGENDA", "weles": "LEGENDA"}
@@ -155,12 +158,25 @@ var goal_target := 0
 var goal_progress := 0
 var hero_levels := {"lada": 1, "brun": 0, "mieta": 0, "wszebor": 0, "boruta": 0, "dobromir": 0, "milena": 0, "radomir": 0, "witosz": 0, "jagna": 0, "rada": 0, "welesa": 0, "zorya": 0, "jaromir": 0, "msciwoj": 0, "dobrawa": 0, "perunika": 0, "czernik": 0, "mirka": 0, "wlodzimierz": 0, "zywia": 0, "mokosza": 0, "stribog": 0, "swarog": 0, "weles": 0}
 var hero_experience := {"lada": 0, "brun": 0, "mieta": 0, "wszebor": 0, "boruta": 0, "dobromir": 0, "milena": 0, "radomir": 0, "witosz": 0, "jagna": 0, "rada": 0, "welesa": 0, "zorya": 0, "jaromir": 0, "msciwoj": 0, "dobrawa": 0, "perunika": 0, "czernik": 0, "mirka": 0, "wlodzimierz": 0, "zywia": 0, "mokosza": 0, "stribog": 0, "swarog": 0, "weles": 0}
+var hero_trees := {}
 var owned_heroes := {"lada": true, "brun": false, "mieta": false, "wszebor": false, "boruta": false, "dobromir": false, "milena": false, "radomir": false, "witosz": false, "jagna": false, "rada": false, "welesa": false, "zorya": false, "jaromir": false, "msciwoj": false, "dobrawa": false, "perunika": false, "czernik": false, "mirka": false, "wlodzimierz": false, "zywia": false, "mokosza": false, "stribog": false, "swarog": false, "weles": false}
 var active_heroes: Array[String] = ["lada"]
 var active_turn_index := 0
 var roster_open := false
+var skill_tree_open := false
+var skill_tree_selected_branch := 0
+var skill_tree_selected_tier := 0
+var skill_icons := {}
+var skill_tree_backgrounds := {}
+var skill_tree_connector_arrow: Texture2D
 var roster_filter := "all"
 var roster_hero_index := 0
+var roster_swap_open := false
+var roster_swap_hero_id := ""
+var roster_transition_time := 1.0
+var roster_transition_direction := 1.0
+var roster_transition_from_id := ""
+const ROSTER_TRANSITION_DURATION := 0.34
 var building_levels := {"domostwa": 0, "kuznia": 0, "chata_zielarki": 0, "swiety_gaj": 0, "spichlerz": 0, "wieza_peruna": 0}
 var village_open := false
 var map_open := false
@@ -245,6 +261,9 @@ var roster_section_header: Texture2D
 var roster_tabs_bar_v04: Texture2D
 var roster_tabs_active_v04: Texture2D
 var roster_tabs_inactive_v04: Texture2D
+var skill_branch_headers: Array[Texture2D] = []
+var skill_description_parchment: Texture2D
+var skill_back_arrow: Texture2D
 var battle_header_oak: Texture2D
 var enemy_square_card_frame: Texture2D
 var battle_board_roots: Texture2D
@@ -288,6 +307,9 @@ const SFX_MIX_RATE := 22050.0
 
 func _ready() -> void:
 	font = ThemeDB.fallback_font
+	skill_tree_connector_arrow = load_image_texture("res://art/ui/skill_tree_connector_arrow_v01.png")
+	for background_hero_id in HERO_IDS:
+		skill_tree_backgrounds[background_hero_id] = load("res://art/skill_backgrounds/skill_tree_%s.png" % background_hero_id) as Texture2D
 	var alegreya_font := FontFile.new()
 	if alegreya_font.load_dynamic_font("res://art/fonts/AlegreyaSans-Bold.ttf") == OK:
 		font = alegreya_font
@@ -358,6 +380,13 @@ func _ready() -> void:
 	roster_tabs_bar_v04 = load_image_texture("res://art/ui/roster_tabs_bar_v08.png")
 	roster_tabs_active_v04 = load_image_texture("res://art/ui/roster_tabs_active_v04.png")
 	roster_tabs_inactive_v04 = load_image_texture("res://art/ui/roster_tabs_inactive_v04.png")
+	skill_branch_headers = [
+		load_image_texture("res://art/ui/skill_branch_moc_v01.png"),
+		load_image_texture("res://art/ui/skill_branch_opieka_v01.png"),
+		load_image_texture("res://art/ui/skill_branch_splot_v01.png")
+	]
+	skill_description_parchment = load_image_texture("res://art/ui/skill_description_parchment_v01.png")
+	skill_back_arrow = load_image_texture("res://art/ui/skill_back_arrow_v02.png")
 	battle_header_oak = load_image_texture("res://art/ui/battle_header_oak_v01.png")
 	enemy_square_card_frame = load_image_texture("res://art/ui/enemy_square_card_frame_v01.png")
 	battle_board_roots = load_image_texture("res://art/ui/battle_board_roots_v02.png")
@@ -403,6 +432,9 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	ui_anim_time += delta
+	if roster_transition_time < ROSTER_TRANSITION_DURATION:
+		roster_transition_time = minf(ROSTER_TRANSITION_DURATION, roster_transition_time + delta)
+		queue_redraw()
 	fill_sfx_buffer()
 	if state == "playing" and not animation_busy and not main_menu_open and not roster_open and not village_open and not map_open and not booster_open and not training_open and not region_intro_open:
 		idle_hint_time += delta
@@ -503,7 +535,8 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	party_max_health = 0
 	party_health = 0
 	for hero_id in active_heroes:
-		var max_health := 55 + int(hero_levels[hero_id]) * 12 + int(building_levels["domostwa"]) * 5
+		var hero_tree: Dictionary = hero_trees.get(hero_id, {})
+		var max_health := 55 + int(hero_levels[hero_id]) * 12 + int(building_levels["domostwa"]) * 5 + SkillTree.ranks(hero_tree, 1, 2) * 3
 		hero_max_health[hero_id] = max_health
 		hero_health[hero_id] = max_health
 		displayed_hero_health[hero_id] = max_health
@@ -667,6 +700,23 @@ func find_hint_move() -> Array[Vector2i]:
 	return []
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if roster_open and not skill_tree_open:
+			var filtered := roster_filter_ids()
+			if event.keycode == KEY_LEFT and not filtered.is_empty():
+				begin_roster_transition(-1.0)
+				roster_hero_index = posmod(roster_hero_index - 1, filtered.size())
+				queue_redraw()
+				return
+			if event.keycode == KEY_RIGHT and not filtered.is_empty():
+				begin_roster_transition(1.0)
+				roster_hero_index = posmod(roster_hero_index + 1, filtered.size())
+				queue_redraw()
+				return
+		if skill_tree_open and event.keycode == KEY_ESCAPE:
+			skill_tree_open = false
+			queue_redraw()
+			return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			handle_press(event.position)
@@ -728,6 +778,9 @@ func handle_release(position: Vector2) -> void:
 			handle_help_input(position)
 			return
 		handle_main_menu_input(position)
+		return
+	if skill_tree_open:
+		handle_skill_tree_input(position)
 		return
 	if is_in_button(position, pause_rect()):
 		main_menu_open = true
@@ -1104,6 +1157,23 @@ func resolve_matches(matches: Dictionary) -> void:
 		var hero_bonus_damage := 0
 		var hero_extra_healing := 0
 		var hero_extra_shield := 0
+		var talent_damage := 0
+		var element_counts := [fire_count, water_count, leaf_count, amber_count, rune_count]
+		for skill_hero_id in active_heroes:
+			var skill_tree: Dictionary = hero_trees.get(skill_hero_id, {})
+			var favored_count: int = element_counts[SkillTree.element(skill_hero_id)]
+			if favored_count <= 0:
+				continue
+			talent_damage += favored_count * (SkillTree.ranks(skill_tree, 0, 0) + SkillTree.ranks(skill_tree, 0, 3) * 8)
+			if has_four or has_five or has_square:
+				talent_damage += SkillTree.ranks(skill_tree, 0, 1) * 3 + favored_count * SkillTree.ranks(skill_tree, 2, 1) * 2
+			if chain > 1:
+				talent_damage += SkillTree.ranks(skill_tree, 0, 2) * 4
+				score += SkillTree.ranks(skill_tree, 2, 2) * 4
+			talent_damage += favored_count * SkillTree.ranks(skill_tree, 2, 3) * 4
+			party_shield += favored_count * (SkillTree.ranks(skill_tree, 1, 0) + SkillTree.ranks(skill_tree, 1, 3) * 2)
+			heal_hero(skill_hero_id, SkillTree.ranks(skill_tree, 1, 1) * 2 + favored_count * SkillTree.ranks(skill_tree, 1, 3) * 2)
+			score += favored_count * (SkillTree.ranks(skill_tree, 2, 0) * 2 + SkillTree.ranks(skill_tree, 2, 3) * 4)
 		var synergy_count := active_synergy_pairs().size()
 		var defender_damage_multiplier := 1.0
 		var cascade_damage_multiplier := 1
@@ -1214,7 +1284,7 @@ func resolve_matches(matches: Dictionary) -> void:
 				damage += fire_count * 3 * int(hero_levels["wszebor"])
 			if active_heroes.has("zywia"):
 				damage += rune_count * 6 * int(hero_levels["zywia"])
-			damage += hero_bonus_damage
+			damage += hero_bonus_damage + talent_damage
 			var synergy_damage := int(round(float(damage * chain * cascade_damage_multiplier) * (1.0 + 0.08 * synergy_count)))
 			deal_damage_to_enemies(synergy_damage, defender_damage_multiplier)
 		collapse_board()
@@ -1288,6 +1358,10 @@ func is_level_complete() -> bool:
 	return score >= goal_target
 
 func goal_label() -> String:
+	# Przetrwanie celowo ma aktywnych wrogów, ale zwycięstwo zależy od liczby
+	# wytrzymanych tur, a nie od ich pokonania. Pokazuj więc właściwy warunek.
+	if goal_type == "survive":
+		return "Przetrwaj: %d / %d tur" % [goal_progress, goal_target]
 	if not enemies.is_empty():
 		return "Pokonaj wrogów: %d / %d" % [living_enemy_count(), enemies.size()]
 	if goal_type == "collect_amber":
@@ -1296,8 +1370,6 @@ func goal_label() -> String:
 		return "Runy: %d / %d" % [goal_progress, goal_target]
 	if goal_type == "clear_obstacles":
 		return "Oczyść przeszkody: %d / %d" % [goal_progress, goal_target]
-	if goal_type == "survive":
-		return "Przetrwaj: %d / %d tur" % [goal_progress, goal_target]
 	return "Punkty: %d / %d" % [score, goal_target]
 
 func finish_level(success_message: String) -> void:
@@ -1440,7 +1512,10 @@ func heal_all_living_heroes(amount: int) -> void:
 func setup_enemies(level: Dictionary) -> void:
 	enemies.clear()
 	var configured: Array = level.get("enemies", [])
-	if not configured.is_empty():
+	# Pusta, jawnie zapisana lista oznacza poziom zadaniowy bez walki.
+	# Przeciwnika awaryjnego dodajemy tylko starszym konfiguracjom, które nie
+	# mają ani pola `enemies`, ani pojedynczego pola `enemy`.
+	if level.has("enemies"):
 		for source in configured:
 			var name := str(source.get("name", "Cień"))
 			enemies.append({"name": name, "health": int(source.get("health", 60)), "max_health": int(source.get("health", 60)), "attack": int(source.get("attack", 5)), "role": str(source.get("role", ENEMY_ROLES.get(name, "attacker")))})
@@ -1649,9 +1724,6 @@ func grant_hero_experience(amount: int) -> void:
 	var share := maxi(1, amount / eligible.size())
 	for hero_id in eligible:
 		hero_experience[hero_id] = int(hero_experience[hero_id]) + share
-		while int(hero_experience[hero_id]) >= hero_experience_to_next_level(hero_id) and int(hero_levels[hero_id]) < MAX_HERO_LEVEL:
-			hero_experience[hero_id] = int(hero_experience[hero_id]) - hero_experience_to_next_level(hero_id)
-			hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
 
 func grant_training_reward() -> void:
 	var reward: Dictionary = training_battle.get("rewards", {})
@@ -1664,9 +1736,6 @@ func grant_training_reward() -> void:
 	# Trening rozwija wyłącznie bohaterów, których gracz świadomie wystawił.
 	for hero_id in active_heroes:
 		hero_experience[hero_id] = int(hero_experience[hero_id]) + received_experience
-		while int(hero_experience[hero_id]) >= hero_experience_to_next_level(hero_id) and int(hero_levels[hero_id]) < MAX_HERO_LEVEL:
-			hero_experience[hero_id] = int(hero_experience[hero_id]) - hero_experience_to_next_level(hero_id)
-			hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
 	last_reward = {"coins": received_coins, "wood": received_wood, "experience": received_experience}
 
 func restart_current_battle() -> void:
@@ -1705,6 +1774,17 @@ func active_synergy_pairs() -> Array:
 		if active_heroes.has(str(pair[0])) and active_heroes.has(str(pair[1])):
 			active_pairs.append(pair)
 	return active_pairs
+
+func synergy_portrait_ids(hero_id: String) -> Array[String]:
+	var partners: Array[String] = []
+	for pair in HERO_SYNERGY_PAIRS:
+		if str(pair[0]) == hero_id:
+			partners.append(str(pair[1]))
+		elif str(pair[1]) == hero_id:
+			partners.append(str(pair[0]))
+		if partners.size() == 2:
+			break
+	return partners
 
 func advance_turn() -> void:
 	if active_heroes.size() > 1:
@@ -1884,17 +1964,29 @@ func village_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 207.0, 147.0, 175.0, 30.0)
 
 func roster_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 92.0, 856.0, 184.0, 42.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 92.0, 884.0, 184.0, 42.0)
 
 func roster_detail_rect() -> Rect2:
 	return Rect2(22, 280, get_viewport_rect().size.x - 44, 492)
 
 func roster_upgrade_rect() -> Rect2:
-	return Rect2(276.0, 704.0, 192.0, 54.0)
+	return Rect2(262.0, 676.0, 283.0, 62.0)
+
+func roster_skill_tree_rect() -> Rect2:
+	return Rect2(95.0, 744.0, get_viewport_rect().size.x - 190.0, 70.0)
+
+func skill_tree_node_rect(branch: int, tier: int) -> Rect2:
+	return Rect2(24.0 + branch * 168.0, 210.0 + tier * 130.0, 156.0, 102.0)
+
+func skill_tree_back_rect() -> Rect2:
+	return Rect2(178.0, 906.0, 184.0, 40.0)
+
+func skill_tree_upgrade_rect() -> Rect2:
+	return Rect2(94.0, 858.0, 352.0, 42.0)
 
 func roster_team_toggle_rect() -> Rect2:
 	# Liściasty przycisk celowo zachodzi na dolną krawędź sylwetki bohatera.
-	return Rect2(38.0, 668.0, 232.0, 62.0)
+	return Rect2(30.0, 644.0, 240.0, 76.0)
 
 func roster_filter_rect(index: int) -> Rect2:
 	# Szersze zakładki mieszczą nazwy, ale zachowują jeden równy rytm na telefonie.
@@ -1902,10 +1994,10 @@ func roster_filter_rect(index: int) -> Rect2:
 	return Rect2(positions[index], 200.0, 132.0, 55.0)
 
 func roster_previous_page_rect() -> Rect2:
-	return Rect2(166.0, 792.0, 48.0, 40.0)
+	return Rect2(166.0, 832.0, 48.0, 40.0)
 
 func roster_next_page_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 214.0, 792.0, 48.0, 40.0)
+	return Rect2(get_viewport_rect().size.x - 214.0, 832.0, 48.0, 40.0)
 
 func roster_filter_ids() -> Array[String]:
 	var filtered: Array[String] = []
@@ -2086,10 +2178,34 @@ func building_cost(building_id: String) -> Dictionary:
 	var multiplier := 1.0 + float(building_levels[building_id]) * 0.25
 	return {"coins": int(round(int(base["coins"]) * multiplier)), "wood": int(round(int(base["wood"]) * multiplier))}
 
+func try_upgrade_building(building_id: String) -> bool:
+	var building_index := BUILDING_IDS.find(building_id)
+	if building_index < 0:
+		return false
+	if int(building_levels.get(building_id, 0)) >= MAX_BUILDING_LEVEL:
+		message = "%s osiągnęła maksymalny poziom %d." % [BUILDING_NAMES[building_index], MAX_BUILDING_LEVEL]
+		return false
+	var cost := building_cost(building_id)
+	if coins < int(cost["coins"]) or wood < int(cost["wood"]):
+		message = "Brakuje zasobów na %s." % BUILDING_NAMES[building_index]
+		return false
+	coins -= int(cost["coins"])
+	wood -= int(cost["wood"])
+	building_levels[building_id] = int(building_levels[building_id]) + 1
+	save_progress()
+	message = "%s osiąga poziom %d." % [BUILDING_NAMES[building_index], building_levels[building_id]]
+	return true
+
 func upgrade_cost(hero_id: String) -> int:
 	return 300 + (int(hero_levels[hero_id]) - 1) * 100
 
 func handle_roster_input(position: Vector2) -> void:
+	if roster_swap_open:
+		handle_roster_swap_input(position)
+		return
+	if skill_tree_open:
+		handle_skill_tree_input(position)
+		return
 	if is_in_button(position, roster_close_rect()):
 		roster_open = false
 		main_menu_open = true
@@ -2104,14 +2220,22 @@ func handle_roster_input(position: Vector2) -> void:
 			return
 	var filtered := roster_filter_ids()
 	if is_in_button(position, roster_previous_page_rect()) and not filtered.is_empty():
+		begin_roster_transition(-1.0)
 		roster_hero_index = posmod(roster_hero_index - 1, filtered.size())
 		queue_redraw()
 		return
 	if is_in_button(position, roster_next_page_rect()) and not filtered.is_empty():
+		begin_roster_transition(1.0)
 		roster_hero_index = posmod(roster_hero_index + 1, filtered.size())
 		queue_redraw()
 		return
 	var hero_id := selected_roster_hero_id()
+	if is_in_button(position, roster_skill_tree_rect()):
+		skill_tree_open = true
+		skill_tree_selected_branch = 0
+		skill_tree_selected_tier = 0
+		queue_redraw()
+		return
 	if is_in_button(position, roster_team_toggle_rect()) and bool(owned_heroes[hero_id]):
 		if active_heroes.has(hero_id):
 			if active_heroes.size() > 1:
@@ -2122,11 +2246,22 @@ func handle_roster_input(position: Vector2) -> void:
 		elif active_heroes.size() < 3:
 			active_heroes.append(hero_id)
 			message = "%s dołącza do składu." % hero_name(hero_id)
+		else:
+			roster_swap_hero_id = hero_id
+			roster_swap_open = true
 		save_progress()
 		queue_redraw()
 		return
 	if not is_in_button(position, roster_upgrade_rect()):
 		return
+	handle_roster_upgrade(hero_id)
+
+func begin_roster_transition(direction: float) -> void:
+	roster_transition_from_id = selected_roster_hero_id()
+	roster_transition_direction = direction
+	roster_transition_time = 0.0
+
+func handle_roster_upgrade(hero_id: String) -> void:
 	if not bool(owned_heroes[hero_id]):
 		var recruit_cost := int(HERO_RECRUIT_COSTS.get(hero_id, 0))
 		var currency := hero_recruit_currency(hero_id)
@@ -2138,6 +2273,7 @@ func handle_roster_input(position: Vector2) -> void:
 			owned_heroes[hero_id] = true
 			hero_levels[hero_id] = maxi(1, int(hero_levels[hero_id]))
 			hero_experience[hero_id] = 0
+			hero_trees[hero_id] = {}
 			if active_heroes.size() < 3: active_heroes.append(hero_id)
 			message = "%s dołącza do drużyny!" % hero_name(hero_id)
 		else:
@@ -2151,14 +2287,63 @@ func handle_roster_input(position: Vector2) -> void:
 		queue_redraw()
 		return
 	var cost := upgrade_cost(hero_id)
-	if coins >= cost:
+	var required_experience := hero_experience_to_next_level(hero_id)
+	if int(hero_experience[hero_id]) < required_experience:
+		message = "Brakuje %d PD do poziomu %d." % [required_experience - int(hero_experience[hero_id]), int(hero_levels[hero_id]) + 1]
+	elif coins >= cost:
 		coins -= cost
+		hero_experience[hero_id] = int(hero_experience[hero_id]) - required_experience
 		hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
 		save_progress()
 		message = "%s osiąga poziom %d." % [hero_name(hero_id), hero_levels[hero_id]]
 	else:
 		message = "Brakuje %d monet do ulepszenia %s." % [cost - coins, hero_name(hero_id)]
 	queue_redraw()
+
+func handle_roster_swap_input(position: Vector2) -> void:
+	if is_in_button(position, Rect2(70, 760, 390, 48)):
+		roster_swap_open = false
+		roster_swap_hero_id = ""
+		queue_redraw()
+		return
+	for index in active_heroes.size():
+		var choice_rect := Rect2(52.0 + index * 145.0, 430.0, 125.0, 220.0)
+		if is_in_button(position, choice_rect):
+			active_heroes[index] = roster_swap_hero_id
+			roster_swap_open = false
+			message = "%s zastępuje bohatera w składzie." % hero_name(roster_swap_hero_id)
+			roster_swap_hero_id = ""
+			save_progress()
+			queue_redraw()
+			return
+
+func handle_skill_tree_input(position: Vector2) -> void:
+	if is_in_button(position, skill_tree_back_rect()):
+		skill_tree_open = false
+		queue_redraw()
+		return
+	var hero_id := selected_roster_hero_id()
+	if is_in_button(position, skill_tree_upgrade_rect()):
+		if bool(owned_heroes.get(hero_id, false)):
+			var tree: Dictionary = hero_trees.get(hero_id, {})
+			if SkillTree.invest(tree, int(hero_levels[hero_id]), skill_tree_selected_branch, skill_tree_selected_tier):
+				hero_trees[hero_id] = tree
+				if skill_tree_selected_branch == 1 and skill_tree_selected_tier == 2 and active_heroes.has(hero_id) and state == "playing":
+					hero_max_health[hero_id] = int(hero_max_health.get(hero_id, 0)) + 3
+					hero_health[hero_id] = int(hero_health.get(hero_id, 0)) + 3
+					refresh_party_health()
+				save_progress()
+				play_sfx(790.0, 0.14, 0.15)
+		queue_redraw()
+		return
+	for branch in SkillTree.BRANCHES.size():
+		for tier in SkillTree.RANK_CAPS.size():
+			if not is_in_button(position, skill_tree_node_rect(branch, tier)):
+				continue
+			skill_tree_selected_branch = branch
+			skill_tree_selected_tier = tier
+			queue_redraw()
+			return
 
 func handle_village_input(position: Vector2) -> void:
 	if is_in_button(position, village_close_rect()):
@@ -2170,15 +2355,7 @@ func handle_village_input(position: Vector2) -> void:
 		if not is_in_button(position, village_upgrade_rect(index)):
 			continue
 		var building_id: String = BUILDING_IDS[index]
-		var cost: Dictionary = building_cost(building_id)
-		if coins >= int(cost["coins"]) and wood >= int(cost["wood"]):
-			coins -= int(cost["coins"])
-			wood -= int(cost["wood"])
-			building_levels[building_id] = int(building_levels[building_id]) + 1
-			save_progress()
-			message = "%s osiąga poziom %d." % [BUILDING_NAMES[index], building_levels[building_id]]
-		else:
-			message = "Brakuje zasobów na %s." % BUILDING_NAMES[index]
+		try_upgrade_building(building_id)
 		queue_redraw()
 		return
 
@@ -2263,6 +2440,11 @@ func handle_main_menu_input(position: Vector2) -> void:
 			reset_confirmation = true
 			queue_redraw()
 		return
+	# Potwierdzenie resetu dotyczy wyłącznie dwóch kolejnych dotknięć tego
+	# samego przycisku. Każda inna akcja lub dotknięcie menu rozbraja reset.
+	if reset_confirmation:
+		reset_confirmation = false
+		queue_redraw()
 	if is_in_button(position, daily_reward_rect()):
 		claim_daily_reward()
 		return
@@ -2325,12 +2507,14 @@ func reset_progress() -> void:
 	for hero_id in HERO_IDS:
 		hero_levels[hero_id] = 1 if hero_id == "lada" else 0
 		hero_experience[hero_id] = 0
+		hero_trees[hero_id] = {}
 		owned_heroes[hero_id] = hero_id == "lada"
 	active_heroes = ["lada"]
 	for building_id in BUILDING_IDS:
 		building_levels[building_id] = 0
 	reset_confirmation = false
 	training_mode = false
+	skill_tree_open = false
 	training_battle.clear()
 	save_progress()
 	start_level(0)
@@ -2395,6 +2579,7 @@ func resource_icon(kind: String) -> Texture2D:
 		"wood": return wood_resource_icon
 		"experience": return experience_resource_icon
 		"sparks": return perun_sparks_resource_icon
+		"marks": return rune_tile_icon
 	return null
 
 func texture_aspect_fit_rect(texture: Texture2D, bounds: Rect2) -> Rect2:
@@ -2747,6 +2932,8 @@ func _draw() -> void:
 				draw_button(defeat_training_rect(), "TRENUJ BOHATERÓW  •  ZDOBYWAJ PD", true, 13)
 	if roster_open:
 		draw_roster_overlay(screen)
+		if skill_tree_open:
+			draw_skill_tree_overlay(screen)
 	if village_open:
 		draw_village_overlay(screen)
 	if map_open:
@@ -2777,7 +2964,20 @@ func _draw() -> void:
 			draw_button(pause_rect(), "II", true, 14)
 
 func draw_roster_overlay(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#05120ef0"))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#071610"))
+	var roster_background_hero := selected_roster_hero_id()
+	if not skill_tree_backgrounds.has(roster_background_hero):
+		skill_tree_backgrounds[roster_background_hero] = load("res://art/skill_backgrounds/skill_tree_%s.png" % roster_background_hero) as Texture2D
+	var roster_background: Texture2D = skill_tree_backgrounds[roster_background_hero]
+	var transition_t := clampf(roster_transition_time / ROSTER_TRANSITION_DURATION, 0.0, 1.0)
+	var eased_t := 1.0 - pow(1.0 - transition_t, 3.0)
+	if roster_transition_from_id != "" and roster_transition_from_id != roster_background_hero and skill_tree_backgrounds.has(roster_transition_from_id):
+		var old_background: Texture2D = skill_tree_backgrounds[roster_transition_from_id]
+		if old_background != null:
+			draw_texture_rect(old_background, Rect2(Vector2.ZERO, screen), false, Color(1, 1, 1, 1.0 - eased_t))
+	if roster_background != null:
+		draw_texture_rect(roster_background, Rect2(Vector2.ZERO, screen), false, Color(1, 1, 1, eased_t if roster_transition_from_id != "" else 1.0))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#05120e88"))
 	draw_game_logo(Vector2(screen.x / 2.0, 72), Vector2(205, 110))
 	var panel_rect := roster_detail_rect()
 	# Karta jest otwarta: przyciemnione tło gry daje kontekst, a sama postać
@@ -2799,63 +2999,110 @@ func draw_roster_overlay(screen: Vector2) -> void:
 				draw_style_box(make_panel(Color("#102a2290"), Color("#42614f")), filter_rect)
 		draw_string(font, Vector2(filter_rect.position.x, filter_rect.position.y + 34), roster_filter_label(filter_id), HORIZONTAL_ALIGNMENT_CENTER, filter_rect.size.x, 12, Color("#fff0c7") if roster_filter == filter_id else Color("#c8d2c0"))
 	var hero_id := selected_roster_hero_id()
+	var content_offset := 0.0
+	if roster_transition_from_id != "" and roster_transition_from_id != hero_id:
+		content_offset = lerpf(92.0 * roster_transition_direction, 0.0, eased_t)
+	draw_set_transform(Vector2(content_offset, 0.0), 0.0, Vector2.ONE)
 	var owned := bool(owned_heroes[hero_id])
 	var in_party := active_heroes.has(hero_id)
 	# Portret nie dostaje własnego tła, panelu ani ozdobnej ramy — sylwetka
 	# pozostaje czytelna i nie konkuruje z informacjami po prawej stronie.
-	var portrait_rect := Rect2(36, 304, 224, 382)
+	var portrait_rect := Rect2(24, 300, 246, 402)
 	if hero_portraits.has(hero_id) and hero_portraits[hero_id] != null:
 		draw_texture_rect(hero_portraits[hero_id], texture_aspect_fit_rect(hero_portraits[hero_id], portrait_rect), false, Color.WHITE if owned else Color(0.58, 0.62, 0.58, 1.0))
-	var info_x := 270.0
+	# Prawa kolumna zostawia wyraźny oddech między opisem a sylwetką bohatera.
+	var info_x := 292.0
 	var tier_name := roster_filter_label(str(HERO_CLASSES[hero_id]))
+	var hero_accent: Texture2D = hero_accent_textures.get(hero_id, null)
+	if hero_accent != null:
+		draw_texture_rect(hero_accent, Rect2(info_x - 34.0, 306.0, 28.0, 28.0), false, Color(1, 1, 1, 0.9))
+	else:
+		var element_icons := [fire_tile_icon, water_tile_icon, leaf_tile_icon, amber_tile_icon, rune_tile_icon]
+		var fallback_icon: Texture2D = element_icons[clampi(SkillTree.element(hero_id), 0, element_icons.size() - 1)]
+		if fallback_icon != null:
+			draw_texture_rect(fallback_icon, Rect2(info_x - 34.0, 306.0, 28.0, 28.0), false, Color.WHITE)
+		else:
+			draw_circle(Vector2(info_x - 20.0, 320.0), 11.0, Color("#d9a93e"))
 	draw_string(font, Vector2(info_x, 332), hero_name(hero_id).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, 200, 35, Color("#ffe2a0"))
 	draw_string(font, Vector2(info_x, 351), tier_name, HORIZONTAL_ALIGNMENT_LEFT, 200, 15, Color("#f0d487"))
 	draw_string(font, Vector2(info_x, 384), "POZIOM %d / %d" % [hero_levels[hero_id], MAX_HERO_LEVEL], HORIZONTAL_ALIGNMENT_LEFT, 200, 18, Color("#d8efe1"))
-	var experience_width := draw_resource_amount(Vector2(info_x, 410), "experience", int(hero_experience[hero_id]), 25.0, 17, Color("#82eee2"))
-	draw_string(font, Vector2(info_x + experience_width + 24.0, 427), "/%d PD" % hero_experience_to_next_level(hero_id), HORIZONTAL_ALIGNMENT_LEFT, 104, 15, Color("#c5e7da"))
-	var experience_ratio := float(hero_experience[hero_id]) / float(maxi(1, hero_experience_to_next_level(hero_id)))
-	var experience_bar := Rect2(info_x, 442, 190, 20)
-	# Dwuwarstwowe zielone wypełnienie: ciemny gaj w tle, świetlista energia PD
-	# na froncie i dyskretny połysk przesuwający się wraz z animacją interfejsu.
-	draw_rect(experience_bar, Color("#071d17e8"), true)
-	draw_rect(experience_bar.grow(-1.0), Color("#1c4b35"), true)
-	var fill_rect := Rect2(experience_bar.position + Vector2(3, 3), Vector2((experience_bar.size.x - 6) * experience_ratio, experience_bar.size.y - 6))
+	var experience_ratio := clampf(float(hero_experience[hero_id]) / float(maxi(1, hero_experience_to_next_level(hero_id))), 0.0, 1.0)
+	var experience_bar := Rect2(info_x - 9.0, 424.0, 215.0, 59.0)
+	var fill_rect := Rect2(experience_bar.position + Vector2(21, 23), Vector2((experience_bar.size.x - 42) * experience_ratio, 12))
+	draw_rect(Rect2(experience_bar.position + Vector2(21, 23), Vector2(experience_bar.size.x - 42, 12)), Color("#08271f"))
 	if fill_rect.size.x > 0.0:
 		for gradient_row in range(int(fill_rect.size.y)):
 			var t := float(gradient_row) / float(maxi(1, int(fill_rect.size.y) - 1))
-			var fill_color := Color("#8ff6a9").lerp(Color("#168451"), t)
+			var fill_color := Color("#baffdf").lerp(Color("#159f86"), t)
 			draw_line(Vector2(fill_rect.position.x, fill_rect.position.y + gradient_row), Vector2(fill_rect.end.x, fill_rect.position.y + gradient_row), fill_color, 1.0)
-		var shimmer_x := fill_rect.position.x + fmod(ui_anim_time * 38.0, maxf(1.0, fill_rect.size.x))
-		draw_line(Vector2(fill_rect.position.x + 2.0, fill_rect.position.y + 2.0), Vector2(maxf(fill_rect.position.x + 2.0, shimmer_x), fill_rect.position.y + 2.0), Color("#e4ffd6b8"), 1.0)
-	draw_rect(experience_bar, Color("#d9af52"), false, 1.0)
-	draw_rect(experience_bar.grow(-2.0), Color("#7ee294a0"), false, 1.0)
-	# Zdolność i współpraca pozostają lekkimi blokami tekstu — bez zielonych
-	# prostokątów oraz obwódek, które konkurowały z portretem.
+	if experience_bar_frame != null:
+		draw_texture_rect(experience_bar_frame, experience_bar, false)
+	else:
+		draw_rect(experience_bar, Color("#d9af52"), false, 2.0)
+	draw_string(font, Vector2(info_x - 5, 418), "%d / %d PD" % [hero_experience[hero_id], hero_experience_to_next_level(hero_id)], HORIZONTAL_ALIGNMENT_CENTER, 200, 15, Color("#bdf9e6"))
+	# Zdolność pozostaje czytelna, a współpraca pokazuje twarze partnerów.
 	draw_string(font, Vector2(info_x, 502), "ZDOLNOŚĆ", HORIZONTAL_ALIGNMENT_LEFT, 190, 16, Color("#f4d06d"))
 	draw_multiline_string(font, Vector2(info_x, 531), HERO_SKILLS[hero_id], HORIZONTAL_ALIGNMENT_LEFT, 192, 16, 21, Color("#e8f0d8"))
-	draw_string(font, Vector2(info_x, 606), "WSPÓŁPRACA", HORIZONTAL_ALIGNMENT_LEFT, 190, 16, Color("#f4d06d"))
-	draw_multiline_string(font, Vector2(info_x, 625), str(HERO_SYNERGIES.get(hero_id, "")), HORIZONTAL_ALIGNMENT_LEFT, 192, 15, 20, Color("#f0e0a1"))
+	var tree_points := SkillTree.points_left(hero_trees.get(hero_id, {}), int(hero_levels[hero_id])) if owned else 0
+	draw_roster_action_button(roster_skill_tree_rect(), "TALENTY  •  %d" % tree_points, true)
+	draw_string(font, Vector2(info_x, 576), "WSPÓŁPRACA", HORIZONTAL_ALIGNMENT_LEFT, 190, 16, Color("#f4d06d"))
+	var partners := synergy_portrait_ids(hero_id)
+	var portrait_size := 54.0
+	var portrait_gap := 26.0
+	var portraits_width := partners.size() * portrait_size + maxi(0, partners.size() - 1) * portrait_gap
+	var portraits_x := info_x + (200.0 - portraits_width) * 0.5
+	for partner_index in partners.size():
+		var partner_id: String = partners[partner_index]
+		var thumb := Rect2(portraits_x + partner_index * (portrait_size + portrait_gap), 582.0, portrait_size, portrait_size)
+		var partner_owned := bool(owned_heroes.get(partner_id, false))
+		var portrait: Texture2D = hero_portraits.get(partner_id, null)
+		if portrait != null:
+			var source_size := portrait.get_size()
+			var crop_size := minf(source_size.x, source_size.y)
+			var source_rect := Rect2((source_size.x - crop_size) * 0.5, 0.0, crop_size, crop_size)
+			draw_texture_rect_region(portrait, thumb, source_rect, Color.WHITE if partner_owned else Color(0.52, 0.60, 0.56, 1.0))
+		draw_string(font, Vector2(thumb.position.x - 10.0, thumb.end.y + 15.0), hero_name(partner_id), HORIZONTAL_ALIGNMENT_CENTER, thumb.size.x + 20.0, 11, Color("#fff0c7") if partner_owned else Color("#aeb9a9"))
 	var team_button := roster_team_toggle_rect()
 	if owned and in_party:
 		if roster_team_leafy_button != null:
 			draw_texture_rect(roster_team_leafy_button, team_button, false)
 		else:
 			draw_style_box(make_panel(Color("#237158"), Color("#f4d06d")), team_button)
-		draw_string(font, Vector2(team_button.position.x, team_button.position.y + 33), "W SKŁADZIE", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 16, Color("#f4ffd7"))
+		draw_string(font, Vector2(team_button.position.x, team_button.position.y + 42), "W SKŁADZIE", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 17, Color("#f4ffd7"))
 	elif owned:
 		if roster_team_leafy_button != null:
 			draw_texture_rect(roster_team_leafy_button, team_button, false)
-			draw_string(font, Vector2(team_button.position.x, team_button.position.y + 33), "+ DODAJ DO SKŁADU", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 14, Color("#f4ffd7"))
+			draw_string(font, Vector2(team_button.position.x, team_button.position.y + 42), "+ DODAJ DO SKŁADU", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 15, Color("#f4ffd7"))
 		else:
 			draw_button(team_button, "+ DODAJ DO SKŁADU", true, 13)
 	else:
 		draw_string(font, Vector2(team_button.position.x, team_button.position.y + 31), "NIEZREKRUTOWANY", HORIZONTAL_ALIGNMENT_CENTER, team_button.size.x, 14, Color("#bac6b7"))
 	var max_level := owned and int(hero_levels[hero_id]) >= MAX_HERO_LEVEL
 	var currency := hero_recruit_currency(hero_id)
-	var action_label := "MAKS. POZIOM" if max_level else ("ULEPSZ • %d MONET" % upgrade_cost(hero_id) if owned else ("REKRUTUJ • %d ZNAKÓW" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "marks" else ("REKRUTUJ • %d ISKIER" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)) if currency == "sparks" else "REKRUTUJ • %d MONET" % int(HERO_RECRUIT_COSTS.get(hero_id, 0)))))
+	var action_label := "MAKS. POZIOM" if max_level else ("ULEPSZ" if owned else "REKRUTUJ")
 	var action_cost := upgrade_cost(hero_id) if owned else int(HERO_RECRUIT_COSTS.get(hero_id, 0))
 	var available := coins if owned or currency == "coins" else (perun_sparks if currency == "sparks" else event_marks)
-	draw_roster_action_button(roster_upgrade_rect(), action_label, not max_level and available >= action_cost)
+	var action_rect := roster_upgrade_rect()
+	var enough_experience := owned and int(hero_experience[hero_id]) >= hero_experience_to_next_level(hero_id)
+	var action_enabled := not max_level and (not owned or (available >= action_cost and enough_experience))
+	draw_roster_action_button(action_rect, action_label if max_level else "", action_enabled)
+	if not max_level:
+		var icon_kind := "coins" if owned or currency == "coins" else ("sparks" if currency == "sparks" else "marks")
+		var icon := resource_icon(icon_kind)
+		var label_size := 18
+		var cost_size := 17
+		var label_width := font.get_string_size(action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x
+		var cost_width := font.get_string_size(str(action_cost), HORIZONTAL_ALIGNMENT_LEFT, -1, cost_size).x
+		var content_width := label_width + 5.0 + 23.0 + 2.0 + cost_width
+		var content_x := action_rect.get_center().x - content_width * 0.5
+		var text_color := Color("#fff1bd") if action_enabled else Color("#a7a99d")
+		draw_string(font, Vector2(content_x, action_rect.get_center().y + 6), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size, text_color)
+		if icon != null:
+			draw_texture_rect(icon, Rect2(content_x + label_width + 5.0, action_rect.get_center().y - 13.0, 23.0, 23.0), false)
+		else:
+			draw_circle(Vector2(content_x + label_width + 16.5, action_rect.get_center().y - 1.5), 10.0, Color("#d8b25c"))
+		draw_string(font, Vector2(content_x + label_width + 30.0, action_rect.get_center().y + 6), str(action_cost), HORIZONTAL_ALIGNMENT_LEFT, -1, cost_size, text_color)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var filtered := roster_filter_ids()
 	if roster_arrow_left != null:
 		draw_texture_rect(roster_arrow_left, roster_previous_page_rect(), false, Color.WHITE if filtered.size() > 1 else Color(0.42, 0.44, 0.40, 0.75))
@@ -2867,6 +3114,155 @@ func draw_roster_overlay(screen: Vector2) -> void:
 	else:
 		draw_button(roster_next_page_rect(), "▶", filtered.size() > 1, 18)
 	draw_roster_action_button(roster_close_rect(), "← WRÓĆ", true)
+	if roster_swap_open:
+		draw_roster_swap_popup(screen)
+
+func draw_roster_swap_popup(screen: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, screen), Color(0.01, 0.04, 0.03, 0.78))
+	var panel := Rect2(24.0, 320.0, screen.x - 48.0, 470.0)
+	draw_style_box(make_panel(Color("#17352f"), Color("#d9b25c")), panel)
+	draw_string(font, Vector2(panel.position.x, 370), "SKŁAD JEST PEŁNY", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 22, Color("#ffe5a4"))
+	draw_string(font, Vector2(panel.position.x + 20, 402), "Wybierz bohatera do wymiany:", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40, 15, Color("#d3ead2"))
+	for index in active_heroes.size():
+		var hero_id: String = active_heroes[index]
+		var choice_rect := Rect2(52.0 + index * 145.0, 430.0, 125.0, 220.0)
+		draw_style_box(make_panel(Color("#0d241f"), Color("#ba934b")), choice_rect)
+		var portrait: Texture2D = hero_portraits.get(hero_id, null)
+		if portrait != null:
+			draw_texture_rect(portrait, texture_aspect_fit_rect(portrait, Rect2(choice_rect.position + Vector2(8, 8), Vector2(109, 145))), false)
+		draw_string(font, Vector2(choice_rect.position.x, 604), hero_name(hero_id), HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x, 13, Color("#fff0c7"))
+		draw_string(font, Vector2(choice_rect.position.x, 628), "WYMIEŃ", HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x, 12, Color("#e8c56e"))
+	draw_roster_action_button(Rect2(70, 760, 390, 48), "ANULUJ", true)
+
+func draw_skill_node_icon(center: Vector2, hero_id: String, branch: int, tier: int, unlocked: bool, rank: int) -> void:
+	var icon_rank := clampi(rank, 1, SkillTree.RANK_CAPS[tier])
+	# Czwarty poziom każdej kolumny korzysta z trzech osobnych ikon mistrzostwa.
+	# Dzięki temu nie próbujemy ładować nieistniejących plików moc_3/opieka_3/splot_3.
+	var icon_branch: String = "master" if tier == 3 else str(SkillTree.BRANCHES[branch])
+	var icon_tier: int = branch if tier == 3 else tier
+	var key := "%s_%s_%d_r%d" % [hero_id, icon_branch, icon_tier, icon_rank]
+	if not skill_icons.has(key):
+		var icon_path := "res://art/skills/skill_%s.png" % key
+		var loaded_icon := load_image_texture(icon_path)
+		# Rangi są opcjonalnymi wariantami — jeśli dana gałąź ma mniej rang,
+		# użyj czystej ikony bazowej zamiast wracać do starego placeholdera.
+		if loaded_icon == null:
+			loaded_icon = load_image_texture("res://art/skills/skill_%s_%s_%d.png" % [hero_id, icon_branch, icon_tier])
+		skill_icons[key] = loaded_icon
+	var icon: Texture2D = skill_icons[key]
+	if icon != null:
+		draw_texture_rect(icon, Rect2(center - Vector2(31, 31), Vector2(62, 62)), false, Color.WHITE if unlocked else Color(0.43, 0.49, 0.45, 0.85))
+		return
+	var glow := Color("#d6a545") if unlocked else Color("#56665c")
+	var inside := Color("#153d34") if unlocked else Color("#1b2725")
+	draw_circle(center, 25.0, glow)
+	draw_circle(center, 22.0, inside)
+	match branch:
+		0:
+			draw_line(center + Vector2(-15, 12), center + Vector2(12, -15), glow, 3.0, true)
+			draw_line(center + Vector2(-12, -14), center + Vector2(14, 12), glow, 3.0, true)
+		1:
+			var shield := PackedVector2Array([center + Vector2(0, -19), center + Vector2(16, -10), center + Vector2(12, 10), center + Vector2(0, 19), center + Vector2(-12, 10), center + Vector2(-16, -10)])
+			draw_colored_polygon(shield, Color("#2a5d4b") if unlocked else Color("#29312e"))
+			for point_index in shield.size():
+				draw_line(shield[point_index], shield[(point_index + 1) % shield.size()], glow, 2.0, true)
+		2:
+			for arm in 4:
+				var direction := Vector2.RIGHT.rotated(TAU * arm / 4.0)
+				draw_line(center + direction * 10.0, center + direction * 18.0, glow, 2.5, true)
+	var element_icons := [fire_tile_icon, water_tile_icon, leaf_tile_icon, amber_tile_icon, rune_tile_icon]
+	var core: Texture2D = element_icons[SkillTree.element(hero_id)]
+	if core != null:
+		draw_texture_rect(core, Rect2(center - Vector2(13, 13), Vector2(26, 26)), false, Color.WHITE if unlocked else Color(0.45, 0.5, 0.48, 1.0))
+	# Pięć runicznych nacięć koduje numer bohatera. Dzięki temu nawet postacie
+	# tego samego żywiołu mają własny znak, a ikony skalują się bez osobnych PNG.
+	var hero_mark := maxi(0, HERO_IDS.find(hero_id)) + 1
+	for notch in 5:
+		if (hero_mark & (1 << notch)) == 0:
+			continue
+		var angle := PI * (1.1 + float(notch) * 0.2)
+		var direction := Vector2(cos(angle), sin(angle))
+		draw_line(center + direction * 18.0, center + direction * 23.0, Color("#fff0b6") if unlocked else Color("#859087"), 2.0, true)
+	for pip in tier + 1:
+		var pip_x := center.x - float(tier) * 5.0 + pip * 10.0
+		draw_circle(Vector2(pip_x, center.y + 28.0), 2.5, glow)
+
+func draw_skill_tree_overlay(screen: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#071610"))
+	var hero_id := selected_roster_hero_id()
+	var background_key := hero_id
+	if not skill_tree_backgrounds.has(background_key):
+		skill_tree_backgrounds[background_key] = load("res://art/skill_backgrounds/skill_tree_%s.png" % hero_id) as Texture2D
+	var background: Texture2D = skill_tree_backgrounds[background_key]
+	if background != null:
+		draw_texture_rect(background, Rect2(Vector2.ZERO, screen), false, Color.WHITE)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07161088"))
+	var owned := bool(owned_heroes.get(hero_id, false))
+	var level := int(hero_levels[hero_id])
+	var tree: Dictionary = hero_trees.get(hero_id, {})
+	draw_string(font, Vector2(0, 22), "DRZEWKO UMIEJĘTNOŚCI", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 24, Color("#ffe3a0"))
+	draw_string(font, Vector2(0, 53), "%s  •  POZIOM %d" % [hero_name(hero_id).to_upper(), level], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 17, Color("#d9efca"))
+	draw_string(font, Vector2(0, 80), "WOLNE PUNKTY: %d  •  DOTKNIJ TALENTU" % (SkillTree.points_left(tree, level) if owned else 0), HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#a9e9cf"))
+	# Delikatne, szerokie przyciemnienie pod każdą ścieżką poprawia kontrast ikon
+	# bez zasłaniania indywidualnego tła bohatera.
+	for branch in SkillTree.BRANCHES.size():
+		var shade_rect := Rect2(12.0 + branch * 168.0, 154.0, 164.0, 570.0)
+		draw_rect(shade_rect, Color(0.01, 0.06, 0.05, 0.38))
+	for branch in SkillTree.BRANCHES.size():
+		var branch_x := 24.0 + branch * 168.0
+		if branch < skill_branch_headers.size() and skill_branch_headers[branch] != null:
+			draw_texture_rect(skill_branch_headers[branch], Rect2(branch_x - 14.0, 102.0, 184.0, 154.0), false, Color.WHITE)
+		draw_string(font, Vector2(branch_x, 184), SkillTree.branch_name(hero_id, branch).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 156.0, 12, Color("#f0cb76"))
+		for tier in SkillTree.RANK_CAPS.size():
+			var card := skill_tree_node_rect(branch, tier)
+			var rank := SkillTree.ranks(tree, branch, tier)
+			var can_buy := owned and SkillTree.can_invest(tree, level, branch, tier)
+			var selected := skill_tree_selected_branch == branch and skill_tree_selected_tier == tier
+			var unlocked := rank > 0 or can_buy
+			if tier > 0:
+				var previous := skill_tree_node_rect(branch, tier - 1)
+				var connector_color := Color("#d5af62") if SkillTree.ranks(tree, branch, tier - 1) == SkillTree.RANK_CAPS[tier - 1] else Color("#536253")
+				var connector_top := Vector2(card.get_center().x, previous.end.y + 4.0)
+				var connector_bottom := Vector2(card.get_center().x, card.position.y - 8.0)
+				if skill_tree_connector_arrow != null:
+					var arrow_slot := Rect2(Vector2(card.get_center().x - 27.0, connector_top.y), Vector2(54.0, connector_bottom.y - connector_top.y))
+					var arrow_rect := texture_aspect_fit_rect(skill_tree_connector_arrow, arrow_slot)
+					draw_texture_rect(skill_tree_connector_arrow, arrow_rect, false, Color.WHITE if connector_color == Color("#d5af62") else Color(0.58, 0.64, 0.59, 0.85))
+				else:
+					draw_line(connector_top, connector_bottom, connector_color, 2.5, true)
+					var arrow := PackedVector2Array([Vector2(connector_bottom.x - 7.0, connector_bottom.y - 10.0), Vector2(connector_bottom.x + 7.0, connector_bottom.y - 10.0), Vector2(connector_bottom.x, connector_bottom.y)])
+					draw_colored_polygon(arrow, connector_color)
+			# Węzeł pozostaje bez karty i ramki: czytelność zapewniają sama ikona,
+			# podpis oraz delikatna linia zależności między progami.
+			draw_skill_node_icon(card.position + Vector2(card.size.x * 0.5, 35), hero_id, branch, tier, unlocked, rank)
+			var skill_label := SkillTree.branch_name(hero_id, branch).to_upper()
+			draw_string(font, Vector2(card.position.x + 5, card.position.y + 82), skill_label, HORIZONTAL_ALIGNMENT_CENTER, card.size.x - 10, 10, Color("#fff0c7") if unlocked else Color("#aab5a8"))
+			draw_string(font, Vector2(card.position.x + 5, card.position.y + 97), "%d / %d  •  POZ. %d" % [rank, SkillTree.RANK_CAPS[tier], SkillTree.LEVEL_GATES[tier]], HORIZONTAL_ALIGNMENT_CENTER, card.size.x - 10, 10, Color("#b8e8bf") if can_buy else Color("#a7ae9c"))
+	var selected_branch := skill_tree_selected_branch
+	var selected_tier := skill_tree_selected_tier
+	var selected_title := SkillTree.node_name(hero_id, selected_branch, selected_tier)
+	var selected_rank := SkillTree.ranks(tree, selected_branch, selected_tier)
+	var details := SkillTree.node_details(hero_id, selected_branch, selected_tier)
+	if skill_description_parchment != null:
+		draw_texture_rect(skill_description_parchment, Rect2(8.0, 704.0, screen.x - 16.0, 234.0), false, Color.WHITE)
+	draw_skill_node_icon(Vector2(426, 812), hero_id, selected_branch, selected_tier, selected_rank > 0, selected_rank)
+	draw_string(font, Vector2(134, 783), "%s  •  %d/%d" % [selected_title, selected_rank, SkillTree.RANK_CAPS[selected_tier]], HORIZONTAL_ALIGNMENT_LEFT, 330, 16, Color("#4b321b"))
+	draw_string(font, Vector2(134, 805), details[0], HORIZONTAL_ALIGNMENT_LEFT, 330, 13, Color("#5b4327"))
+	draw_string(font, Vector2(134, 823), details[1], HORIZONTAL_ALIGNMENT_LEFT, 330, 13, Color("#5b4327"))
+	var can_buy := owned and SkillTree.can_invest(tree, level, selected_branch, selected_tier)
+	var blocker := SkillTree.invest_blocker(tree, level, selected_branch, selected_tier) if owned else "Najpierw zdobądź tego bohatera."
+	draw_string(font, Vector2(24, 848), blocker, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 48, 12, Color("#3f714e") if can_buy else Color("#7c3d2f"))
+	draw_roster_action_button(skill_tree_upgrade_rect(), "ODBLOKUJ  •  1 PUNKT" if selected_rank == 0 else "ULEPSZ  •  1 PUNKT", can_buy)
+	var back_rect := skill_tree_back_rect()
+	draw_roster_action_button(back_rect, "", true)
+	var back_label_size := 14
+	var back_label := "BOHATER"
+	var back_text_width := font.get_string_size(back_label, HORIZONTAL_ALIGNMENT_LEFT, -1, back_label_size).x
+	var back_content_width := back_text_width + 32.0 + 8.0
+	var back_content_x := back_rect.get_center().x - back_content_width * 0.5
+	if skill_back_arrow != null:
+		draw_texture_rect(skill_back_arrow, Rect2(back_content_x, back_rect.get_center().y - 12.0, 24.0, 24.0), false, Color.WHITE)
+	draw_string(font, Vector2(back_content_x + 36.0, back_rect.get_center().y + 5.0), back_label, HORIZONTAL_ALIGNMENT_LEFT, back_text_width + 4.0, back_label_size, Color("#fff1bd"))
 
 func draw_roster_action_button(rect: Rect2, label: String, enabled: bool) -> void:
 	if roster_action_button != null:
@@ -2912,10 +3308,14 @@ func draw_village_overlay(screen: Vector2) -> void:
 		draw_string(font, Vector2(text_x, card.position.y + 25), "%s  •  poz. %d" % [BUILDING_NAMES[index], building_levels[building_id]], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#fff0c7"))
 		draw_string(font, Vector2(text_x, card.position.y + 47), bonus, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#c7ddba"))
 		var upgrade_rect := village_upgrade_rect(index)
-		draw_button(upgrade_rect, "", coins >= int(cost["coins"]) and wood >= int(cost["wood"]), 11)
-		var cost_x := upgrade_rect.position.x + 12.0
-		cost_x += draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "coins", int(cost["coins"]), 17.0, 10) + 5.0
-		draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "wood", int(cost["wood"]), 17.0, 10)
+		var max_level := int(building_levels[building_id]) >= MAX_BUILDING_LEVEL
+		if max_level:
+			draw_button(upgrade_rect, "MAKS. POZIOM", false, 10)
+		else:
+			draw_button(upgrade_rect, "", coins >= int(cost["coins"]) and wood >= int(cost["wood"]), 11)
+			var cost_x := upgrade_rect.position.x + 12.0
+			cost_x += draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "coins", int(cost["coins"]), 17.0, 10) + 5.0
+			draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "wood", int(cost["wood"]), 17.0, 10)
 	draw_string(font, Vector2(panel_rect.position.x, 666), "Koszt ulepszenia", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 12, Color("#c7ddba"))
 	draw_button(village_close_rect(), "Wróć do menu", true, 14)
 
@@ -3078,6 +3478,8 @@ func load_progress() -> void:
 			owned_heroes[hero_id] = is_owned
 			hero_levels[hero_id] = maxi(1, int(data.get_value("heroes", "%s_level" % hero_id, 1))) if is_owned else 0
 			hero_experience[hero_id] = maxi(0, int(data.get_value("heroes", "%s_experience" % hero_id, 0))) if is_owned else 0
+			var saved_tree: Variant = data.get_value("talents", hero_id, {})
+			hero_trees[hero_id] = saved_tree if saved_tree is Dictionary else {}
 		active_heroes.clear()
 		for hero_id in HERO_IDS:
 			if bool(data.get_value("heroes", "%s_active" % hero_id, hero_id == "lada")) and bool(owned_heroes[hero_id]):
@@ -3109,6 +3511,8 @@ func sanitize_progress() -> void:
 		owned_heroes[hero_id] = owned
 		hero_levels[hero_id] = clampi(int(hero_levels.get(hero_id, 0)), 1, MAX_HERO_LEVEL) if owned else 0
 		hero_experience[hero_id] = clampi(int(hero_experience.get(hero_id, 0)), 0, 9999999) if owned else 0
+		var raw_tree: Variant = hero_trees.get(hero_id, {})
+		hero_trees[hero_id] = SkillTree.sanitize(raw_tree if raw_tree is Dictionary else {}, int(hero_levels[hero_id])) if owned else {}
 	var valid_active: Array[String] = []
 	for hero_id in HERO_IDS:
 		if bool(owned_heroes.get(hero_id, false)) and active_heroes.has(hero_id) and valid_active.size() < 3:
@@ -3117,7 +3521,7 @@ func sanitize_progress() -> void:
 		valid_active.append("lada")
 	active_heroes = valid_active
 	for building_id in BUILDING_IDS:
-		building_levels[building_id] = clampi(int(building_levels.get(building_id, 0)), 0, 50)
+		building_levels[building_id] = clampi(int(building_levels.get(building_id, 0)), 0, MAX_BUILDING_LEVEL)
 
 func save_progress() -> void:
 	var data := ConfigFile.new()
@@ -3141,6 +3545,7 @@ func save_progress() -> void:
 		data.set_value("heroes", "%s_experience" % hero_id, hero_experience[hero_id])
 		data.set_value("heroes", "%s_owned" % hero_id, owned_heroes[hero_id])
 		data.set_value("heroes", "%s_active" % hero_id, active_heroes.has(hero_id))
+		data.set_value("talents", hero_id, hero_trees.get(hero_id, {}))
 	for building_id in BUILDING_IDS:
 		data.set_value("village", "%s_level" % building_id, building_levels[building_id])
 	for level in levels:
