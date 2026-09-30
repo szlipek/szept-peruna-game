@@ -93,6 +93,16 @@ const REGION_CHAPTERS := {
 	"kraina_zmijow": ["KRAINA ŻMIJÓW", "W szczelinach skał syczą stare rody. Ogień jest tu językiem odwagi."],
 	"korona_drzewa": ["KORONA DRZEWA ŚWIATA", "Korzenie i gwiazdy spotykają się nad tobą. Ostatni szlak wymaga równowagi wszystkich mocy."]
 }
+const MAP_REGION_ORDER := ["debowepogranicze", "swiety_gaj", "bagna_welesa", "gory_peruna", "nawia", "prawia", "grzmotne_szczyty"]
+const MAP_REGION_RANGES := {
+	"debowepogranicze": Vector2i(1, 20),
+	"swiety_gaj": Vector2i(21, 35),
+	"bagna_welesa": Vector2i(36, 45),
+	"gory_peruna": Vector2i(46, 55),
+	"nawia": Vector2i(56, 70),
+	"prawia": Vector2i(71, 85),
+	"grzmotne_szczyty": Vector2i(86, 100)
+}
 const NORMAL_ENEMY_PORTRAIT_SLUGS := {
 	"Cień mchu": "cien_mchu", "Korzeniowy strażnik": "korzeniowy_straznik", "Wilcze szczenię cienia": "wilcze_szczenie_cienia", "Kruczy posłaniec": "kruczy_poslaniec",
 	"Mglisty sługa": "mglisty_sluga", "Topielec źródlany": "topielec_zrodlany", "Ropuch kurhanów": "ropuch_kurhanow", "Żmijowe pisklę": "zmijowe_piskle",
@@ -264,6 +274,9 @@ var roster_tabs_inactive_v04: Texture2D
 var skill_branch_headers: Array[Texture2D] = []
 var skill_description_parchment: Texture2D
 var skill_back_arrow: Texture2D
+var roster_swap_panel: Texture2D
+var roster_swap_card_frame: Texture2D
+var roster_swap_card_backdrop: Texture2D
 var battle_header_oak: Texture2D
 var enemy_square_card_frame: Texture2D
 var battle_board_roots: Texture2D
@@ -276,6 +289,7 @@ var wood_resource_icon: Texture2D
 var experience_resource_icon: Texture2D
 var perun_sparks_resource_icon: Texture2D
 var map_region_gate: Texture2D
+var map_region_backgrounds := {}
 var hero_portraits := {}
 var hero_accent_textures := {}
 var enemy_portraits := {}
@@ -387,6 +401,9 @@ func _ready() -> void:
 	]
 	skill_description_parchment = load_image_texture("res://art/ui/skill_description_parchment_v01.png")
 	skill_back_arrow = load_image_texture("res://art/ui/skill_back_arrow_v02.png")
+	roster_swap_panel = load_image_texture("res://art/ui/roster_swap_forest_v03.png")
+	roster_swap_card_frame = load_image_texture("res://art/ui/roster_swap_card_gold_v04.png")
+	roster_swap_card_backdrop = load_image_texture("res://art/ui/roster_swap_card_leaf_v05.png")
 	battle_header_oak = load_image_texture("res://art/ui/battle_header_oak_v01.png")
 	enemy_square_card_frame = load_image_texture("res://art/ui/enemy_square_card_frame_v01.png")
 	battle_board_roots = load_image_texture("res://art/ui/battle_board_roots_v02.png")
@@ -399,6 +416,15 @@ func _ready() -> void:
 	experience_resource_icon = load_image_texture("res://art/ui/icon_xp_oak_v01.png")
 	perun_sparks_resource_icon = load_image_texture("res://art/ui/icon_perun_sparks_v01.png")
 	map_region_gate = load_image_texture("res://art/ui/map_region_gate_v01.png")
+	map_region_backgrounds = {
+		"debowepogranicze": oak_borderland_background,
+		"swiety_gaj": load_image_texture("res://art/environments/map_swiety_gaj_v01.png"),
+		"bagna_welesa": load_image_texture("res://art/environments/map_bagna_welesa_v01.png"),
+		"gory_peruna": load_image_texture("res://art/environments/map_gory_peruna_v01.png"),
+		"nawia": load_image_texture("res://art/environments/map_nawia_v01.png"),
+		"prawia": load_image_texture("res://art/environments/map_prawia_v01.png"),
+		"grzmotne_szczyty": load_image_texture("res://art/environments/map_grzmotne_szczyty_v01.png")
+	}
 	for enemy_name_key in NORMAL_ENEMY_PORTRAIT_SLUGS:
 		var enemy_slug: String = NORMAL_ENEMY_PORTRAIT_SLUGS[enemy_name_key]
 		enemy_portraits[enemy_name_key] = load_image_texture("res://art/characters/normal_enemies/enemy_%s_portrait_v01.png" % enemy_slug)
@@ -423,6 +449,10 @@ func _ready() -> void:
 			hero_portraits[hero_id] = hero_portraits.get("lada", null)
 	for hero_id in HERO_IDS:
 		hero_accent_textures[hero_id] = load_image_texture("res://art/vfx/hero_accent_%s.png" % hero_id)
+	# Te dwa kadry z planszy ImageGen miały sąsiedni pierścień w kadrze;
+	# używamy czystego akcentu żywiołu zamiast pokazywać nakładające się koła.
+	hero_accent_textures["rada"] = null
+	hero_accent_textures["welesa"] = null
 	setup_procedural_sfx()
 	levels = load_levels()
 	load_progress()
@@ -2301,13 +2331,13 @@ func handle_roster_upgrade(hero_id: String) -> void:
 	queue_redraw()
 
 func handle_roster_swap_input(position: Vector2) -> void:
-	if is_in_button(position, Rect2(70, 760, 390, 48)):
+	if is_in_button(position, roster_swap_cancel_rect()):
 		roster_swap_open = false
 		roster_swap_hero_id = ""
 		queue_redraw()
 		return
 	for index in active_heroes.size():
-		var choice_rect := Rect2(52.0 + index * 145.0, 430.0, 125.0, 220.0)
+		var choice_rect := roster_swap_choice_rect(index)
 		if is_in_button(position, choice_rect):
 			active_heroes[index] = roster_swap_hero_id
 			roster_swap_open = false
@@ -3117,22 +3147,41 @@ func draw_roster_overlay(screen: Vector2) -> void:
 	if roster_swap_open:
 		draw_roster_swap_popup(screen)
 
+func roster_swap_choice_rect(index: int) -> Rect2:
+	return Rect2(15.0 + index * 172.0, 272.0, 166.0, 300.0)
+
+func roster_swap_cancel_rect() -> Rect2:
+	return Rect2(175.0, 690.0, 190.0, 48.0)
+
 func draw_roster_swap_popup(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color(0.01, 0.04, 0.03, 0.78))
-	var panel := Rect2(24.0, 320.0, screen.x - 48.0, 470.0)
-	draw_style_box(make_panel(Color("#17352f"), Color("#d9b25c")), panel)
-	draw_string(font, Vector2(panel.position.x, 370), "SKŁAD JEST PEŁNY", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 22, Color("#ffe5a4"))
-	draw_string(font, Vector2(panel.position.x + 20, 402), "Wybierz bohatera do wymiany:", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40, 15, Color("#d3ead2"))
+	# Pełne tło zasłania poprzedni ekran kolekcji i jego przyciski.
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#071712"))
+	if roster_swap_panel != null:
+		var source_size := roster_swap_panel.get_size()
+		var cover_scale := maxf(screen.x / source_size.x, screen.y / source_size.y)
+		var cover_size := source_size * cover_scale
+		draw_texture_rect(roster_swap_panel, Rect2((screen - cover_size) * 0.5, cover_size), false)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color(0.01, 0.04, 0.03, 0.25))
+	draw_string(font, Vector2(0, 197), "SKŁAD JEST PEŁNY", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 34, Color("#ffe5a4"))
+	# Ozdobnik znajduje się w całości pod tytułem.
+	if roster_section_header != null:
+		draw_texture_rect(roster_section_header, Rect2(62.0, 205.0, screen.x - 124.0, 25.0), false, Color.WHITE)
+	draw_string(font, Vector2(20, 253), "Wybierz bohatera do wymiany:", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 40, 19, Color("#f0e6c4"))
 	for index in active_heroes.size():
 		var hero_id: String = active_heroes[index]
-		var choice_rect := Rect2(52.0 + index * 145.0, 430.0, 125.0, 220.0)
-		draw_style_box(make_panel(Color("#0d241f"), Color("#ba934b")), choice_rect)
+		var choice_rect := roster_swap_choice_rect(index)
+		# Ciemne liście wewnątrz oprawy oddzielają postać od jasnego krajobrazu.
+		if roster_swap_card_backdrop != null:
+			draw_texture_rect(roster_swap_card_backdrop, choice_rect, false, Color.WHITE)
 		var portrait: Texture2D = hero_portraits.get(hero_id, null)
 		if portrait != null:
-			draw_texture_rect(portrait, texture_aspect_fit_rect(portrait, Rect2(choice_rect.position + Vector2(8, 8), Vector2(109, 145))), false)
-		draw_string(font, Vector2(choice_rect.position.x, 604), hero_name(hero_id), HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x, 13, Color("#fff0c7"))
-		draw_string(font, Vector2(choice_rect.position.x, 628), "WYMIEŃ", HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x, 12, Color("#e8c56e"))
-	draw_roster_action_button(Rect2(70, 760, 390, 48), "ANULUJ", true)
+			draw_texture_rect(portrait, texture_aspect_fit_rect(portrait, Rect2(choice_rect.position + Vector2(12, 20), Vector2(142, 213))), false)
+		# Jedna nowa grafika zawiera złotą oprawę, podpis i przycisk.
+		if roster_swap_card_frame != null:
+			draw_texture_rect(roster_swap_card_frame, choice_rect, false, Color.WHITE)
+		draw_string(font, Vector2(choice_rect.position.x + 12, choice_rect.position.y + 236), hero_name(hero_id), HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x - 24, 18, Color("#fff4c8"))
+		draw_string(font, Vector2(choice_rect.position.x + 12, choice_rect.position.y + 263), "WYMIEŃ", HORIZONTAL_ALIGNMENT_CENTER, choice_rect.size.x - 24, 17, Color("#fff4c8"))
+	draw_roster_action_button(roster_swap_cancel_rect(), "ANULUJ", true)
 
 func draw_skill_node_icon(center: Vector2, hero_id: String, branch: int, tier: int, unlocked: bool, rank: int) -> void:
 	var icon_rank := clampi(rank, 1, SkillTree.RANK_CAPS[tier])
