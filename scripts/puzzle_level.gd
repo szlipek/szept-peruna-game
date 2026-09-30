@@ -288,7 +288,8 @@ var coin_resource_icon: Texture2D
 var wood_resource_icon: Texture2D
 var experience_resource_icon: Texture2D
 var perun_sparks_resource_icon: Texture2D
-var map_region_gate: Texture2D
+var map_mission_icon_atlas: Texture2D
+var map_ui_frames: Texture2D
 var map_region_backgrounds := {}
 var hero_portraits := {}
 var hero_accent_textures := {}
@@ -415,15 +416,16 @@ func _ready() -> void:
 	wood_resource_icon = load_image_texture("res://art/ui/icon_wood_oak_v01.png")
 	experience_resource_icon = load_image_texture("res://art/ui/icon_xp_oak_v01.png")
 	perun_sparks_resource_icon = load_image_texture("res://art/ui/icon_perun_sparks_v01.png")
-	map_region_gate = load_image_texture("res://art/ui/map_region_gate_v01.png")
+	map_mission_icon_atlas = load_image_texture("res://art/ui/world_map_mission_icons_v01.png")
+	map_ui_frames = load_image_texture("res://art/ui/world_map_frames_v01.png")
 	map_region_backgrounds = {
-		"debowepogranicze": oak_borderland_background,
-		"swiety_gaj": load_image_texture("res://art/environments/map_swiety_gaj_v01.png"),
-		"bagna_welesa": load_image_texture("res://art/environments/map_bagna_welesa_v01.png"),
-		"gory_peruna": load_image_texture("res://art/environments/map_gory_peruna_v01.png"),
-		"nawia": load_image_texture("res://art/environments/map_nawia_v01.png"),
-		"prawia": load_image_texture("res://art/environments/map_prawia_v01.png"),
-		"grzmotne_szczyty": load_image_texture("res://art/environments/map_grzmotne_szczyty_v01.png")
+		"debowepogranicze": load_image_texture("res://art/environments/world_map_debowepogranicze_v02.png"),
+		"swiety_gaj": load_image_texture("res://art/environments/world_map_swiety_gaj_v02.png"),
+		"bagna_welesa": load_image_texture("res://art/environments/world_map_bagna_welesa_v02.png"),
+		"gory_peruna": load_image_texture("res://art/environments/world_map_gory_peruna_v02.png"),
+		"nawia": load_image_texture("res://art/environments/world_map_nawia_v02.png"),
+		"prawia": load_image_texture("res://art/environments/world_map_prawia_v02.png"),
+		"grzmotne_szczyty": load_image_texture("res://art/environments/world_map_grzmotne_szczyty_v02.png")
 	}
 	for enemy_name_key in NORMAL_ENEMY_PORTRAIT_SLUGS:
 		var enemy_slug: String = NORMAL_ENEMY_PORTRAIT_SLUGS[enemy_name_key]
@@ -2077,12 +2079,15 @@ func map_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 178.0, 34.0, 98.0, 32.0)
 
 func map_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 780.0, 160.0, 38.0)
+	var screen := get_viewport_rect().size
+	var button_size := Vector2(248.0, 64.0)
+	return Rect2(Vector2((screen.x - button_size.x) / 2.0, screen.y - button_size.y - 24.0), button_size)
 
 func map_level_rect(index: int) -> Rect2:
-	var positions := [Vector2(270, 242), Vector2(145, 355), Vector2(350, 470), Vector2(170, 585), Vector2(290, 700)]
-	var center: Vector2 = positions[index]
-	return Rect2(center - Vector2(42, 26), Vector2(84, 52))
+	var screen := get_viewport_rect().size
+	var positions := [Vector2(0.50, 0.235), Vector2(0.27, 0.365), Vector2(0.70, 0.495), Vector2(0.33, 0.625), Vector2(0.56, 0.755)]
+	var center: Vector2 = positions[index] * screen
+	return Rect2(center - Vector2(44, 44), Vector2(88, 88))
 
 func map_previous_page_rect() -> Rect2:
 	return Rect2(44.0, 104.0, 110.0, 34.0)
@@ -3369,47 +3374,120 @@ func draw_village_overlay(screen: Vector2) -> void:
 	draw_button(village_close_rect(), "Wróć do menu", true, 14)
 
 func draw_map_overlay(screen: Vector2) -> void:
-	if oak_borderland_background != null:
-		draw_texture_rect(oak_borderland_background, Rect2(Vector2.ZERO, screen), false)
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#071916b8"))
-	draw_style_box(make_panel(Color("#24322be8"), Color("#b8904c")), Rect2(18, 18, screen.x - 36, 60))
-	draw_string(font, Vector2(0, 56), "MAPA ŚWIATA", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 25, Color("#f4d69a"))
-	draw_string(font, Vector2(0, 92), "Odkrywaj krainy Dębowego Pogranicza", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#d9e4bd"))
 	map_page = int(maxi(0, unlocked_level - 1) / 5)
-	draw_string(font, Vector2(0, 135), "AKTUALNY SZLAK  •  POZIOM %d" % unlocked_level, HORIZONTAL_ALIGNMENT_CENTER, screen.x, 13, Color("#e5ebca"))
-	var path_points := [Vector2(270, 242), Vector2(145, 355), Vector2(350, 470), Vector2(170, 585), Vector2(290, 700)]
-	for index in range(path_points.size() - 1):
-		draw_line(path_points[index], path_points[index + 1], Color("#3a2418"), 12.0, true)
-		draw_line(path_points[index], path_points[index + 1], Color("#b38b48"), 5.0, true)
+	var focus_index := clampi(unlocked_level - 1, 0, levels.size() - 1)
+	var focus_level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
+	var region_id := str(focus_level.get("region", "debowepogranicze"))
+	var map_background: Texture2D = map_region_backgrounds.get(region_id, oak_borderland_background)
+	if map_background != null:
+		var atlas_size := map_background.get_size()
+		var region_range: Vector2i = MAP_REGION_RANGES.get(region_id, Vector2i(1, 20))
+		var first_region_page := int(floor(float(region_range.x - 1) / 5.0))
+		var region_page_count := maxi(1, int(ceili(float(region_range.y - region_range.x + 1) / 5.0)))
+		var region_page := clampi(map_page - first_region_page, 0, region_page_count - 1)
+		var page_progress := 0.5
+		if region_page_count > 1:
+			page_progress = float(region_page) / float(region_page_count - 1)
+		var source_height := atlas_size.y * 0.84
+		var source_width := minf(atlas_size.x, source_height * screen.x / screen.y)
+		var source_y := (atlas_size.y - source_height) * page_progress
+		var source := Rect2(Vector2((atlas_size.x - source_width) * 0.5, source_y), Vector2(source_width, source_height))
+		draw_texture_rect_region(map_background, Rect2(Vector2.ZERO, screen), source, Color.WHITE)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07191648"))
+	var path_points: Array[Vector2] = []
+	for slot in 5:
+		path_points.append(map_level_rect(slot).get_center())
+	draw_map_route(path_points)
+	if map_ui_frames != null:
+		var frame_size := map_ui_frames.get_size()
+		var header_source := Rect2(0.0, frame_size.y * 0.10, frame_size.x, frame_size.y * 0.40)
+		draw_texture_rect_region(map_ui_frames, Rect2(8.0, 4.0, screen.x - 16.0, 130.0), header_source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#18241fdc"), Color("#d2ad62")), Rect2(18.0, 14.0, screen.x - 36.0, 112.0))
+	draw_string(font, Vector2(0, 48), "MAPA ŚWIATA", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 22, Color("#ffe2a4"))
+	draw_string(font, Vector2(0, 76), region_display_name(region_id).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#fff0cf"))
+	var first_level := map_page * 5 + 1
+	var last_level := mini(map_page * 5 + 5, levels.size())
+	draw_string(font, Vector2(0, 101), "SZLAK %d  •  POZIOMY %d–%d" % [map_page + 1, first_level, last_level], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e8d5ad"))
 	for slot in 5:
 		var index := map_page * 5 + slot
-		if index >= levels.size() or index + 1 > unlocked_level:
+		if index >= levels.size():
 			continue
 		var unlocked := index + 1 <= unlocked_level
 		var active := index == level_index
-		var color := Color("#a96e2c") if unlocked else Color("#4b5047")
-		var border := Color("#fff0a3") if active else Color("#bd9a58")
 		var node_rect := map_level_rect(slot)
-		draw_circle(node_rect.get_center(), 48, Color("#142923d9") if unlocked else Color("#101513e8"))
-		draw_style_box(make_panel(color, border), node_rect)
+		var center := node_rect.get_center()
 		var level: Dictionary = levels[index]
-		if slot == 0 and index > 0 and str(level.get("region", "")) != str(levels[index - 1].get("region", "")):
-			if map_region_gate != null:
-				draw_texture_rect(map_region_gate, Rect2(node_rect.get_center() - Vector2(34, 58), Vector2(68, 92)), false)
-			draw_string(font, Vector2(node_rect.position.x - 68, node_rect.position.y - 52), "BRAMA: %s" % region_display_name(str(level.get("region", ""))), HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x + 136, 12, Color("#f5d36f"))
-		draw_string(font, Vector2(node_rect.position.x, node_rect.position.y + 23), str(level.id), HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x, 19, Color.WHITE)
-		var label: String = level.name if unlocked else "Zamknięte"
-		draw_string(font, Vector2(node_rect.position.x - 72, node_rect.position.y - 28), region_display_name(str(level.get("region", ""))), HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x + 144, 14, Color("#fff0c7") if unlocked else Color("#889087"))
-		draw_string(font, Vector2(node_rect.position.x - 56, node_rect.position.y + 72), label, HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x + 112, 12, Color("#e5ebca") if unlocked else Color("#889087"))
-		if unlocked:
-			var difficulty := level_difficulty_label(int(level.get("id", 1)))
-			draw_string(font, Vector2(node_rect.position.x, node_rect.position.y + 45), difficulty, HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x, 9, level_difficulty_color(int(level.get("id", 1))))
+		var boss_mission := int(level.get("id", 0)) % 5 == 0
+		if active:
+			draw_circle(center, 47.0, Color("#f5d37638"))
+			draw_arc(center, 46.0, 0.0, TAU, 48, Color("#ffe8a8"), 2.5, true)
+		draw_map_mission_icon(center, level, boss_mission, unlocked)
+		var number_rect := Rect2(center + Vector2(-21.0, 31.0), Vector2(42.0, 20.0))
+		draw_style_box(make_panel(Color("#17231fe8"), Color("#d8b765" if unlocked else "#82795f")), number_rect)
+		draw_string(font, Vector2(number_rect.position.x, number_rect.position.y + 15.0), str(level.get("id", index + 1)), HORIZONTAL_ALIGNMENT_CENTER, number_rect.size.x, 12, Color("#fff1d0") if unlocked else Color("#b5b0a1"))
+		var text_width := 190.0
+		var text_x := center.x + 48.0 if center.x < screen.x * 0.43 else center.x - text_width - 48.0
+		text_x = clampf(text_x, 12.0, screen.x - text_width - 12.0)
+		var title_color := Color("#fff0cc") if unlocked else Color("#c0c0b2")
+		if boss_mission:
+			title_color = Color("#ffd17c") if unlocked else Color("#aa9272")
+		draw_string(font, Vector2(text_x, center.y - 5.0), str(level.get("name", "Wyprawa")), HORIZONTAL_ALIGNMENT_CENTER, text_width, 13, title_color)
+		var mission_kind := "BOSS" if boss_mission else level_kind_label(level)
+		var kind_color := Color("#ffd27a") if boss_mission else (level_kind_color(level) if unlocked else Color("#96978c"))
+		draw_string(font, Vector2(text_x, center.y + 13.0), mission_kind, HORIZONTAL_ALIGNMENT_CENTER, text_width, 10, kind_color)
 		var stars := int(level_stars.get(int(level.id), 0))
 		if stars > 0:
-			draw_star_rating(Vector2(map_level_rect(slot).get_center().x, map_level_rect(slot).position.y + 88), stars, 18.0)
-		var kind_label := level_kind_label(level)
-		draw_string(font, Vector2(node_rect.position.x - 70, node_rect.position.y - 48), kind_label, HORIZONTAL_ALIGNMENT_CENTER, node_rect.size.x + 140, 11, level_kind_color(level) if unlocked else Color("#889087"))
-	draw_button(map_close_rect(), "Wróć do menu", true, 14)
+			draw_star_rating(Vector2(text_x + text_width * 0.5, center.y + 30.0), stars, 13.0)
+	var close_rect := map_close_rect()
+	if map_ui_frames != null:
+		var frame_size := map_ui_frames.get_size()
+		var button_source := Rect2(frame_size.x * 0.12, frame_size.y * 0.57, frame_size.x * 0.76, frame_size.y * 0.25)
+		draw_texture_rect_region(map_ui_frames, close_rect, button_source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#1b2b22f0"), Color("#d7b363")), close_rect)
+	draw_string(font, Vector2(close_rect.position.x, close_rect.position.y + 39.0), "Wróć do menu", HORIZONTAL_ALIGNMENT_CENTER, close_rect.size.x, 18, Color("#fff0c8"))
+
+func draw_map_route(points: Array[Vector2]) -> void:
+	var route := PackedVector2Array()
+	for segment in range(points.size() - 1):
+		var start: Vector2 = points[segment]
+		var finish: Vector2 = points[segment + 1]
+		var direction := (finish - start).normalized()
+		var bend := Vector2(-direction.y, direction.x) * (24.0 if segment % 2 == 0 else -24.0)
+		var control := (start + finish) * 0.5 + bend
+		for step in 13:
+			var t := float(step) / 12.0
+			var inverse := 1.0 - t
+			route.append(inverse * inverse * start + 2.0 * inverse * t * control + t * t * finish)
+	draw_polyline(route, Color("#10120ee8"), 22.0, true)
+	draw_polyline(route, Color("#4d2e14"), 16.0, true)
+	draw_polyline(route, Color("#e0b85f"), 9.0, true)
+	draw_polyline(route, Color("#ffe4a0"), 2.0, true)
+
+func draw_map_mission_icon(center: Vector2, level: Dictionary, boss_mission: bool, unlocked: bool) -> void:
+	if map_mission_icon_atlas == null:
+		draw_circle(center, 35.0, Color("#183327e8"))
+		draw_arc(center, 34.0, 0.0, TAU, 40, Color("#d7b363"), 3.0, true)
+		return
+	var atlas_size := map_mission_icon_atlas.get_size()
+	var cell_size := Vector2(atlas_size.x / 4.0, atlas_size.y / 2.0)
+	var icon_index := 7 if boss_mission else map_mission_region_index(str(level.get("region", "debowepogranicze")))
+	var source_position := Vector2(float(icon_index % 4) * cell_size.x, float(icon_index / 4) * cell_size.y)
+	var source := Rect2(source_position, cell_size)
+	var tint := Color(1.0, 1.0, 1.0, 1.0 if unlocked else 0.48)
+	draw_texture_rect_region(map_mission_icon_atlas, Rect2(center - Vector2(39.0, 39.0), Vector2(78.0, 78.0)), source, tint)
+
+func map_mission_region_index(region_id: String) -> int:
+	match region_id:
+		"debowepogranicze": return 0
+		"swiety_gaj": return 1
+		"bagna_welesa": return 2
+		"gory_peruna": return 3
+		"nawia": return 4
+		"prawia": return 5
+		"grzmotne_szczyty": return 6
+		_: return 0
 
 func draw_booster_overlay(screen: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, screen), Color("#0b1b1ad9"))
