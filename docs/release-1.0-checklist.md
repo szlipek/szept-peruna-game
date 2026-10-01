@@ -4,7 +4,7 @@ Ten dokument rozdziela elementy, które można sprawdzić automatycznie w projek
 
 ## Zakres wersji 1.0
 
-- kampania 1–1000 z ręcznie przygotowanymi poziomami 1–100 oraz dalszymi etapami opartymi na zasadach;
+- kampania 1–2000 z ręcznie przygotowanymi poziomami 1–100 oraz dalszymi etapami opartymi na zasadach;
 - walka turowa, drużyna, trening, osada, boostery i lokalny zapis;
 - cele: walka, przetrwanie, oczyszczenie, zbieranie bursztynu/run oraz wynik;
 - dziesięć krain, walki strażników krain i wielkich bossów;
@@ -14,12 +14,12 @@ Ten dokument rozdziela elementy, które można sprawdzić automatycznie w projek
 ## Kontrola przed kompilacją
 
 - [ ] Godot uruchamia projekt bez `SCRIPT ERROR` i `Parse Error`.
-- [ ] `tools/verify-release.ps1` potwierdza składnię oraz spójność 1000 poziomów kampanii.
+- [ ] `tools/verify-release.ps1` potwierdza składnię oraz spójność 2000 poziomów kampanii.
 - [ ] Poziomy 1, 20, 21, 50, 100, 101, 125, 150, 200 i 300 można otworzyć po odblokowaniu.
 - [ ] Każdy z pięciu celów poziomu może zostać ukończony.
 - [x] Dane poziomu są zgodne z pętlą gry: etap z przeciwnikami używa celu `defeat_enemy`, a poziom zadaniowy nie zawiera przeciwników.
 - [ ] Prawidłowy ruch nigdy nie resetuje planszy; nieprawidłowy nie zużywa ruchu.
-- [x] Automatyczny test tworzy 100 plansz i potwierdza brak gotowych połączeń, legalny ruch oraz limit 24 przeszkód nawet dla bardzo późnego poziomu.
+- [x] Automatyczny test tworzy 100 plansz i potwierdza brak gotowych połączeń, legalny ruch oraz limit 48 przeszkód nawet dla bardzo późnego poziomu.
 - [ ] Po ruchu gracza plansza kończy spadanie kafelków przed ruchem przeciwnika; po ruchu przeciwnika — przed odblokowaniem wejścia gracza.
 - [ ] Obrońca, mistyk, zwiadowca i napastnik zachowują się zgodnie z opisem.
 - [ ] Nagrody, gwiazdki, Iskry, Znaki wydarzenia, poziomy bohaterów i osada pozostają po restarcie aplikacji.

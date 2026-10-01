@@ -1,6 +1,6 @@
 # Szept Peruna
 
-Rozwijana wersja 1.0 gry 2D match-3 RPG w Godot 4. Kampania łączy ręcznie zaprojektowane pierwsze 100 poziomów z kolejnymi etapami, treningiem bohaterów, osadą i walką turową.
+Rozwijana wersja 1.0 gry 2D match-3 RPG w Godot 4. Kampania zawiera 2000 poziomów: pierwsze 100 zaprojektowano ręcznie, a dalsze korzystają z rozbudowanych rozdziałów, misji i starć z bossami. Do tego dochodzą trening bohaterów, osada i walka turowa.
 
 ## Szybkie uruchomienie
 

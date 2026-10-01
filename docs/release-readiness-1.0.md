@@ -6,7 +6,7 @@ Stan: 25 września 2026.
 
 - Godot 4.5.2 uruchamia projekt w trybie headless bez błędów składni.
 - `tools/verify-release.ps1` przechodzi poprawnie.
-- Test kampanii sprawdza 1000 poziomów, ciągłość identyfikatorów, cele, krainy, nagrody, strażników i wielkich bossów.
+- Test kampanii sprawdza 2000 poziomów, ciągłość identyfikatorów, cele, krainy, nagrody, strażników i wielkich bossów.
 - Test match‑3 tworzy 100 czystych, grywalnych plansz i sprawdza limit przeszkód.
 - Test zapisu symuluje uszkodzone dane i potwierdza bezpieczne odzyskanie grywalnego stanu.
 - Projekt ma numer `1.0.0`, ikonę aplikacji, preset Android i konfigurację pionowej orientacji.

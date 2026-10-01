@@ -103,6 +103,7 @@ const MAP_REGION_RANGES := {
 	"prawia": Vector2i(71, 85),
 	"grzmotne_szczyty": Vector2i(86, 100)
 }
+const MANUAL_BOSS_LEVELS := [3, 5, 7, 10, 12, 15, 17, 19, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 68, 70, 75, 80, 85, 90, 95, 100]
 const NORMAL_ENEMY_PORTRAIT_SLUGS := {
 	"Cień mchu": "cien_mchu", "Korzeniowy strażnik": "korzeniowy_straznik", "Wilcze szczenię cienia": "wilcze_szczenie_cienia", "Kruczy posłaniec": "kruczy_poslaniec",
 	"Mglisty sługa": "mglisty_sluga", "Topielec źródlany": "topielec_zrodlany", "Ropuch kurhanów": "ropuch_kurhanow", "Żmijowe pisklę": "zmijowe_piskle",
@@ -183,6 +184,7 @@ var roster_filter := "all"
 var roster_hero_index := 0
 var roster_swap_open := false
 var roster_swap_hero_id := ""
+var roster_swap_return_hero_id := ""
 var roster_transition_time := 1.0
 var roster_transition_direction := 1.0
 var roster_transition_from_id := ""
@@ -291,6 +293,8 @@ var perun_sparks_resource_icon: Texture2D
 var map_mission_icon_atlas: Texture2D
 var map_ui_frames: Texture2D
 var map_region_backgrounds := {}
+var home_navigation_icons: Texture2D
+var home_reward_chests: Texture2D
 var hero_portraits := {}
 var hero_accent_textures := {}
 var enemy_portraits := {}
@@ -425,8 +429,14 @@ func _ready() -> void:
 		"gory_peruna": load_image_texture("res://art/environments/world_map_gory_peruna_v02.png"),
 		"nawia": load_image_texture("res://art/environments/world_map_nawia_v02.png"),
 		"prawia": load_image_texture("res://art/environments/world_map_prawia_v02.png"),
-		"grzmotne_szczyty": load_image_texture("res://art/environments/world_map_grzmotne_szczyty_v02.png")
+		"grzmotne_szczyty": load_image_texture("res://art/environments/world_map_grzmotne_szczyty_v02.png"),
+		"jeziora_rusalek": load_image_texture("res://art/environments/world_map_bagna_welesa_v02.png"),
+		"ziemie_marzanny": load_image_texture("res://art/environments/world_map_grzmotne_szczyty_v02.png"),
+		"kraina_zmijow": load_image_texture("res://art/environments/world_map_gory_peruna_v02.png"),
+		"korona_drzewa": load_image_texture("res://art/environments/world_map_swiety_gaj_v02.png")
 	}
+	home_navigation_icons = load_image_texture("res://art/ui/home_navigation_icons_v01.png")
+	home_reward_chests = load_image_texture("res://art/ui/home_reward_chests_v01.png")
 	for enemy_name_key in NORMAL_ENEMY_PORTRAIT_SLUGS:
 		var enemy_slug: String = NORMAL_ENEMY_PORTRAIT_SLUGS[enemy_name_key]
 		enemy_portraits[enemy_name_key] = load_image_texture("res://art/characters/normal_enemies/enemy_%s_portrait_v01.png" % enemy_slug)
@@ -606,12 +616,9 @@ func load_image_texture(file_path: String) -> Texture2D:
 	# Opcjonalne portrety i efekty mogą pojawiać się etapami rozwoju gry.
 	# Nie próbujemy dekodować nieistniejącego pliku — pozostaje wtedy bezpieczne
 	# zastępcze rysowanie, bez błędów podczas uruchamiania.
-	if not FileAccess.file_exists(file_path):
+	if not ResourceLoader.exists(file_path):
 		return null
-	var image := Image.load_from_file(file_path)
-	if image == null or image.is_empty():
-		return null
-	return ImageTexture.create_from_image(image)
+	return ResourceLoader.load(file_path) as Texture2D
 
 func fill_fresh_board() -> void:
 	for attempt in range(64):
@@ -678,10 +685,11 @@ func setup_obstacles(level: Dictionary) -> void:
 			obstacles[row].append(0)
 	var obstacle_config: Dictionary = level.get("obstacles", {})
 	var types := {"root": 1, "stone": 2, "curse": 3}
-	# Nawet trudny etap musi zostawić miejsce na kombinacje. Bez limitu dane
-	# późnej kampanii mogły przykryć niemal wszystkie pola planszy.
+	# Trudniejsze etapy stopniowo wypełniają planszę przeszkodami, ale zostawiają
+	# co najmniej 16 pól na kombinacje nawet w końcówce kampanii.
 	var level_id := int(level.get("id", level_index + 1))
-	var obstacle_budget := mini(24, 8 + int(level_id / 12))
+	var late_campaign_obstacles := int(maxi(0, level_id - 1000) / 100)
+	var obstacle_budget := mini(48, mini(36, 8 + int(level_id / 12)) + late_campaign_obstacles)
 	var planned: Array[int] = []
 	for obstacle_id in types:
 		for ignored in int(obstacle_config.get(obstacle_id, 0)):
@@ -1728,10 +1736,9 @@ func grant_level_reward() -> void:
 	last_reward = {"coins": received_coins, "wood": received_wood, "experience": received_experience}
 
 func grant_boss_spark() -> bool:
-	var level_id := int(levels[level_index].get("id", level_index + 1))
-	# Każdy poziom kampanii zawiera wrogów, ale Iskra jest nagrodą za etap bossa
-	# (co piąty poziom), a nie za każdą zwykłą potyczkę.
-	if level_id % 5 != 0 or bool(claimed_boss_sparks.get(level_id, false)):
+	var level: Dictionary = levels[level_index]
+	var level_id := int(level.get("id", level_index + 1))
+	if not is_boss_level(level) or bool(claimed_boss_sparks.get(level_id, false)):
 		return false
 	perun_sparks += 1
 	claimed_boss_sparks[level_id] = true
@@ -1739,12 +1746,20 @@ func grant_boss_spark() -> bool:
 
 func grant_event_mark() -> bool:
 	var level_id := int(levels[level_index].get("id", level_index + 1))
-	# Co piąty poziom jest etapem wydarzenia; znak jest przyznawany tylko raz.
+	# Co piąty etap daje znak wyprawy; Iskra Peruna pozostaje nagrodą za bossa.
 	if level_id % 5 == 0 and not bool(claimed_boss_sparks.get(-level_id, false)):
 		event_marks += 1
 		claimed_boss_sparks[-level_id] = true
 		return true
 	return false
+
+func is_boss_level(level: Dictionary) -> bool:
+	var level_id := int(level.get("id", 0))
+	# Ręcznie zaprojektowane etapy korzystają z rozpiski bossów prologu.
+	# W długiej kampanii strażnik pojawia się co 25, a wielki boss co 50 poziomów.
+	if level_id <= 100:
+		return MANUAL_BOSS_LEVELS.has(level_id)
+	return level_id % 25 == 0
 
 func grant_hero_experience(amount: int) -> void:
 	var eligible: Array[String] = []
@@ -2008,7 +2023,7 @@ func roster_skill_tree_rect() -> Rect2:
 	return Rect2(95.0, 744.0, get_viewport_rect().size.x - 190.0, 70.0)
 
 func skill_tree_node_rect(branch: int, tier: int) -> Rect2:
-	return Rect2(24.0 + branch * 168.0, 210.0 + tier * 130.0, 156.0, 102.0)
+	return Rect2(24.0 + branch * 168.0, 600.0 - tier * 130.0, 156.0, 102.0)
 
 func skill_tree_back_rect() -> Rect2:
 	return Rect2(178.0, 906.0, 184.0, 40.0)
@@ -2090,10 +2105,10 @@ func map_level_rect(index: int) -> Rect2:
 	return Rect2(center - Vector2(44, 44), Vector2(88, 88))
 
 func map_previous_page_rect() -> Rect2:
-	return Rect2(44.0, 104.0, 110.0, 34.0)
+	return Rect2(24.0, 134.0, 126.0, 34.0)
 
 func map_next_page_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 154.0, 104.0, 110.0, 34.0)
+	return Rect2(get_viewport_rect().size.x - 150.0, 134.0, 126.0, 34.0)
 
 func map_page_count() -> int:
 	return int(ceili(float(levels.size()) / 5.0))
@@ -2134,6 +2149,8 @@ func level_kind_label(level: Dictionary) -> String:
 		return "WIELKI BOSS"
 	if level_id > 100 and level_id % 25 == 0:
 		return "STRAŻNIK KRAINY"
+	if level_id <= 100 and is_boss_level(level):
+		return "BOSS"
 	match str(level.get("goal_type", "defeat_enemy")):
 		"clear_obstacles": return "OCZYSZCZENIE"
 		"collect_amber": return "ZBIERANIE BURSZTYNU"
@@ -2147,6 +2164,8 @@ func level_kind_label(level: Dictionary) -> String:
 func level_kind_color(level: Dictionary) -> Color:
 	var label := level_kind_label(level)
 	if label == "WIELKI BOSS":
+		return Color("#ffbd68")
+	if label == "BOSS":
 		return Color("#ffbd68")
 	if label == "STRAŻNIK KRAINY":
 		return Color("#f2d783")
@@ -2165,31 +2184,38 @@ func booster_choice_rect(index: int) -> Rect2:
 	return Rect2(70.0, 254.0 + index * 100.0, get_viewport_rect().size.x - 140.0, 76.0)
 
 func main_menu_play_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 454.0, 375.0, 78.0)
+	return Rect2(34.0, 620.0, get_viewport_rect().size.x - 68.0, 91.0)
 
 func daily_reward_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 150.0, 395.0, 300.0, 42.0)
+	return Rect2(20.0, 724.0, get_viewport_rect().size.x - 40.0, 112.0)
+
+func main_menu_nav_rect(index: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	var side_margin := 12.0
+	var gap := 3.0
+	var item_width := (screen.x - side_margin * 2.0 - gap * 4.0) / 5.0
+	return Rect2(side_margin + index * (item_width + gap), 850.0, item_width, 98.0)
 
 func main_menu_map_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 541.0, 375.0, 69.0)
+	return main_menu_nav_rect(0)
 
 func main_menu_roster_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 619.0, 375.0, 63.0)
+	return main_menu_nav_rect(1)
 
 func main_menu_village_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 691.0, 375.0, 63.0)
+	return main_menu_nav_rect(2)
 
 func main_menu_booster_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 763.0, 375.0, 63.0)
+	return main_menu_nav_rect(3)
 
 func main_menu_training_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 187.5, 835.0, 375.0, 63.0)
+	return main_menu_nav_rect(4)
 
 func reset_progress_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 94.0, 22.0, 78.0, 22.0)
+	return Rect2(get_viewport_rect().size.x - 92.0, 22.0, 54.0, 23.0)
 
 func help_button_rect() -> Rect2:
-	return Rect2(302.0, 38.0, 32.0, 22.0)
+	return Rect2(get_viewport_rect().size.x - 36.0, 50.0, 24.0, 23.0)
 
 func help_close_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 730.0, 240.0, 48.0)
@@ -2283,6 +2309,7 @@ func handle_roster_input(position: Vector2) -> void:
 			message = "%s dołącza do składu." % hero_name(hero_id)
 		else:
 			roster_swap_hero_id = hero_id
+			roster_swap_return_hero_id = hero_id
 			roster_swap_open = true
 		save_progress()
 		queue_redraw()
@@ -2339,6 +2366,7 @@ func handle_roster_swap_input(position: Vector2) -> void:
 	if is_in_button(position, roster_swap_cancel_rect()):
 		roster_swap_open = false
 		roster_swap_hero_id = ""
+		roster_swap_return_hero_id = ""
 		queue_redraw()
 		return
 	for index in active_heroes.size():
@@ -2348,9 +2376,30 @@ func handle_roster_swap_input(position: Vector2) -> void:
 			roster_swap_open = false
 			message = "%s zastępuje bohatera w składzie." % hero_name(roster_swap_hero_id)
 			roster_swap_hero_id = ""
+			restore_roster_selection(roster_swap_return_hero_id)
+			roster_swap_return_hero_id = ""
+			roster_open = true
+			main_menu_open = false
+			map_open = false
+			roster_transition_from_id = ""
+			roster_transition_time = ROSTER_TRANSITION_DURATION
 			save_progress()
 			queue_redraw()
 			return
+
+func restore_roster_selection(hero_id: String) -> void:
+	if hero_id == "":
+		return
+	var filtered := roster_filter_ids()
+	var hero_index := filtered.find(hero_id)
+	if hero_index >= 0:
+		roster_hero_index = hero_index
+		return
+	roster_filter = str(HERO_CLASSES.get(hero_id, "all"))
+	filtered = roster_filter_ids()
+	hero_index = filtered.find(hero_id)
+	if hero_index >= 0:
+		roster_hero_index = hero_index
 
 func handle_skill_tree_input(position: Vector2) -> void:
 	if is_in_button(position, skill_tree_back_rect()):
@@ -2395,6 +2444,14 @@ func handle_village_input(position: Vector2) -> void:
 		return
 
 func handle_map_input(position: Vector2) -> void:
+	if is_in_button(position, map_previous_page_rect()):
+		map_page = maxi(0, map_page - 1)
+		queue_redraw()
+		return
+	if is_in_button(position, map_next_page_rect()):
+		map_page = mini(map_page_count() - 1, map_page + 1)
+		queue_redraw()
+		return
 	if is_in_button(position, map_close_rect()):
 		map_open = false
 		main_menu_open = true
@@ -3276,8 +3333,8 @@ func draw_skill_tree_overlay(screen: Vector2) -> void:
 			if tier > 0:
 				var previous := skill_tree_node_rect(branch, tier - 1)
 				var connector_color := Color("#d5af62") if SkillTree.ranks(tree, branch, tier - 1) == SkillTree.RANK_CAPS[tier - 1] else Color("#536253")
-				var connector_top := Vector2(card.get_center().x, previous.end.y + 4.0)
-				var connector_bottom := Vector2(card.get_center().x, card.position.y - 8.0)
+				var connector_top := Vector2(card.get_center().x, card.end.y + 4.0)
+				var connector_bottom := Vector2(card.get_center().x, previous.position.y - 8.0)
 				if skill_tree_connector_arrow != null:
 					var arrow_slot := Rect2(Vector2(card.get_center().x - 27.0, connector_top.y), Vector2(54.0, connector_bottom.y - connector_top.y))
 					var arrow_rect := texture_aspect_fit_rect(skill_tree_connector_arrow, arrow_slot)
@@ -3374,8 +3431,7 @@ func draw_village_overlay(screen: Vector2) -> void:
 	draw_button(village_close_rect(), "Wróć do menu", true, 14)
 
 func draw_map_overlay(screen: Vector2) -> void:
-	map_page = int(maxi(0, unlocked_level - 1) / 5)
-	var focus_index := clampi(unlocked_level - 1, 0, levels.size() - 1)
+	var focus_index := clampi(map_page * 5, 0, levels.size() - 1)
 	var focus_level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
 	var region_id := str(focus_level.get("region", "debowepogranicze"))
 	var map_background: Texture2D = map_region_backgrounds.get(region_id, oak_borderland_background)
@@ -3409,6 +3465,8 @@ func draw_map_overlay(screen: Vector2) -> void:
 	var first_level := map_page * 5 + 1
 	var last_level := mini(map_page * 5 + 5, levels.size())
 	draw_string(font, Vector2(0, 101), "SZLAK %d  •  POZIOMY %d–%d" % [map_page + 1, first_level, last_level], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e8d5ad"))
+	draw_button(map_previous_page_rect(), "‹ POPRZEDNI", map_page > 0, 10)
+	draw_button(map_next_page_rect(), "NASTĘPNY ›", map_page < map_page_count() - 1, 10)
 	for slot in 5:
 		var index := map_page * 5 + slot
 		if index >= levels.size():
@@ -3418,7 +3476,7 @@ func draw_map_overlay(screen: Vector2) -> void:
 		var node_rect := map_level_rect(slot)
 		var center := node_rect.get_center()
 		var level: Dictionary = levels[index]
-		var boss_mission := int(level.get("id", 0)) % 5 == 0
+		var boss_mission := is_boss_level(level)
 		if active:
 			draw_circle(center, 47.0, Color("#f5d37638"))
 			draw_arc(center, 46.0, 0.0, TAU, 48, Color("#ffe8a8"), 2.5, true)
@@ -3477,6 +3535,31 @@ func draw_map_mission_icon(center: Vector2, level: Dictionary, boss_mission: boo
 	var source := Rect2(source_position, cell_size)
 	var tint := Color(1.0, 1.0, 1.0, 1.0 if unlocked else 0.48)
 	draw_texture_rect_region(map_mission_icon_atlas, Rect2(center - Vector2(39.0, 39.0), Vector2(78.0, 78.0)), source, tint)
+	if not boss_mission:
+		draw_map_objective_icon(center + Vector2(25.0, 25.0), level, unlocked)
+
+func draw_map_objective_icon(center: Vector2, level: Dictionary, unlocked: bool) -> void:
+	var goal := str(level.get("goal_type", "defeat_enemy"))
+	var ink := Color("#fff0bf") if unlocked else Color("#aaa493")
+	draw_circle(center, 13.0, Color("#18251eeF"))
+	draw_arc(center, 12.0, 0.0, TAU, 24, Color("#d7b363"), 2.0, true)
+	match goal:
+		"survive":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -7), center + Vector2(6, -4), center + Vector2(5, 2), center + Vector2(0, 7), center + Vector2(-5, 2), center + Vector2(-6, -4)]), ink)
+		"collect_amber":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -8), center + Vector2(6, -2), center + Vector2(4, 6), center + Vector2(-4, 6), center + Vector2(-6, -2)]), Color("#f3b347") if unlocked else Color("#b3a16d"))
+		"collect_rune":
+			draw_line(center + Vector2(-5, 5), center + Vector2(5, -5), ink, 2.0, true)
+			draw_line(center + Vector2(-5, -5), center + Vector2(5, 5), ink, 2.0, true)
+		"clear_obstacles":
+			draw_line(center + Vector2(-6, 6), center + Vector2(6, -6), ink, 2.5, true)
+			draw_line(center + Vector2(-7, -4), center + Vector2(-3, -8), ink, 2.5, true)
+			draw_line(center + Vector2(-3, -8), center + Vector2(1, -4), ink, 2.5, true)
+		"score":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -7), center + Vector2(2, -2), center + Vector2(7, -2), center + Vector2(3, 1), center + Vector2(5, 6), center + Vector2(0, 3), center + Vector2(-5, 6), center + Vector2(-3, 1), center + Vector2(-7, -2), center + Vector2(-2, -2)]), ink)
+		_:
+			draw_line(center + Vector2(-5, -5), center + Vector2(5, 5), ink, 2.5, true)
+			draw_line(center + Vector2(-5, 5), center + Vector2(5, -5), ink, 2.5, true)
 
 func map_mission_region_index(region_id: String) -> int:
 	match region_id:
@@ -3487,6 +3570,10 @@ func map_mission_region_index(region_id: String) -> int:
 		"nawia": return 4
 		"prawia": return 5
 		"grzmotne_szczyty": return 6
+		"jeziora_rusalek": return 2
+		"ziemie_marzanny": return 4
+		"kraina_zmijow": return 3
+		"korona_drzewa": return 1
 		_: return 0
 
 func draw_booster_overlay(screen: Vector2) -> void:
@@ -3507,33 +3594,93 @@ func draw_booster_overlay(screen: Vector2) -> void:
 			draw_rect(card, Color("#152724a8"))
 	draw_button(booster_close_rect(), "Wróć do menu", true, 14)
 
+func main_menu_focus_level() -> Dictionary:
+	if levels.is_empty():
+		return {}
+	var index := clampi(unlocked_level - 1, 0, levels.size() - 1)
+	return levels[index]
+
+func main_menu_region_id() -> String:
+	var focus_level := main_menu_focus_level()
+	return str(focus_level.get("region", "debowepogranicze"))
+
+func draw_main_menu_background(screen: Vector2) -> void:
+	var region_id := main_menu_region_id()
+	var background: Texture2D = map_region_backgrounds.get(region_id, village_background)
+	if background == null:
+		background = oak_borderland_background
+	if background == null:
+		draw_rect(Rect2(Vector2.ZERO, screen), Color("#122b2a"))
+		return
+	var texture_size := background.get_size()
+	var scale_factor := maxf(screen.x / texture_size.x, screen.y / texture_size.y)
+	var source_size := screen / scale_factor
+	var source_position := (texture_size - source_size) * 0.5
+	draw_texture_rect_region(background, Rect2(Vector2.ZERO, screen), Rect2(source_position, source_size), Color.WHITE)
+	# Przyciemniamy krainę tylko tyle, by HUD i przyciski pozostały czytelne.
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07100e86"))
+	draw_rect(Rect2(0.0, 585.0, screen.x, screen.y - 585.0), Color("#07100ed0"))
+
+func draw_home_nav_icon(index: int, center: Vector2) -> void:
+	if home_navigation_icons == null:
+		return
+	var atlas_size := home_navigation_icons.get_size()
+	var cell_size := Vector2(atlas_size.x / 3.0, atlas_size.y / 2.0)
+	var source := Rect2(Vector2((index % 3) * cell_size.x, int(index / 3) * cell_size.y), cell_size)
+	draw_texture_rect_region(home_navigation_icons, Rect2(center - Vector2(27.0, 27.0), Vector2(54.0, 54.0)), source, Color.WHITE)
+
+func draw_home_navigation(screen: Vector2) -> void:
+	draw_style_box(make_panel(Color("#071310e8"), Color("#8b6a3d")), Rect2(7.0, 842.0, screen.x - 14.0, 110.0))
+	var labels := ["MAPA", "DRUŻYNA", "OSADA", "ZAPASY", "TRENING"]
+	for index in labels.size():
+		var item_rect := main_menu_nav_rect(index)
+		draw_home_nav_icon(index, Vector2(item_rect.get_center().x, 881.0))
+		draw_string(font, Vector2(item_rect.position.x, 940.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, item_rect.size.x, 10, Color("#e8d9b9"))
+
+func draw_home_reward_shelf() -> void:
+	var chest_rect := daily_reward_rect()
+	if home_reward_chests != null:
+		var source := Rect2(0.0, 0.0, home_reward_chests.get_width(), home_reward_chests.get_height())
+		draw_texture_rect_region(home_reward_chests, chest_rect, source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#101a17e8"), Color("#967544")), chest_rect)
+	var labels := ["MONETY", "DREWNO", "PD"]
+	var slot_width := chest_rect.size.x / 3.0
+	for index in labels.size():
+		var slot := Rect2(chest_rect.position.x + index * slot_width, chest_rect.position.y, slot_width, chest_rect.size.y)
+		draw_string(font, Vector2(slot.position.x, slot.end.y - 8.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 10, Color("#dbcba9"))
+
 func draw_main_menu(screen: Vector2) -> void:
-	if village_background != null:
-		draw_texture_rect(village_background, Rect2(Vector2.ZERO, screen), false)
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07191699"))
-	draw_style_box(make_panel(Color("#19332de8"), Color("#cda154")), Rect2(18, 18, screen.x - 36, 64))
-	draw_circle(Vector2(51, 50), 22, Color("#7a4d2c"))
-	draw_string(font, Vector2(80, 45), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#fff0c7"))
-	draw_string(font, Vector2(80, 67), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#c7ddba"))
-	var wallet_x := screen.x - 184.0
-	wallet_x += draw_resource_amount(Vector2(wallet_x, 28), "coins", coins, 18.0, 13, Color("#f4d69a")) + 10.0
-	draw_resource_amount(Vector2(wallet_x, 28), "wood", wood, 18.0, 13, Color("#c7ddba"))
-	wallet_x = screen.x - 184.0
-	wallet_x += draw_resource_amount(Vector2(wallet_x, 52), "experience", experience, 18.0, 13, Color("#8fe8df")) + 10.0
-	draw_resource_amount(Vector2(wallet_x, 52), "sparks", perun_sparks, 18.0, 13, Color("#f6d779"))
-	draw_button(help_button_rect(), "?", true, 14)
-	draw_button(reset_progress_rect(), "POTWIERDŹ" if reset_confirmation else "RESET", true, 9)
-	draw_game_logo(Vector2(screen.x / 2.0, 230), Vector2(350, 250))
-	draw_string(font, Vector2(0, 370), "Dębowe Pogranicze czeka na swój szept.", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 15, Color("#e3dfbd"))
-	var can_claim_daily := daily_reward_available()
-	draw_button(daily_reward_rect(), "ODBIERZ DZIENNY DAR GAJU" if can_claim_daily else "DAR GAJU ODEBRANY • WRÓĆ JUTRO", can_claim_daily, 13)
-	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 20)
-	draw_button(main_menu_map_rect(), "MAPA WYPRAW", true, 15)
-	draw_button(main_menu_roster_rect(), "DRUŻYNA I BOHATEROWIE", true, 15)
-	draw_button(main_menu_village_rect(), "OSADA DĘBOWEGO POGRANICZA", true, 14)
-	draw_button(main_menu_booster_rect(), "BOOSTERY I ZAPASY", true, 14)
-	draw_button(main_menu_training_rect(), "TRENING BOHATERÓW  •  PD", true, 14)
-	draw_string(font, Vector2(0, 928), "Odblokowany poziom: %d / %d  •  Trening jest zawsze dostępny" % [unlocked_level, levels.size()], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 12, Color("#c7ddba"))
+	draw_main_menu_background(screen)
+	var focus_level := main_menu_focus_level()
+	var focus_level_id := int(focus_level.get("id", unlocked_level))
+	var active_hero_id := active_heroes[0] if not active_heroes.is_empty() else "lada"
+	var active_portrait: Texture2D = hero_portraits.get(active_hero_id, null)
+	draw_style_box(make_panel(Color("#101b19eF"), Color("#b38b4d")), Rect2(15.0, 14.0, screen.x - 30.0, 72.0))
+	if active_portrait != null:
+		draw_texture_rect(active_portrait, texture_aspect_fit_rect(active_portrait, Rect2(23.0, 23.0, 46.0, 46.0)), false)
+	else:
+		draw_circle(Vector2(46.0, 47.0), 22.0, Color("#604a34"))
+	draw_string(font, Vector2(77.0, 42.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 140.0, 15, Color("#fff0c7"))
+	draw_string(font, Vector2(77.0, 64.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 160.0, 10, Color("#c7ddba"))
+	draw_resource_amount(Vector2(244.0, 22.0), "coins", coins, 15.0, 11, Color("#f4d69a"))
+	draw_resource_amount(Vector2(337.0, 22.0), "wood", wood, 15.0, 11, Color("#c7ddba"))
+	draw_resource_amount(Vector2(244.0, 50.0), "experience", experience, 15.0, 11, Color("#8fe8df"))
+	draw_resource_amount(Vector2(337.0, 50.0), "sparks", perun_sparks, 15.0, 11, Color("#f6d779"))
+	draw_button(help_button_rect(), "?", true, 12)
+	draw_button(reset_progress_rect(), "POTWIERDŹ" if reset_confirmation else "RESET", true, 8)
+	draw_game_logo(Vector2(screen.x / 2.0, 177.0), Vector2(190.0, 125.0))
+	var region_name := region_display_name(main_menu_region_id()).to_upper()
+	var region_panel := Rect2(66.0, 258.0, screen.x - 132.0, 58.0)
+	draw_style_box(make_panel(Color("#111a17df"), Color("#997441")), region_panel)
+	draw_string(font, Vector2(region_panel.position.x, 282.0), region_name, HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x, 17, Color("#f0dfba"))
+	draw_string(font, Vector2(region_panel.position.x, 303.0), "SZLAK %d  •  POZIOM %d" % [int((focus_level_id - 1) / 5) + 1, focus_level_id], HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x, 10, Color("#c5b99e"))
+	var mission_name := str(focus_level.get("name", "Dębowe Pogranicze"))
+	draw_string(font, Vector2(30.0, 562.0), mission_name, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 60.0, 13, Color("#e1d3b3"))
+	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 19)
+	draw_string(font, Vector2(0.0, 719.0), "DZIENNY DAR GAJU" if daily_reward_available() else "DAR GAJU ODEBRANY  •  WRÓĆ JUTRO", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e1d3b3"))
+	draw_home_reward_shelf()
+	draw_home_navigation(screen)
 
 func draw_help_overlay(screen: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511e8"))
@@ -3715,20 +3862,25 @@ func append_generated_levels(handcrafted_levels: Array) -> Array:
 		"prawia": ["Strażnik Równowagi", "Władca Kruczych Znaków"],
 		"korona_drzewa": ["Czarny Bóg Przesmyku", "Serce Starego Dębu"]
 	}
-	for level_id in range(101, 1001):
+	for level_id in range(101, 2001):
+		# Każdy kolejny etap podnosi rangę trudności; nie stosujemy miękkiego limitu
+		# po 1000 poziomie, bo kampania trwa dalej do poziomu 2000.
 		var tier := level_id - 100
 		var region: String = regions[int((level_id - 101) / 25) % regions.size()]
 		var enemy_pool: Array = regional_enemy_pools.get(region, [])
 		var grand_bosses: Array = regional_grand_bosses.get(region, [])
 		var enemies: Array = []
-		var base_health := 370 + tier * 6
-		var base_attack := 13 + int(tier / 45)
+		# Statystyki rosną przez całą kampanię, ale wolniej niż ranga poziomu:
+		# drużyna rozwija się do maksymalnego poziomu, więc 2000 ma być wymagające,
+		# a nie wymagać nieskończonego wzrostu obrażeń.
+		var base_health := 520 + int(float(tier) * 0.6)
+		var base_attack := 13 + int(tier / 200)
 		if level_id % 50 == 0:
 			enemies.append({"name": enemy_pool[level_id % enemy_pool.size()], "health": base_health, "attack": base_attack})
-			enemies.append({"name": grand_bosses[int(level_id / 50) % grand_bosses.size()], "health": base_health * 3, "attack": base_attack + 12})
+			enemies.append({"name": grand_bosses[int(level_id / 50) % grand_bosses.size()], "health": base_health * 2, "attack": base_attack + 10})
 		elif level_id % 25 == 0:
 			enemies.append({"name": enemy_pool[level_id % enemy_pool.size()], "health": base_health, "attack": base_attack})
-			enemies.append({"name": grand_bosses[int(level_id / 25) % grand_bosses.size()], "health": int(base_health * 2.3), "attack": base_attack + 9})
+			enemies.append({"name": grand_bosses[int(level_id / 25) % grand_bosses.size()], "health": int(base_health * 1.7), "attack": base_attack + 7})
 		elif level_id % 10 == 0:
 			enemies.append({"name": enemy_pool[level_id % enemy_pool.size()], "health": base_health, "attack": base_attack})
 			enemies.append({"name": "Strażnik totemu", "health": base_health * 2, "attack": base_attack + 7})
@@ -3765,11 +3917,11 @@ func append_generated_levels(handcrafted_levels: Array) -> Array:
 		elif is_cleansing_stage:
 			name = "Oczyszczenie %d — szlak %s" % [level_id, str(region_names[region])]
 			obstacle_profile = {"root": 8 + int(tier / 150), "stone": 6 + int(tier / 180), "curse": 5 + int(tier / 220)}
-			var cleansing_target := mini(20, 11 + int(tier / 95))
+			var cleansing_target := 11 + int(tier / 95)
 			result.append({"id": level_id, "region": region, "name": name, "moves": 18, "goal_type": "clear_obstacles", "goal_value": cleansing_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 42, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
 		elif is_collection_stage:
 			var collect_runes := level_id % 30 == 0
-			var collection_target := mini(18, 11 + int(tier / 140))
+			var collection_target := 11 + int(tier / 140)
 			name = ("Zbieranie run %d" if collect_runes else "Zbieranie bursztynu %d") % level_id
 			obstacle_profile = {"root": 4 + int(tier / 220), "stone": 3 + int(tier / 260), "curse": 2}
 			result.append({"id": level_id, "region": region, "name": name, "moves": 19, "goal_type": "collect_rune" if collect_runes else "collect_amber", "goal_value": collection_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 40, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
@@ -3779,5 +3931,5 @@ func append_generated_levels(handcrafted_levels: Array) -> Array:
 			obstacle_profile = {"root": 3 + int(tier / 300), "stone": 2 + int(tier / 360), "curse": 1}
 			result.append({"id": level_id, "region": region, "name": name, "moves": 17, "goal_type": "score", "target": score_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 41, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
 		else:
-			result.append({"id": level_id, "region": region, "name": name, "moves": maxi(12, 16 - int(tier / 180)), "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 38, "wood": 1550 + tier * 7, "experience": 1850 + tier * 9}})
+			result.append({"id": level_id, "region": region, "name": name, "moves": maxi(14, 16 - int(tier / 900)), "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 38, "wood": 1550 + tier * 7, "experience": 1850 + tier * 9}})
 	return result

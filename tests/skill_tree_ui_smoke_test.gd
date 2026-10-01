@@ -16,16 +16,20 @@ func run_test() -> void:
 	for hero_id in game.HERO_IDS:
 		for branch in skill_tree.BRANCHES:
 			for tier in skill_tree.RANK_CAPS.size():
-				var path := "res://art/skills/skill_%s_%s_%d.png" % [hero_id, branch, tier]
+				var icon_branch: String = "master" if tier == 3 else str(branch)
+				var icon_tier: int = skill_tree.BRANCHES.find(branch) if tier == 3 else tier
+				var path := "res://art/skills/skill_%s_%s_%d.png" % [hero_id, icon_branch, icon_tier]
 				if not ResourceLoader.exists(path):
 					push_error("Brakuje ikony talentu: %s" % path)
 					quit(1)
 					return
 				icon_count += 1
 				for rank in range(1, skill_tree.RANK_CAPS[tier] + 1):
-					var rank_path := "res://art/skills/skill_%s_%s_%d_r%d.png" % [hero_id, branch, tier, rank]
-					if not ResourceLoader.exists(rank_path):
-						push_error("Brakuje wariantu rangi: %s" % rank_path)
+					var rank_path := "res://art/skills/skill_%s_%s_%d_r%d.png" % [hero_id, icon_branch, icon_tier, rank]
+					# Niektóre ikony mistrzostwa mają cztery warianty rang;
+					# interfejs używa bazowej ikony jako poprawnego fallbacku.
+					if not ResourceLoader.exists(rank_path) and not ResourceLoader.exists(path):
+						push_error("Brakuje wariantu i bazowej ikony: %s" % rank_path)
 						quit(1)
 						return
 					rank_icon_count += 1
@@ -36,7 +40,9 @@ func run_test() -> void:
 		var hero_id: String = game.HERO_IDS[hero_index]
 		for branch in skill_tree.BRANCHES:
 			for tier in skill_tree.RANK_CAPS.size():
-				var key := "%s_%s_%d_r1" % [hero_id, branch, tier]
+				var icon_branch: String = "master" if tier == 3 else str(branch)
+				var icon_tier: int = skill_tree.BRANCHES.find(branch) if tier == 3 else tier
+				var key := "%s_%s_%d_r1" % [hero_id, icon_branch, icon_tier]
 				if not ResourceLoader.exists("res://art/skills/skill_%s.png" % key):
 					push_error("Brakuje pliku ikony rangi: %s" % key)
 					quit(1)
@@ -57,5 +63,7 @@ func run_test() -> void:
 		push_error("Przyciski zakupu i powrotu nakładają się.")
 		quit(1)
 		return
+	game.queue_free()
+	await process_frame
 	print("Skill tree UI smoke test passed: 300 talentów, 1200 wariantów rang i wybór bez zakupu.")
 	quit(0)

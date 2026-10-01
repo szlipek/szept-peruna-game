@@ -85,7 +85,7 @@ Przeciwnicy mają role widoczne po przytrzymaniu portretu w walce. **Obrońca** 
 
 ## Kampania rozszerzona
 
-Kampania zawiera 70 poziomów w pięciu krainach. Co piąty poziom jest oznaczonym na mapie etapem bossa; pierwsze ukończenie takiego etapu daje Iskrę Peruna. Zwykłe starcia nie przyznają Iskier, dzięki czemu rzadka waluta zachowuje swoją wartość.
+Kampania zawiera 2000 poziomów. Pierwsze 100 etapów zaprojektowano ręcznie, a dalsze 1900 rozwija kampanię przez powracające rozdziały, misje specjalne, strażników krain co 25 poziomów i wielkie starcia z bossami co 50 poziomów. Pierwsze ukończenie etapu bossa może dać Iskrę Peruna; znaki wyprawy są osobną nagrodą za etapy co 5 poziomów.
 
 ## Projekt Etapu 6 — drużyna i walka turowa
 

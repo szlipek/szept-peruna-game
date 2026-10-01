@@ -23,4 +23,4 @@
 | 68 | Wąż Wiślany |
 | 70 | Czarny Bóg Przesmyku |
 
-Kampania obejmuje teraz 70 poziomów: Dębowe Pogranicze (1–20), Święty Gaj (21–35), Bagna Welesa (36–45), Góry Peruna (46–55) i Cienie Nawii (56–70).
+Ręcznie zaprojektowany prolog obejmuje poziomy 1–100. Kampania rozwija się do 2000 etapów; kolejne rozdziały prowadzą przez Jeziora Rusałek, Ziemie Marzanny, Krainę Żmijów, Nawię, Prawię i Koronę Drzewa Świata, z powracającymi motywami krain, nowymi celami misji i starciami z bossami.

@@ -67,14 +67,23 @@ func _init() -> void:
 			fail("Zespół bohaterów zawiera niepoprawną parę synergii.")
 			return
 	var campaign: Array = gameplay.append_generated_levels(handcrafted)
+	for boss_id in [3, 68, 100, 125, 2000]:
+		if not gameplay.is_boss_level({"id": boss_id}):
+			fail("Poziom bossa %d nie jest oznaczony jako boss." % boss_id)
+			return
+	for ordinary_id in [101, 105, 110, 124, 126, 1999]:
+		if gameplay.is_boss_level({"id": ordinary_id}):
+			fail("Zwykły poziom %d jest błędnie oznaczony jako boss." % ordinary_id)
+			return
 	gameplay.free()
-	if campaign.size() != 1000:
-		fail("Kampania powinna mieć 1000 poziomów, ma %d." % campaign.size())
+	if campaign.size() != 2000:
+		fail("Kampania powinna mieć 2000 poziomów, ma %d." % campaign.size())
 		return
 	var found_goals := {}
 	var found_regions := {}
 	var found_guardian := false
 	var found_grand_boss := false
+	var previous_generated_enemy_health := 0
 	for index in campaign.size():
 		var level: Dictionary = campaign[index]
 		var expected_id := index + 1
@@ -100,6 +109,12 @@ func _init() -> void:
 				fail("Poziom %d ma ujemną nagrodę %s." % [expected_id, reward_id])
 				return
 		var enemies: Array = level.get("enemies", [])
+		if expected_id > 100 and not enemies.is_empty() and not (expected_id % 40 == 0 and expected_id % 50 != 0):
+			var first_enemy_health := int(enemies[0].get("health", 0))
+			if previous_generated_enemy_health > 0 and first_enemy_health < previous_generated_enemy_health:
+				fail("Zdrowie bazowego przeciwnika maleje na poziomie %d." % expected_id)
+				return
+			previous_generated_enemy_health = first_enemy_health
 		if goal == "defeat_enemy" and enemies.is_empty():
 			fail("Poziom walki %d nie ma przeciwnika." % expected_id)
 			return
@@ -110,6 +125,14 @@ func _init() -> void:
 			found_guardian = true
 		if expected_id > 100 and expected_id % 50 == 0 and enemies.size() >= 2:
 			found_grand_boss = true
+	if previous_generated_enemy_health <= 520:
+		fail("Końcowe poziomy kampanii nie rosną ponad bazowe zdrowie prologu.")
+		return
+	var final_level: Dictionary = campaign.back()
+	var final_enemies: Array = final_level.get("enemies", [])
+	if final_enemies.size() < 2 or int(final_enemies[1].get("health", 0)) > 3400 or int(final_enemies[1].get("attack", 0)) > 34:
+		fail("Wielki boss poziomu 2000 przekracza zaplanowany próg trudności do przejścia.")
+		return
 	for goal in EXPECTED_GOALS:
 		if not found_goals.has(goal):
 			fail("W kampanii nie występuje cel: %s." % goal)
@@ -160,7 +183,7 @@ func _init() -> void:
 	recovery.active_heroes = corrupted_active
 	recovery.building_levels = {"domostwa": -1, "kuznia": 500, "chata_zielarki": 0, "swiety_gaj": 0, "spichlerz": 0, "wieza_peruna": 0}
 	recovery.sanitize_progress()
-	if recovery.unlocked_level != 1000 or recovery.coins != 0 or recovery.wood != 0 or recovery.experience != 0:
+	if recovery.unlocked_level != 2000 or recovery.coins != 0 or recovery.wood != 0 or recovery.experience != 0:
 		fail("Naprawa zapisu nie ogranicza postępu albo walut.")
 		return
 	if not bool(recovery.owned_heroes.get("lada", false)) or recovery.active_heroes.size() < 1 or recovery.active_heroes.size() > 3:
@@ -185,15 +208,15 @@ func _init() -> void:
 		if board_test.board.size() != 8 or not board_test.find_matches().is_empty() or not board_test.board_has_legal_move():
 			fail("Plansza startowa nie jest stabilna lub nie ma legalnego ruchu (próba %d)." % attempt)
 			return
-		board_test.setup_obstacles({"id": 1000, "obstacles": {"root": 50, "stone": 50, "curse": 50}})
+		board_test.setup_obstacles({"id": 2000, "obstacles": {"root": 50, "stone": 50, "curse": 50}})
 		var obstacle_count := 0
 		for row in board_test.obstacles:
 			for obstacle in row:
 				if int(obstacle) > 0:
 					obstacle_count += 1
-		if obstacle_count > 24:
+		if obstacle_count > 48:
 			fail("Limit przeszkód na planszy nie działa (próba %d)." % attempt)
 			return
 	board_test.free()
-	print("Release smoke test passed: 1000 poziomów, cele, krainy i bossowie są spójne.")
+	print("Release smoke test passed: 2000 poziomów, cele, krainy i bossowie są spójne.")
 	quit(0)

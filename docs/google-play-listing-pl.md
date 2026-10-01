@@ -14,7 +14,7 @@ Szept Peruna to baśniowa gra logiczna match‑3 z walką turową i rozwojem dru
 
 Łącz ogień, wodę, liście, bursztyn i runy, aby pokonywać przeciwników. Każdy żywioł ma własne znaczenie: ogień i runy wzmacniają atak, woda leczy, a liście budują ochronę drużyny.
 
-Wyrusz przez Dębowe Pogranicze, Święty Gaj, Bagna Welesa, Góry Peruna, Jeziora Rusałek, Ziemie Marzanny, Krainę Żmijów, Nawię, Prawię i Koronę Drzewa Świata. Kampania zawiera 1000 poziomów, zadania specjalne, strażników krain i wielkie walki z bossami.
+Wyrusz przez Dębowe Pogranicze, Święty Gaj, Bagna Welesa, Góry Peruna, Jeziora Rusałek, Ziemie Marzanny, Krainę Żmijów, Nawię, Prawię i Koronę Drzewa Świata. Kampania zawiera 2000 poziomów, zadania specjalne, strażników krain i wielkie walki z bossami.
 
 Rozwijaj bohaterów, dobieraj skład, ulepszaj osadę i korzystaj z boosterów. Gdy potrzebujesz spokojniejszej próby, odwiedź Krąg Treningowy — zdobywasz tam doświadczenie bez ryzyka utraty postępu.
 

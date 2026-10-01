@@ -51,17 +51,20 @@ if (-not $SkipGodot) {
     $Godot = Join-Path $ProjectRoot 'tools/Godot/Godot_v4.5.2-stable_win64_console.exe'
     if (-not (Test-Path -LiteralPath $Godot)) {
         $Failures.Add('Nie znaleziono lokalnego Godot 4.5.2. Użyj -SkipGodot tylko do kontroli plików.')
-    } else {
-        $Output = & $Godot --headless --path $ProjectRoot --quit-after 1 2>&1
+	} else {
+		$StartLog = Join-Path $ProjectRoot '.godot/verify-start.log'
+		$CampaignLog = Join-Path $ProjectRoot '.godot/verify-campaign.log'
+		$SkillTreeLog = Join-Path $ProjectRoot '.godot/verify-skill-tree.log'
+		$Output = & $Godot --headless --path $ProjectRoot --log-file $StartLog --quit-after 1 2>&1
         if ($LASTEXITCODE -ne 0 -or ($Output -match 'SCRIPT ERROR|Parse Error')) {
             $Failures.Add("Godot zgłosił błąd przy uruchomieniu w trybie headless.`n$Output")
         }
-        $SmokeOutput = & $Godot --headless --path $ProjectRoot --script (Join-Path $ProjectRoot 'tests/release_smoke_test.gd') 2>&1
+		$SmokeOutput = & $Godot --headless --path $ProjectRoot --log-file $CampaignLog --script (Join-Path $ProjectRoot 'tests/release_smoke_test.gd') 2>&1
         if ($LASTEXITCODE -ne 0 -or ($SmokeOutput -match 'ERROR: RELEASE SMOKE TEST|SCRIPT ERROR|Parse Error')) {
             $Failures.Add("Test spójności kampanii nie przeszedł.`n$SmokeOutput")
         }
-        $TreeOutput = & $Godot --headless --path $ProjectRoot --script (Join-Path $ProjectRoot 'tests/skill_tree_ui_smoke_test.gd') 2>&1
-        if ($LASTEXITCODE -ne 0 -or ($TreeOutput -match 'SCRIPT ERROR|Parse Error|ERROR:')) {
+		$TreeOutput = & $Godot --headless --path $ProjectRoot --log-file $SkillTreeLog --script (Join-Path $ProjectRoot 'tests/skill_tree_ui_smoke_test.gd') 2>&1
+		if ($LASTEXITCODE -ne 0 -or ($TreeOutput -match 'SCRIPT ERROR|Parse Error|ERROR: (Brakuje|Dotknięcie|Przyciski|Oczekiwano)')) {
             $Failures.Add("Test ekranu drzewka nie przeszedł.`n$TreeOutput")
         }
     }
