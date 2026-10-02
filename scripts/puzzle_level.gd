@@ -191,8 +191,19 @@ var roster_transition_from_id := ""
 const ROSTER_TRANSITION_DURATION := 0.34
 var building_levels := {"domostwa": 0, "kuznia": 0, "chata_zielarki": 0, "swiety_gaj": 0, "spichlerz": 0, "wieza_peruna": 0}
 var village_open := false
+var village_selected_id := ""
+var village_upgrade_id := ""
+var village_upgrade_from_level := 0
+var village_upgrade_time := 0.0
+const VILLAGE_UPGRADE_DURATION := 1.0
 var map_open := false
 var map_page := 0
+var map_transition_from_page := 0
+var map_transition_time := 0.4
+var map_transition_direction := 1.0
+var map_transition_from_blur: Texture2D
+var map_transition_to_blur: Texture2D
+const MAP_TRANSITION_DURATION := 0.4
 var map_drag_distance := 0.0
 var map_was_dragged := false
 var booster_open := false
@@ -209,11 +220,15 @@ var active_region_intro_key := ""
 var current_battle: Dictionary = {}
 var reset_confirmation := false
 var daily_reward_day := ""
+var daily_reward_open_time := -1.0
 var oak_borderland_background: Texture2D
 var board_roots_frame: Texture2D
 var tile_remove_burst: Texture2D
 var tile_remove_frames: Array[Texture2D] = []
 var village_background: Texture2D
+var village_layout: Texture2D
+var village_inspector_frame: Texture2D
+var village_upgraded_illustrations := {}
 var leszy_portrait: Texture2D
 var wilk_cienia_portrait: Texture2D
 var rusalka_portrait: Texture2D
@@ -292,9 +307,22 @@ var experience_resource_icon: Texture2D
 var perun_sparks_resource_icon: Texture2D
 var map_mission_icon_atlas: Texture2D
 var map_ui_frames: Texture2D
+var map_route_connector: Texture2D
+var map_mission_nameplate: Texture2D
+var map_level_number_plate: Texture2D
 var map_region_backgrounds := {}
 var home_navigation_icons: Texture2D
 var home_reward_chests: Texture2D
+var home_reward_panel: Texture2D
+var home_reward_coin_frames: Texture2D
+var home_reward_wood_frames: Texture2D
+var home_reward_xp_frames: Texture2D
+var home_help_icon: Texture2D
+var home_navigation_frame: Texture2D
+var home_status_header: Texture2D
+var home_party_panel: Texture2D
+var home_party_portrait_ring: Texture2D
+var home_face_portraits := {}
 var hero_portraits := {}
 var hero_accent_textures := {}
 var enemy_portraits := {}
@@ -340,6 +368,10 @@ func _ready() -> void:
 		if frame_texture != null:
 			tile_remove_frames.append(frame_texture)
 	village_background = load_image_texture("res://art/environments/village_debowe_pogranicze_v01.png")
+	village_layout = load_image_texture("res://art/environments/village_layout_v01.png")
+	village_inspector_frame = load_image_texture("res://art/ui/village_inspector_frame_v01.png")
+	for building_id in BUILDING_IDS:
+		village_upgraded_illustrations[building_id] = load_image_texture("res://art/environments/building_%s_v02.png" % building_id)
 	leszy_portrait = load_image_texture("res://art/characters/boss_leszy_portrait_v01.png")
 	wilk_cienia_portrait = load_image_texture("res://art/characters/boss_wilk_cienia_portrait_v01.png")
 	rusalka_portrait = load_image_texture("res://art/characters/boss_rusalka_czarnego_stawu_portrait_v01.png")
@@ -422,6 +454,9 @@ func _ready() -> void:
 	perun_sparks_resource_icon = load_image_texture("res://art/ui/icon_perun_sparks_v01.png")
 	map_mission_icon_atlas = load_image_texture("res://art/ui/world_map_mission_icons_v01.png")
 	map_ui_frames = load_image_texture("res://art/ui/world_map_frames_v01.png")
+	map_route_connector = load_image_texture("res://art/ui/world_map_route_connector_v01.png")
+	map_mission_nameplate = load_image_texture("res://art/ui/world_map_mission_nameplate_v01.png")
+	map_level_number_plate = load_image_texture("res://art/ui/world_map_level_number_v01.png")
 	map_region_backgrounds = {
 		"debowepogranicze": load_image_texture("res://art/environments/world_map_debowepogranicze_v02.png"),
 		"swiety_gaj": load_image_texture("res://art/environments/world_map_swiety_gaj_v02.png"),
@@ -437,6 +472,15 @@ func _ready() -> void:
 	}
 	home_navigation_icons = load_image_texture("res://art/ui/home_navigation_icons_v01.png")
 	home_reward_chests = load_image_texture("res://art/ui/home_reward_chests_v01.png")
+	home_reward_panel = load_image_texture("res://art/ui/home_reward_panel_v02.png")
+	home_reward_coin_frames = load_image_texture("res://art/ui/home_reward_coin_chest_frames_v03.png")
+	home_reward_wood_frames = load_image_texture("res://art/ui/home_reward_wood_chest_frames_v04.png")
+	home_reward_xp_frames = load_image_texture("res://art/ui/home_reward_xp_chest_frames_v03.png")
+	home_help_icon = load_image_texture("res://art/ui/home_help_icon_v01.png")
+	home_navigation_frame = load_image_texture("res://art/ui/home_navigation_backdrop_v01.png")
+	home_status_header = load_image_texture("res://art/ui/home_status_header_v02.png")
+	home_party_panel = load_image_texture("res://art/ui/home_party_panel_v01.png")
+	home_party_portrait_ring = load_image_texture("res://art/ui/home_party_portrait_ring_v01.png")
 	for enemy_name_key in NORMAL_ENEMY_PORTRAIT_SLUGS:
 		var enemy_slug: String = NORMAL_ENEMY_PORTRAIT_SLUGS[enemy_name_key]
 		enemy_portraits[enemy_name_key] = load_image_texture("res://art/characters/normal_enemies/enemy_%s_portrait_v01.png" % enemy_slug)
@@ -474,8 +518,24 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	ui_anim_time += delta
+	if daily_reward_open_time >= 0.0:
+		daily_reward_open_time += delta
+		if daily_reward_open_time > 0.2125:
+			daily_reward_open_time = -1.0
+		queue_redraw()
 	if roster_transition_time < ROSTER_TRANSITION_DURATION:
 		roster_transition_time = minf(ROSTER_TRANSITION_DURATION, roster_transition_time + delta)
+		queue_redraw()
+	if map_transition_time < MAP_TRANSITION_DURATION:
+		map_transition_time = minf(MAP_TRANSITION_DURATION, map_transition_time + delta)
+		if map_transition_time >= MAP_TRANSITION_DURATION:
+			map_transition_from_blur = null
+			map_transition_to_blur = null
+		queue_redraw()
+	if village_upgrade_time > 0.0:
+		village_upgrade_time = maxf(0.0, village_upgrade_time - delta)
+		if village_upgrade_time == 0.0:
+			village_upgrade_id = ""
 		queue_redraw()
 	fill_sfx_buffer()
 	if state == "playing" and not animation_busy and not main_menu_open and not roster_open and not village_open and not map_open and not booster_open and not training_open and not region_intro_open:
@@ -741,6 +801,14 @@ func find_hint_move() -> Array[Vector2i]:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
+		if village_open and event.keycode == KEY_ESCAPE:
+			if village_selected_id != "":
+				village_selected_id = ""
+			else:
+				village_open = false
+				main_menu_open = true
+			queue_redraw()
+			return
 		if roster_open and not skill_tree_open:
 			var filtered := roster_filter_ids()
 			if event.keycode == KEY_LEFT and not filtered.is_empty():
@@ -822,7 +890,7 @@ func handle_release(position: Vector2) -> void:
 	if skill_tree_open:
 		handle_skill_tree_input(position)
 		return
-	if is_in_button(position, pause_rect()):
+	if not village_open and is_in_button(position, pause_rect()):
 		main_menu_open = true
 		queue_redraw()
 		return
@@ -858,6 +926,7 @@ func handle_release(position: Vector2) -> void:
 		return
 	if is_in_button(position, village_rect()):
 		village_open = true
+		village_selected_id = ""
 		queue_redraw()
 		return
 	if is_in_button(position, lada_skill_rect()) and current_turn_hero() == "lada" and lada_charge >= LADA_MAX_CHARGE:
@@ -2085,10 +2154,55 @@ func hero_recruit_currency(hero_id: String) -> String:
 	return "coins"
 
 func village_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 75.0, 686.0, 150.0, 36.0)
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x - 174.0, screen.y - 68.0, 164.0, 50.0)
 
-func village_upgrade_rect(index: int) -> Rect2:
-	return Rect2(344.0, 219.0 + index * 70.0, 126.0, 32.0)
+func village_inspector_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	var width := minf(350.0, screen.x - 70.0)
+	var height := minf(380.0, screen.y * 0.46)
+	return Rect2(8.0, screen.y - height - 8.0, width, height)
+
+func village_inspector_close_rect() -> Rect2:
+	var panel := village_inspector_rect()
+	return Rect2(panel.end.x - 63.0, panel.position.y + 28.0, 40.0, 38.0)
+
+func village_upgrade_rect() -> Rect2:
+	var panel := village_inspector_rect()
+	return Rect2(panel.position.x + 42.0, panel.end.y - 64.0, panel.size.x - 84.0, 49.0)
+
+func village_building_rect(building_id: String) -> Rect2:
+	var screen := get_viewport_rect().size
+	var center := Vector2(270.0, 470.0)
+	var dimensions := Vector2(150.0, 150.0)
+	match building_id:
+		"domostwa":
+			center = Vector2(85.0, 205.0)
+			dimensions = Vector2(150.0, 150.0)
+		"swiety_gaj":
+			center = Vector2(268.0, 180.0)
+			dimensions = Vector2(168.0, 178.0)
+		"wieza_peruna":
+			center = Vector2(453.0, 215.0)
+			dimensions = Vector2(124.0, 188.0)
+		"kuznia":
+			center = Vector2(100.0, 412.0)
+			dimensions = Vector2(174.0, 162.0)
+		"chata_zielarki":
+			center = Vector2(437.0, 415.0)
+			dimensions = Vector2(169.0, 169.0)
+		"spichlerz":
+			center = Vector2(448.0, 618.0)
+			dimensions = Vector2(150.0, 160.0)
+	var scale_factor := minf(screen.x / 540.0, screen.y / 960.0)
+	var size := dimensions * scale_factor
+	var position := Vector2(center.x * screen.x / 540.0, center.y * screen.y / 960.0) - size * 0.5
+	return Rect2(position, size)
+
+func village_building_label_rect(building_id: String) -> Rect2:
+	var building := village_building_rect(building_id)
+	var width := minf(132.0, get_viewport_rect().size.x * 0.32)
+	return Rect2(building.get_center().x - width * 0.5, building.end.y - 5.0, width, 33.0)
 
 func map_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 178.0, 34.0, 98.0, 32.0)
@@ -2098,20 +2212,27 @@ func map_close_rect() -> Rect2:
 	var button_size := Vector2(248.0, 64.0)
 	return Rect2(Vector2((screen.x - button_size.x) / 2.0, screen.y - button_size.y - 24.0), button_size)
 
-func map_level_rect(index: int) -> Rect2:
-	var screen := get_viewport_rect().size
-	var positions := [Vector2(0.50, 0.235), Vector2(0.27, 0.365), Vector2(0.70, 0.495), Vector2(0.33, 0.625), Vector2(0.56, 0.755)]
-	var center: Vector2 = positions[index] * screen
-	return Rect2(center - Vector2(44, 44), Vector2(88, 88))
-
 func map_previous_page_rect() -> Rect2:
-	return Rect2(24.0, 134.0, 126.0, 34.0)
+	var screen := get_viewport_rect().size
+	var button_width := minf(189.0, screen.x - 16.0)
+	return Rect2(8.0, 189.5, button_width, 45.0)
 
 func map_next_page_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 150.0, 134.0, 126.0, 34.0)
+	var screen := get_viewport_rect().size
+	var button_width := minf(189.0, screen.x - 16.0)
+	return Rect2(screen.x - button_width - 8.0, 189.5, button_width, 45.0)
 
-func map_page_count() -> int:
-	return int(ceili(float(levels.size()) / 5.0))
+func map_level_rect(index: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	var positions := [Vector2(0.50, 0.755), Vector2(0.27, 0.625), Vector2(0.70, 0.495), Vector2(0.33, 0.365), Vector2(0.64, 0.235)]
+	var center: Vector2 = positions[index] * screen
+	center.y += 50.0
+	var level_id := map_page * 5 + index
+	var radius := 62.0 if level_id < levels.size() and is_boss_level(levels[level_id]) else 44.0
+	return Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+
+func map_has_unlocked_next_page() -> bool:
+	return map_page < int(maxi(0, unlocked_level - 1) / 5)
 
 func region_display_name(region_id: String) -> String:
 	var labels := {"debowepogranicze": "Dębowe Pogranicze", "swiety_gaj": "Święty Gaj", "bagna_welesa": "Bagna Welesa", "gory_peruna": "Góry Peruna", "nawia": "Cienie Nawii", "prawia": "Prawia", "grzmotne_szczyty": "Grzmotne Szczyty", "jeziora_rusalek": "Jeziora Rusałek", "ziemie_marzanny": "Ziemie Marzanny", "kraina_zmijow": "Kraina Żmijów", "korona_drzewa": "Korona Drzewa Świata"}
@@ -2184,17 +2305,22 @@ func booster_choice_rect(index: int) -> Rect2:
 	return Rect2(70.0, 254.0 + index * 100.0, get_viewport_rect().size.x - 140.0, 76.0)
 
 func main_menu_play_rect() -> Rect2:
-	return Rect2(34.0, 620.0, get_viewport_rect().size.x - 68.0, 91.0)
+	return Rect2(79.0, 568.0, get_viewport_rect().size.x - 158.0, 104.0)
+
+func main_menu_party_rect() -> Rect2:
+	return Rect2(20.0, 375.0, get_viewport_rect().size.x - 40.0, 188.0)
 
 func daily_reward_rect() -> Rect2:
 	return Rect2(20.0, 724.0, get_viewport_rect().size.x - 40.0, 112.0)
 
+func daily_reward_banner_rect() -> Rect2:
+	return Rect2(106.0, 690.0, get_viewport_rect().size.x - 212.0, 32.0)
+
 func main_menu_nav_rect(index: int) -> Rect2:
 	var screen := get_viewport_rect().size
-	var side_margin := 12.0
-	var gap := 3.0
-	var item_width := (screen.x - side_margin * 2.0 - gap * 4.0) / 5.0
-	return Rect2(side_margin + index * (item_width + gap), 850.0, item_width, 98.0)
+	var item_width := 88.0
+	var side_margin := (screen.x - item_width * 5.0) * 0.5
+	return Rect2(side_margin + index * item_width, 837.0, item_width, 123.0)
 
 func main_menu_map_rect() -> Rect2:
 	return main_menu_nav_rect(0)
@@ -2211,11 +2337,8 @@ func main_menu_booster_rect() -> Rect2:
 func main_menu_training_rect() -> Rect2:
 	return main_menu_nav_rect(4)
 
-func reset_progress_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 92.0, 22.0, 54.0, 23.0)
-
 func help_button_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 36.0, 50.0, 24.0, 23.0)
+	return Rect2(get_viewport_rect().size.x - 58.0, 124.0, 50.0, 50.0)
 
 func help_close_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 730.0, 240.0, 48.0)
@@ -2430,27 +2553,47 @@ func handle_skill_tree_input(position: Vector2) -> void:
 			return
 
 func handle_village_input(position: Vector2) -> void:
+	if village_upgrade_time > 0.0:
+		return
 	if is_in_button(position, village_close_rect()):
 		village_open = false
+		village_selected_id = ""
 		main_menu_open = true
 		queue_redraw()
 		return
-	for index in BUILDING_IDS.size():
-		if not is_in_button(position, village_upgrade_rect(index)):
+	if village_selected_id != "":
+		if is_in_button(position, village_inspector_close_rect()):
+			village_selected_id = ""
+			queue_redraw()
+			return
+		if is_in_button(position, village_upgrade_rect()):
+			var previous_level := int(building_levels[village_selected_id])
+			if try_upgrade_building(village_selected_id):
+				village_upgrade_id = village_selected_id
+				village_upgrade_from_level = previous_level
+				village_upgrade_time = VILLAGE_UPGRADE_DURATION
+			queue_redraw()
+			return
+		if is_in_button(position, village_inspector_rect()):
+			return
+	for building_id in BUILDING_IDS:
+		if not village_building_rect(building_id).grow(7.0).has_point(position) and not village_building_label_rect(building_id).has_point(position):
 			continue
-		var building_id: String = BUILDING_IDS[index]
-		try_upgrade_building(building_id)
+		village_selected_id = building_id
 		queue_redraw()
 		return
+	if village_selected_id != "":
+		village_selected_id = ""
+		queue_redraw()
 
 func handle_map_input(position: Vector2) -> void:
-	if is_in_button(position, map_previous_page_rect()):
-		map_page = maxi(0, map_page - 1)
-		queue_redraw()
+	if map_transition_time < MAP_TRANSITION_DURATION:
 		return
-	if is_in_button(position, map_next_page_rect()):
-		map_page = mini(map_page_count() - 1, map_page + 1)
-		queue_redraw()
+	if is_in_button(position, map_previous_page_rect()) and map_page > 0:
+		start_map_page_transition(-1)
+		return
+	if is_in_button(position, map_next_page_rect()) and map_has_unlocked_next_page():
+		start_map_page_transition(1)
 		return
 	if is_in_button(position, map_close_rect()):
 		map_open = false
@@ -2472,6 +2615,32 @@ func handle_map_input(position: Vector2) -> void:
 			message = "Ukończ poprzedni poziom, aby odblokować tę ścieżkę."
 			queue_redraw()
 		return
+
+func start_map_page_transition(direction: int) -> void:
+	map_transition_from_page = map_page
+	map_transition_direction = float(direction)
+	var target_page := clampi(map_page + direction, 0, maxi(0, int(maxi(0, unlocked_level - 1) / 5)))
+	map_transition_from_blur = create_blurred_map_texture(map_background_for_page(map_page))
+	map_transition_to_blur = create_blurred_map_texture(map_background_for_page(target_page))
+	map_page = target_page
+	map_transition_time = 0.0
+	queue_redraw()
+
+func map_background_for_page(page: int) -> Texture2D:
+	var focus_index := clampi(page * 5, 0, levels.size() - 1)
+	var level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
+	return map_region_backgrounds.get(str(level.get("region", "debowepogranicze")), oak_borderland_background)
+
+func create_blurred_map_texture(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		return texture
+	var original_size := image.get_size()
+	image.resize(maxi(1, original_size.x / 12), maxi(1, original_size.y / 12), Image.INTERPOLATE_BILINEAR)
+	image.resize(original_size.x, original_size.y, Image.INTERPOLATE_BILINEAR)
+	return ImageTexture.create_from_image(image)
 
 func handle_booster_input(position: Vector2) -> void:
 	if is_in_button(position, booster_close_rect()):
@@ -2522,23 +2691,15 @@ func handle_training_input(position: Vector2) -> void:
 func handle_main_menu_input(position: Vector2) -> void:
 	if is_in_button(position, help_button_rect()):
 		help_open = true
-		reset_confirmation = false
 		queue_redraw()
 		return
-	if is_in_button(position, reset_progress_rect()):
-		if reset_confirmation:
-			reset_progress()
-		else:
-			reset_confirmation = true
-			queue_redraw()
-		return
-	# Potwierdzenie resetu dotyczy wyłącznie dwóch kolejnych dotknięć tego
-	# samego przycisku. Każda inna akcja lub dotknięcie menu rozbraja reset.
-	if reset_confirmation:
-		reset_confirmation = false
-		queue_redraw()
-	if is_in_button(position, daily_reward_rect()):
+	if is_in_button(position, daily_reward_rect()) or is_in_button(position, daily_reward_banner_rect()):
 		claim_daily_reward()
+		return
+	if is_in_button(position, main_menu_party_rect()):
+		main_menu_open = false
+		roster_open = true
+		queue_redraw()
 		return
 	if is_in_button(position, main_menu_play_rect()):
 		main_menu_open = false
@@ -2558,6 +2719,7 @@ func handle_main_menu_input(position: Vector2) -> void:
 	if is_in_button(position, main_menu_village_rect()):
 		main_menu_open = false
 		village_open = true
+		village_selected_id = ""
 		queue_redraw()
 		return
 	if is_in_button(position, main_menu_booster_rect()):
@@ -2629,6 +2791,7 @@ func claim_daily_reward() -> void:
 	wood += wood_reward
 	experience += experience_reward
 	daily_reward_day = Time.get_date_string_from_system()
+	daily_reward_open_time = 0.0
 	message = "Dar Gaju: +%d monet, +%d drewna, +%d PD." % [coin_reward, wood_reward, experience_reward]
 	save_progress()
 	play_sfx(760.0, 0.16, 0.18)
@@ -2699,15 +2862,15 @@ func resource_amount_width(amount: int, icon_size := 22.0, text_size := 14) -> f
 	return icon_size + 3.0 + font.get_string_size(str(amount), HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x
 
 func draw_star_rating(center: Vector2, stars: int, icon_size := 30.0) -> void:
-	if stars <= 0:
-		return
-	var total_width := float(stars) * icon_size
+	var total_width := 3.0 * icon_size
 	var first_x := center.x - total_width * 0.5
-	for star_index in stars:
+	for star_index in 3:
+		var earned := star_index < stars
+		var tint := Color.WHITE if earned else Color(0.42, 0.45, 0.42, 0.9)
 		if star_rating_icon != null:
-			draw_texture_rect(star_rating_icon, Rect2(first_x + star_index * icon_size, center.y - icon_size * 0.5, icon_size, icon_size), false)
+			draw_texture_rect(star_rating_icon, Rect2(first_x + star_index * icon_size, center.y - icon_size * 0.5, icon_size, icon_size), false, tint)
 		else:
-			draw_string(font, Vector2(first_x + star_index * icon_size, center.y + 7.0), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, int(icon_size), Color("#f5d36f"))
+			draw_string(font, Vector2(first_x + star_index * icon_size, center.y + 7.0), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, int(icon_size), Color("#f5d36f") if earned else Color("#747a70"))
 
 func make_panel(fill: Color, border: Color) -> StyleBoxFlat:
 	var panel := StyleBoxFlat.new()
@@ -3029,7 +3192,21 @@ func _draw() -> void:
 	if village_open:
 		draw_village_overlay(screen)
 	if map_open:
-		draw_map_overlay(screen)
+		if map_transition_time < MAP_TRANSITION_DURATION:
+			var progress := clampf(map_transition_time / MAP_TRANSITION_DURATION, 0.0, 1.0)
+			var eased_progress := progress * progress * (3.0 - 2.0 * progress)
+			var target_page := map_page
+			draw_map_background_transition(screen, eased_progress)
+			draw_map_overlay(screen, false, true, false)
+			map_page = map_transition_from_page
+			draw_set_transform(Vector2(0.0, -map_transition_direction * screen.y * eased_progress), 0.0, Vector2.ONE)
+			draw_map_overlay(screen, false, false, true)
+			map_page = target_page
+			draw_set_transform(Vector2(0.0, map_transition_direction * screen.y * (1.0 - eased_progress)), 0.0, Vector2.ONE)
+			draw_map_overlay(screen, false, false, true)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		else:
+			draw_map_overlay(screen)
 	if booster_open:
 		draw_booster_overlay(screen)
 	if training_open:
@@ -3386,61 +3563,277 @@ func draw_roster_action_button(rect: Rect2, label: String, enabled: bool) -> voi
 	draw_string(font, Vector2(rect.position.x, label_y), label, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, label_size, Color("#fff1bd") if enabled else Color("#a7a99d"))
 
 func draw_village_overlay(screen: Vector2) -> void:
-	if village_background != null:
+	if village_layout != null:
+		draw_texture_rect(village_layout, Rect2(Vector2.ZERO, screen), false)
+	elif village_background != null:
 		draw_texture_rect(village_background, Rect2(Vector2.ZERO, screen), false)
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#0b1b1ab8"))
-	draw_game_logo(Vector2(screen.x / 2.0, 66), Vector2(195, 100))
-	var panel_rect := Rect2(28, 142, screen.x - 56, 600)
-	draw_style_box(make_panel(Color("#193d38"), Color("#e1bd6a")), panel_rect)
-	draw_string(font, Vector2(panel_rect.position.x, 184), "OSADA DĘBOWEGO POGRANICZA", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 20, Color("#f5d998"))
-	for index in BUILDING_IDS.size():
-		var building_id: String = BUILDING_IDS[index]
-		var card := Rect2(50, 200 + index * 70, screen.x - 100, 58)
-		var cost: Dictionary = building_cost(building_id)
-		var bonus: String = ["+5 maks. zdrowia", "+5 obrażeń Bruna", "+1 leczenia Miety", "+1 tarczy z liści", "+10 monet za wygraną", "+5 obrażeń Ledy"][index]
-		draw_style_box(make_panel(Color("#285149"), Color("#719a78")), card)
-		var text_x := 66.0
-		var building_illustration: Texture2D = null
-		if building_id == "domostwa":
-			building_illustration = domostwa_illustration
-		elif building_id == "kuznia":
-			building_illustration = kuznia_illustration
-		elif building_id == "chata_zielarki":
-			building_illustration = chata_zielarki_illustration
-		elif building_id == "swiety_gaj":
-			building_illustration = swiety_gaj_illustration
-		elif building_id == "spichlerz":
-			building_illustration = spichlerz_illustration
-		elif building_id == "wieza_peruna":
-			building_illustration = wieza_peruna_illustration
-		if building_illustration != null:
-			draw_texture_rect(building_illustration, Rect2(56, card.position.y + 6, 44, 46), false)
-			text_x = 108.0
-		draw_string(font, Vector2(text_x, card.position.y + 25), "%s  •  poz. %d" % [BUILDING_NAMES[index], building_levels[building_id]], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#fff0c7"))
-		draw_string(font, Vector2(text_x, card.position.y + 47), bonus, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#c7ddba"))
-		var upgrade_rect := village_upgrade_rect(index)
-		var max_level := int(building_levels[building_id]) >= MAX_BUILDING_LEVEL
-		if max_level:
-			draw_button(upgrade_rect, "MAKS. POZIOM", false, 10)
-		else:
-			draw_button(upgrade_rect, "", coins >= int(cost["coins"]) and wood >= int(cost["wood"]), 11)
-			var cost_x := upgrade_rect.position.x + 12.0
-			cost_x += draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "coins", int(cost["coins"]), 17.0, 10) + 5.0
-			draw_resource_amount(Vector2(cost_x, upgrade_rect.position.y + 6.0), "wood", int(cost["wood"]), 17.0, 10)
-	draw_string(font, Vector2(panel_rect.position.x, 666), "Koszt ulepszenia", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 12, Color("#c7ddba"))
-	draw_button(village_close_rect(), "Wróć do menu", true, 14)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07130d20"))
+	for building_id in ["domostwa", "swiety_gaj", "wieza_peruna", "kuznia", "chata_zielarki", "spichlerz"]:
+		draw_village_building(building_id)
+	if map_ui_frames != null:
+		var frame_size := map_ui_frames.get_size()
+		var header_source := Rect2(0.0, frame_size.y * 0.10, frame_size.x, frame_size.y * 0.40)
+		draw_texture_rect_region(map_ui_frames, Rect2(8.0, -16.0, screen.x - 16.0, 170.0), header_source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#10271ff0"), Color("#bc9659")), Rect2(5.0, 4.0, screen.x - 10.0, 96.0))
+	draw_button(village_close_rect(), "POWRÓT", true, 16)
+	var title := "OSADA DĘBOWEGO POGRANICZA"
+	if screen.x < 430.0:
+		draw_string(font, Vector2(76.0, 55.0), "OSADA DĘBOWEGO", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 84.0, 17, Color("#ffe0a0"))
+		draw_string(font, Vector2(76.0, 74.0), "POGRANICZA", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 84.0, 17, Color("#ffe0a0"))
+	else:
+		var title_size := 19
+		while title_size > 14 and font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > screen.x - 90.0:
+			title_size -= 1
+		draw_string(font, Vector2(78.0, 62.0), title, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 88.0, title_size, Color("#ffe0a0"))
+	var resource_size := 16
+	var resource_width := resource_amount_width(coins, 27.0, resource_size) + 32.0 + resource_amount_width(wood, 27.0, resource_size)
+	var resource_x := maxf(82.0, (screen.x - resource_width) * 0.5)
+	resource_x += draw_resource_amount(Vector2(resource_x, 80.0), "coins", coins, 27.0, resource_size, Color("#ffe5a8")) + 32.0
+	draw_resource_amount(Vector2(resource_x, 80.0), "wood", wood, 27.0, resource_size, Color("#e2eac7"))
+	if village_selected_id != "":
+		draw_village_inspector()
 
-func draw_map_overlay(screen: Vector2) -> void:
-	var focus_index := clampi(map_page * 5, 0, levels.size() - 1)
+func village_illustration(building_id: String, level: int) -> Texture2D:
+	if level >= 6:
+		var upgraded := village_upgraded_illustrations.get(building_id, null) as Texture2D
+		if upgraded != null:
+			return upgraded
+	match building_id:
+		"domostwa": return domostwa_illustration
+		"kuznia": return kuznia_illustration
+		"chata_zielarki": return chata_zielarki_illustration
+		"swiety_gaj": return swiety_gaj_illustration
+		"spichlerz": return spichlerz_illustration
+		"wieza_peruna": return wieza_peruna_illustration
+	return null
+
+func draw_village_growth_details(rect: Rect2, level: int) -> void:
+	if level <= 0:
+		return
+	var rune_count := level % 10
+	for rune_index in rune_count:
+		var rune_pos := Vector2(rect.position.x + rect.size.x * (0.17 + rune_index * 0.073), rect.position.y + rect.size.y * 0.78)
+		draw_circle(rune_pos, 3.7, Color("#ffbe5766"))
+		draw_circle(rune_pos, 1.8, Color("#ffe9a1"))
+	var pennants := mini(5, int(level / 10))
+	for pennant_index in pennants:
+		var pin := Vector2(rect.position.x + rect.size.x * (0.27 + pennant_index * 0.12), rect.position.y + rect.size.y * 0.27)
+		draw_line(pin, pin + Vector2(0.0, rect.size.y * 0.11), Color("#f6d89a"), 1.5)
+		draw_colored_polygon(PackedVector2Array([pin + Vector2(0.0, 2.0), pin + Vector2(8.0, 5.0), pin + Vector2(0.0, 9.0)]), Color("#d9a344"))
+
+func draw_village_construction(rect: Rect2, progress: float) -> void:
+	var opacity := 1.0 - progress
+	if progress < 0.58:
+		var left := Vector2(rect.position.x + rect.size.x * 0.1, rect.position.y + rect.size.y * 0.22)
+		var right := Vector2(rect.end.x - rect.size.x * 0.1, rect.position.y + rect.size.y * 0.22)
+		var lower_left := Vector2(left.x, rect.end.y - 5.0)
+		var lower_right := Vector2(right.x, rect.end.y - 5.0)
+		for endpoints in [[left, lower_left], [right, lower_right], [left, right], [left, lower_right], [right, lower_left]]:
+			draw_line(endpoints[0], endpoints[1], Color(0.39, 0.22, 0.09, opacity), 5.0)
+	for dust_index in 12:
+		var seed := float(dust_index)
+		var dust_pos := Vector2(rect.position.x + rect.size.x * (0.12 + fposmod(seed * 0.37, 0.76)), rect.end.y - rect.size.y * (0.10 + progress * (0.3 + fposmod(seed * 0.21, 0.35))))
+		draw_circle(dust_pos, 2.0 + fposmod(seed * 1.7, 3.0), Color(0.95, 0.77, 0.48, opacity * 0.72))
+
+func draw_village_building(building_id: String) -> void:
+	var rect := village_building_rect(building_id)
+	var level := int(building_levels[building_id])
+	var animating := village_upgrade_id == building_id and village_upgrade_time > 0.0
+	var progress := 1.0 - village_upgrade_time / VILLAGE_UPGRADE_DURATION if animating else 1.0
+	if animating and progress < 0.52:
+		level = village_upgrade_from_level
+	var sprite := village_illustration(building_id, level)
+	if sprite != null:
+		var display_rect := rect
+		if animating and progress >= 0.52:
+			var bounce := 1.0 + 0.08 * sin((progress - 0.52) / 0.48 * PI)
+			var bounce_size := rect.size * bounce
+			display_rect = Rect2(Vector2(rect.get_center().x - bounce_size.x * 0.5, rect.end.y - bounce_size.y), bounce_size)
+		draw_texture_rect(sprite, display_rect, false, Color("#b9c3b8") if level == 0 else Color.WHITE)
+		draw_village_growth_details(display_rect, level)
+	if animating:
+		draw_village_construction(rect, progress)
+	var label_rect := village_building_label_rect(building_id)
+	if map_mission_nameplate != null:
+		draw_texture_rect(map_mission_nameplate, label_rect, false, Color("#ffe0a1") if village_selected_id == building_id else Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#10261ddc"), Color("#c59d5d")), label_rect)
+	var index := BUILDING_IDS.find(building_id)
+	var label: String = BUILDING_NAMES[index]
+	var label_size := 12
+	while label_size > 9 and font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_size).x > label_rect.size.x - 18.0:
+		label_size -= 1
+	draw_string(font, Vector2(label_rect.position.x, label_rect.position.y + 22.0), label, HORIZONTAL_ALIGNMENT_CENTER, label_rect.size.x, label_size, Color("#fff1c8"))
+
+func village_bonus_label(building_id: String) -> String:
+	match building_id:
+		"domostwa": return "+5 maks. zdrowia"
+		"kuznia": return "+5 obrażeń Bruna"
+		"chata_zielarki": return "+1 leczenia Miety"
+		"swiety_gaj": return "+1 tarczy z liści"
+		"spichlerz": return "+10 monet za wygraną"
+		"wieza_peruna": return "+5 obrażeń Ledy"
+	return ""
+
+func draw_village_inspector() -> void:
+	var panel := village_inspector_rect()
+	if village_inspector_frame != null:
+		draw_texture_rect(village_inspector_frame, panel, false)
+	else:
+		draw_style_box(make_panel(Color("#102b20f5"), Color("#d9b56c")), panel)
+	var building_id := village_selected_id
+	var index := BUILDING_IDS.find(building_id)
+	if index < 0:
+		return
+	var level := int(building_levels[building_id])
+	var max_level := level >= MAX_BUILDING_LEVEL
+	var title: String = BUILDING_NAMES[index].to_upper()
+	var title_size := 18
+	while title_size > 13 and font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > panel.size.x - 110.0:
+		title_size -= 1
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 68.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, title_size, Color("#ffe2a3"))
+	draw_button(village_inspector_close_rect(), "X", true, 16)
+	var level_text := "POZIOM %d" % level if max_level else "POZIOM %d  →  %d" % [level, level + 1]
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 92.0), level_text, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 16, Color("#e3d4ab"))
+	var preview_size := minf(96.0, minf((panel.size.x - 108.0) * 0.5, panel.size.y - 280.0))
+	var preview_y := panel.position.y + 105.0
+	var current_rect := Rect2(panel.position.x + 52.0, preview_y, preview_size, preview_size)
+	var next_rect := Rect2(panel.end.x - 52.0 - preview_size, preview_y, preview_size, preview_size)
+	var current_art := village_illustration(building_id, level)
+	if current_art != null:
+		draw_texture_rect(current_art, current_rect, false)
+		draw_village_growth_details(current_rect, level)
+	if not max_level:
+		var next_art := village_illustration(building_id, level + 1)
+		if next_art != null:
+			draw_texture_rect(next_art, next_rect, false)
+			draw_village_growth_details(next_rect, level + 1)
+		draw_string(font, Vector2(panel.get_center().x - 18.0, preview_y + preview_size * 0.64), "→", HORIZONTAL_ALIGNMENT_CENTER, 36.0, 25, Color("#f9cd7c"))
+	draw_string(font, Vector2(current_rect.position.x, preview_y + preview_size + 17.0), "TERAZ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#c9d9b8"))
+	if not max_level:
+		draw_string(font, Vector2(next_rect.position.x, preview_y + preview_size + 17.0), "DALEJ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#f5d18c"))
+	draw_line(Vector2(panel.position.x + 44.0, panel.end.y - 152.0), Vector2(panel.end.x - 44.0, panel.end.y - 152.0), Color("#a98851"), 1.0)
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 126.0), "PREMIA: %s" % village_bonus_label(building_id), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 14, Color("#e5edcb"))
+	if max_level:
+		draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 96.0), "Budynek w pełni rozbudowany", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 13, Color("#f5d18c"))
+		draw_button(village_upgrade_rect(), "MAKS. POZIOM", false, 13)
+		return
+	var cost := building_cost(building_id)
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 101.0), "KOSZT", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 12, Color("#c7d9b7"))
+	var coin_width := resource_amount_width(int(cost["coins"]), 25.0, 15)
+	var wood_width := resource_amount_width(int(cost["wood"]), 25.0, 15)
+	var cost_x := panel.get_center().x - (coin_width + 24.0 + wood_width) * 0.5
+	draw_resource_amount(Vector2(cost_x, panel.end.y - 94.0), "coins", int(cost["coins"]), 25.0, 15, Color("#ffe5a8") if coins >= int(cost["coins"]) else Color("#f29a86"))
+	draw_resource_amount(Vector2(cost_x + coin_width + 24.0, panel.end.y - 94.0), "wood", int(cost["wood"]), 25.0, 15, Color("#d9eac1") if wood >= int(cost["wood"]) else Color("#f29a86"))
+	var affordable := coins >= int(cost["coins"]) and wood >= int(cost["wood"])
+	draw_button(village_upgrade_rect(), "ROZBUDOWA..." if village_upgrade_time > 0.0 else ("ROZBUDUJ" if affordable else "BRAK SUROWCÓW"), affordable and village_upgrade_time <= 0.0, 16 if affordable else 14)
+
+func draw_map_overlay(screen: Vector2, include_background := true, include_chrome := true, include_missions := true) -> void:
+	if include_background:
+		draw_map_background(screen, map_page)
+	if include_missions:
+		var visible_level_count := mini(5, maxi(0, unlocked_level - map_page * 5))
+		var path_points: Array[Vector2] = []
+		for slot in visible_level_count:
+			path_points.append(map_level_rect(slot).get_center())
+		draw_map_route(path_points)
+	if include_chrome:
+		if map_ui_frames != null:
+			var frame_size := map_ui_frames.get_size()
+			var header_source := Rect2(0.0, frame_size.y * 0.10, frame_size.x, frame_size.y * 0.40)
+			draw_texture_rect_region(map_ui_frames, Rect2(8.0, -6.0, screen.x - 16.0, 200.0), header_source, Color.WHITE)
+		else:
+			draw_style_box(make_panel(Color("#18241fdc"), Color("#d2ad62")), Rect2(18.0, 4.0, screen.x - 36.0, 182.0))
+		draw_string(font, Vector2(0, 95), "MAPA ŚWIATA", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 22, Color("#ffe2a4"))
+		var focus_index := clampi(map_page * 5, 0, levels.size() - 1)
+		var focus_level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
+		draw_string(font, Vector2(0, 114), region_display_name(str(focus_level.get("region", "debowepogranicze"))).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#fff0cf"))
+		draw_string(font, Vector2(0, 131), "SZLAK %d" % [map_page + 1], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e8d5ad"))
+		draw_button(map_previous_page_rect(), "POPRZEDNI", map_page > 0, 12)
+		if map_has_unlocked_next_page():
+			draw_button(map_next_page_rect(), "NASTĘPNY", true, 12)
+	if include_missions:
+		for slot in 5:
+			var index := map_page * 5 + slot
+			if index >= levels.size() or index >= unlocked_level:
+				continue
+			var unlocked := true
+			var active := index == level_index
+			var node_rect := map_level_rect(slot)
+			var center := node_rect.get_center()
+			var level: Dictionary = levels[index]
+			var boss_mission := is_boss_level(level)
+			if active:
+				var active_radius := 64.0 if boss_mission else 46.0
+				draw_circle(center, active_radius + 1.0, Color("#f5d37638"))
+				draw_arc(center, active_radius, 0.0, TAU, 48, Color("#ffe8a8"), 2.5, true)
+			draw_map_mission_icon(center, level, boss_mission, unlocked)
+			var number_rect := Rect2(center + Vector2(-29.0, 52.0 if boss_mission else 32.0), Vector2(58.0, 28.0))
+			if map_level_number_plate != null:
+				draw_texture_rect(map_level_number_plate, number_rect, false, Color.WHITE if unlocked else Color(0.55, 0.58, 0.55, 0.85))
+			else:
+				draw_style_box(make_panel(Color("#17231fe8"), Color("#d8b765" if unlocked else "#82795f")), number_rect)
+			var number := str(int(level.get("id", index + 1)))
+			var number_size := 12
+			while number_size > 8 and font.get_string_size(number, HORIZONTAL_ALIGNMENT_LEFT, -1, number_size).x > number_rect.size.x - 18.0:
+				number_size -= 1
+			draw_string(font, Vector2(number_rect.position.x, number_rect.get_center().y + number_size * 0.36), number, HORIZONTAL_ALIGNMENT_CENTER, number_rect.size.x, number_size, Color("#fff1d0") if unlocked else Color("#b5b0a1"))
+			var text_width := minf(190.0, screen.x * 0.36)
+			var text_gap := 72.0 if boss_mission else 54.0
+			var text_x := center.x + text_gap if center.x < screen.x * 0.43 else center.x - text_width - text_gap
+			text_x = clampf(text_x, 12.0, screen.x - text_width - 12.0)
+			var nameplate_rect := Rect2(text_x - 10.0, center.y - 36.0, text_width + 20.0, 84.0)
+			if map_mission_nameplate != null:
+				draw_texture_rect(map_mission_nameplate, nameplate_rect, false, Color.WHITE if unlocked else Color(0.65, 0.69, 0.65, 0.85))
+			else:
+				draw_style_box(make_panel(Color("#10221df2"), Color("#a88446")), nameplate_rect)
+			var title_color := Color("#fff0cc") if unlocked else Color("#c0c0b2")
+			if boss_mission:
+				title_color = Color("#ffd17c") if unlocked else Color("#aa9272")
+			var mission_name := str(level.get("name", "Wyprawa"))
+			var title_size := 13
+			while title_size > 9 and font.get_string_size(mission_name, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > text_width - 16.0:
+				title_size -= 1
+			draw_string(font, Vector2(text_x, center.y - 7.0), mission_name, HORIZONTAL_ALIGNMENT_CENTER, text_width, title_size, title_color)
+			var mission_kind := "BOSS" if boss_mission else level_kind_label(level)
+			var kind_color := Color("#ffd27a") if boss_mission else (level_kind_color(level) if unlocked else Color("#96978c"))
+			draw_string(font, Vector2(text_x, center.y + 5.0), mission_kind, HORIZONTAL_ALIGNMENT_CENTER, text_width, 10, kind_color)
+			var stars := int(level_stars.get(int(level.id), 0))
+			draw_star_rating(Vector2(text_x + text_width * 0.5, center.y + 20.0), stars, 21.0)
+	if include_chrome:
+		var close_rect := map_close_rect()
+		if map_ui_frames != null:
+			var frame_size := map_ui_frames.get_size()
+			var button_source := Rect2(frame_size.x * 0.12, frame_size.y * 0.57, frame_size.x * 0.76, frame_size.y * 0.25)
+			draw_texture_rect_region(map_ui_frames, close_rect, button_source, Color.WHITE)
+		else:
+			draw_style_box(make_panel(Color("#1b2b22f0"), Color("#d7b363")), close_rect)
+		draw_string(font, Vector2(close_rect.position.x, close_rect.position.y + 39.0), "Wróć do menu", HORIZONTAL_ALIGNMENT_CENTER, close_rect.size.x, 18, Color("#fff0c8"))
+
+func draw_map_background_transition(screen: Vector2, progress: float) -> void:
+	var blur_in := clampf(progress / 0.24, 0.0, 1.0)
+	blur_in = blur_in * blur_in * (3.0 - 2.0 * blur_in)
+	var target_sharp := clampf((progress - 0.64) / 0.36, 0.0, 1.0)
+	target_sharp = target_sharp * target_sharp * (3.0 - 2.0 * target_sharp)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#09201d"))
+	draw_map_background(screen, map_transition_from_page, null, 1.0 - progress, false)
+	draw_map_background(screen, map_transition_from_page, map_transition_from_blur, blur_in * (1.0 - progress), false)
+	draw_map_background(screen, map_page, map_transition_to_blur, progress, false)
+	draw_map_background(screen, map_page, null, target_sharp, false)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07191648"))
+
+func draw_map_background(screen: Vector2, page: int, texture_override: Texture2D = null, opacity := 1.0, draw_shade := true) -> void:
+	var focus_index := clampi(page * 5, 0, levels.size() - 1)
 	var focus_level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
 	var region_id := str(focus_level.get("region", "debowepogranicze"))
-	var map_background: Texture2D = map_region_backgrounds.get(region_id, oak_borderland_background)
+	var map_background: Texture2D = texture_override if texture_override != null else map_region_backgrounds.get(region_id, oak_borderland_background)
 	if map_background != null:
 		var atlas_size := map_background.get_size()
 		var region_range: Vector2i = MAP_REGION_RANGES.get(region_id, Vector2i(1, 20))
 		var first_region_page := int(floor(float(region_range.x - 1) / 5.0))
 		var region_page_count := maxi(1, int(ceili(float(region_range.y - region_range.x + 1) / 5.0)))
-		var region_page := clampi(map_page - first_region_page, 0, region_page_count - 1)
+		var region_page := clampi(page - first_region_page, 0, region_page_count - 1)
 		var page_progress := 0.5
 		if region_page_count > 1:
 			page_progress = float(region_page) / float(region_page_count - 1)
@@ -3448,85 +3841,45 @@ func draw_map_overlay(screen: Vector2) -> void:
 		var source_width := minf(atlas_size.x, source_height * screen.x / screen.y)
 		var source_y := (atlas_size.y - source_height) * page_progress
 		var source := Rect2(Vector2((atlas_size.x - source_width) * 0.5, source_y), Vector2(source_width, source_height))
-		draw_texture_rect_region(map_background, Rect2(Vector2.ZERO, screen), source, Color.WHITE)
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07191648"))
-	var path_points: Array[Vector2] = []
-	for slot in 5:
-		path_points.append(map_level_rect(slot).get_center())
-	draw_map_route(path_points)
-	if map_ui_frames != null:
-		var frame_size := map_ui_frames.get_size()
-		var header_source := Rect2(0.0, frame_size.y * 0.10, frame_size.x, frame_size.y * 0.40)
-		draw_texture_rect_region(map_ui_frames, Rect2(8.0, 4.0, screen.x - 16.0, 130.0), header_source, Color.WHITE)
-	else:
-		draw_style_box(make_panel(Color("#18241fdc"), Color("#d2ad62")), Rect2(18.0, 14.0, screen.x - 36.0, 112.0))
-	draw_string(font, Vector2(0, 48), "MAPA ŚWIATA", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 22, Color("#ffe2a4"))
-	draw_string(font, Vector2(0, 76), region_display_name(region_id).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#fff0cf"))
-	var first_level := map_page * 5 + 1
-	var last_level := mini(map_page * 5 + 5, levels.size())
-	draw_string(font, Vector2(0, 101), "SZLAK %d  •  POZIOMY %d–%d" % [map_page + 1, first_level, last_level], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e8d5ad"))
-	draw_button(map_previous_page_rect(), "‹ POPRZEDNI", map_page > 0, 10)
-	draw_button(map_next_page_rect(), "NASTĘPNY ›", map_page < map_page_count() - 1, 10)
-	for slot in 5:
-		var index := map_page * 5 + slot
-		if index >= levels.size():
-			continue
-		var unlocked := index + 1 <= unlocked_level
-		var active := index == level_index
-		var node_rect := map_level_rect(slot)
-		var center := node_rect.get_center()
-		var level: Dictionary = levels[index]
-		var boss_mission := is_boss_level(level)
-		if active:
-			draw_circle(center, 47.0, Color("#f5d37638"))
-			draw_arc(center, 46.0, 0.0, TAU, 48, Color("#ffe8a8"), 2.5, true)
-		draw_map_mission_icon(center, level, boss_mission, unlocked)
-		var number_rect := Rect2(center + Vector2(-21.0, 31.0), Vector2(42.0, 20.0))
-		draw_style_box(make_panel(Color("#17231fe8"), Color("#d8b765" if unlocked else "#82795f")), number_rect)
-		draw_string(font, Vector2(number_rect.position.x, number_rect.position.y + 15.0), str(level.get("id", index + 1)), HORIZONTAL_ALIGNMENT_CENTER, number_rect.size.x, 12, Color("#fff1d0") if unlocked else Color("#b5b0a1"))
-		var text_width := 190.0
-		var text_x := center.x + 48.0 if center.x < screen.x * 0.43 else center.x - text_width - 48.0
-		text_x = clampf(text_x, 12.0, screen.x - text_width - 12.0)
-		var title_color := Color("#fff0cc") if unlocked else Color("#c0c0b2")
-		if boss_mission:
-			title_color = Color("#ffd17c") if unlocked else Color("#aa9272")
-		draw_string(font, Vector2(text_x, center.y - 5.0), str(level.get("name", "Wyprawa")), HORIZONTAL_ALIGNMENT_CENTER, text_width, 13, title_color)
-		var mission_kind := "BOSS" if boss_mission else level_kind_label(level)
-		var kind_color := Color("#ffd27a") if boss_mission else (level_kind_color(level) if unlocked else Color("#96978c"))
-		draw_string(font, Vector2(text_x, center.y + 13.0), mission_kind, HORIZONTAL_ALIGNMENT_CENTER, text_width, 10, kind_color)
-		var stars := int(level_stars.get(int(level.id), 0))
-		if stars > 0:
-			draw_star_rating(Vector2(text_x + text_width * 0.5, center.y + 30.0), stars, 13.0)
-	var close_rect := map_close_rect()
-	if map_ui_frames != null:
-		var frame_size := map_ui_frames.get_size()
-		var button_source := Rect2(frame_size.x * 0.12, frame_size.y * 0.57, frame_size.x * 0.76, frame_size.y * 0.25)
-		draw_texture_rect_region(map_ui_frames, close_rect, button_source, Color.WHITE)
-	else:
-		draw_style_box(make_panel(Color("#1b2b22f0"), Color("#d7b363")), close_rect)
-	draw_string(font, Vector2(close_rect.position.x, close_rect.position.y + 39.0), "Wróć do menu", HORIZONTAL_ALIGNMENT_CENTER, close_rect.size.x, 18, Color("#fff0c8"))
-
+		draw_texture_rect_region(map_background, Rect2(Vector2.ZERO, screen), source, Color(1.0, 1.0, 1.0, opacity))
+	if draw_shade:
+		draw_rect(Rect2(Vector2.ZERO, screen), Color("#07191648"))
 func draw_map_route(points: Array[Vector2]) -> void:
-	var route := PackedVector2Array()
 	for segment in range(points.size() - 1):
 		var start: Vector2 = points[segment]
 		var finish: Vector2 = points[segment + 1]
 		var direction := (finish - start).normalized()
 		var bend := Vector2(-direction.y, direction.x) * (24.0 if segment % 2 == 0 else -24.0)
 		var control := (start + finish) * 0.5 + bend
-		for step in 13:
-			var t := float(step) / 12.0
+		var route := PackedVector2Array()
+		var vertices := PackedVector2Array()
+		var uvs := PackedVector2Array()
+		for step in 25:
+			var t := float(step) / 24.0
 			var inverse := 1.0 - t
-			route.append(inverse * inverse * start + 2.0 * inverse * t * control + t * t * finish)
-	draw_polyline(route, Color("#10120ee8"), 22.0, true)
-	draw_polyline(route, Color("#4d2e14"), 16.0, true)
-	draw_polyline(route, Color("#e0b85f"), 9.0, true)
-	draw_polyline(route, Color("#ffe4a0"), 2.0, true)
+			var point := inverse * inverse * start + 2.0 * inverse * t * control + t * t * finish
+			var tangent := (2.0 * inverse * (control - start) + 2.0 * t * (finish - control)).normalized()
+			var normal := Vector2(-tangent.y, tangent.x) * 10.0
+			route.append(point)
+			vertices.append(point - normal)
+			uvs.append(Vector2(t, 0.0))
+		for step in range(24, -1, -1):
+			var t := float(step) / 24.0
+			var inverse := 1.0 - t
+			var tangent := (2.0 * inverse * (control - start) + 2.0 * t * (finish - control)).normalized()
+			vertices.append(route[step] + Vector2(-tangent.y, tangent.x) * 10.0)
+			uvs.append(Vector2(t, 1.0))
+		if map_route_connector != null:
+			draw_polygon(vertices, PackedColorArray([Color.WHITE]), uvs, map_route_connector)
+		else:
+			draw_polyline(route, Color("#10120ee8"), 20.0, true)
+			draw_polyline(route, Color("#d7b363"), 8.0, true)
 
 func draw_map_mission_icon(center: Vector2, level: Dictionary, boss_mission: bool, unlocked: bool) -> void:
+	var radius := 60.0 if boss_mission else 39.0
 	if map_mission_icon_atlas == null:
-		draw_circle(center, 35.0, Color("#183327e8"))
-		draw_arc(center, 34.0, 0.0, TAU, 40, Color("#d7b363"), 3.0, true)
+		draw_circle(center, radius - 4.0, Color("#183327e8"))
+		draw_arc(center, radius - 5.0, 0.0, TAU, 40, Color("#d7b363"), 3.0, true)
 		return
 	var atlas_size := map_mission_icon_atlas.get_size()
 	var cell_size := Vector2(atlas_size.x / 4.0, atlas_size.y / 2.0)
@@ -3534,32 +3887,7 @@ func draw_map_mission_icon(center: Vector2, level: Dictionary, boss_mission: boo
 	var source_position := Vector2(float(icon_index % 4) * cell_size.x, float(icon_index / 4) * cell_size.y)
 	var source := Rect2(source_position, cell_size)
 	var tint := Color(1.0, 1.0, 1.0, 1.0 if unlocked else 0.48)
-	draw_texture_rect_region(map_mission_icon_atlas, Rect2(center - Vector2(39.0, 39.0), Vector2(78.0, 78.0)), source, tint)
-	if not boss_mission:
-		draw_map_objective_icon(center + Vector2(25.0, 25.0), level, unlocked)
-
-func draw_map_objective_icon(center: Vector2, level: Dictionary, unlocked: bool) -> void:
-	var goal := str(level.get("goal_type", "defeat_enemy"))
-	var ink := Color("#fff0bf") if unlocked else Color("#aaa493")
-	draw_circle(center, 13.0, Color("#18251eeF"))
-	draw_arc(center, 12.0, 0.0, TAU, 24, Color("#d7b363"), 2.0, true)
-	match goal:
-		"survive":
-			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -7), center + Vector2(6, -4), center + Vector2(5, 2), center + Vector2(0, 7), center + Vector2(-5, 2), center + Vector2(-6, -4)]), ink)
-		"collect_amber":
-			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -8), center + Vector2(6, -2), center + Vector2(4, 6), center + Vector2(-4, 6), center + Vector2(-6, -2)]), Color("#f3b347") if unlocked else Color("#b3a16d"))
-		"collect_rune":
-			draw_line(center + Vector2(-5, 5), center + Vector2(5, -5), ink, 2.0, true)
-			draw_line(center + Vector2(-5, -5), center + Vector2(5, 5), ink, 2.0, true)
-		"clear_obstacles":
-			draw_line(center + Vector2(-6, 6), center + Vector2(6, -6), ink, 2.5, true)
-			draw_line(center + Vector2(-7, -4), center + Vector2(-3, -8), ink, 2.5, true)
-			draw_line(center + Vector2(-3, -8), center + Vector2(1, -4), ink, 2.5, true)
-		"score":
-			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -7), center + Vector2(2, -2), center + Vector2(7, -2), center + Vector2(3, 1), center + Vector2(5, 6), center + Vector2(0, 3), center + Vector2(-5, 6), center + Vector2(-3, 1), center + Vector2(-7, -2), center + Vector2(-2, -2)]), ink)
-		_:
-			draw_line(center + Vector2(-5, -5), center + Vector2(5, 5), ink, 2.5, true)
-			draw_line(center + Vector2(-5, 5), center + Vector2(5, -5), ink, 2.5, true)
+	draw_texture_rect_region(map_mission_icon_atlas, Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0), source, tint)
 
 func map_mission_region_index(region_id: String) -> int:
 	match region_id:
@@ -3613,13 +3941,30 @@ func draw_main_menu_background(screen: Vector2) -> void:
 		draw_rect(Rect2(Vector2.ZERO, screen), Color("#122b2a"))
 		return
 	var texture_size := background.get_size()
-	var scale_factor := maxf(screen.x / texture_size.x, screen.y / texture_size.y)
-	var source_size := screen / scale_factor
-	var source_position := (texture_size - source_size) * 0.5
-	draw_texture_rect_region(background, Rect2(Vector2.ZERO, screen), Rect2(source_position, source_size), Color.WHITE)
-	# Przyciemniamy krainę tylko tyle, by HUD i przyciski pozostały czytelne.
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07100e86"))
-	draw_rect(Rect2(0.0, 585.0, screen.x, screen.y - 585.0), Color("#07100ed0"))
+	var region_progress := 0.5
+	if not levels.is_empty():
+		var focus_index := clampi(unlocked_level - 1, 0, levels.size() - 1)
+		var region_first := focus_index
+		var region_last := focus_index
+		while region_first > 0 and str(levels[region_first - 1].get("region", "")) == region_id:
+			region_first -= 1
+		while region_last + 1 < levels.size() and str(levels[region_last + 1].get("region", "")) == region_id:
+			region_last += 1
+		if region_last > region_first:
+			region_progress = float(focus_index - region_first) / float(region_last - region_first)
+	var source_height := texture_size.y * 0.82
+	var source_width := source_height * screen.x / screen.y
+	if source_width > texture_size.x:
+		source_width = texture_size.x
+		source_height = source_width * screen.y / screen.x
+	var source_position := Vector2((texture_size.x - source_width) * 0.5, (texture_size.y - source_height) * (1.0 - region_progress))
+	draw_texture_rect_region(background, Rect2(Vector2.ZERO, screen), Rect2(source_position, Vector2(source_width, source_height)), Color.WHITE)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#07100e70"))
+	# Płynny cień skupia uwagę na przycisku i nagrodach, zachowując widoczność mapy.
+	for strip in 24:
+		var y := 480.0 + strip * 20.0
+		var darkness := 0.68 * pow(float(strip) / 23.0, 1.3)
+		draw_rect(Rect2(0.0, y, screen.x, minf(20.0, screen.y - y)), Color(0.027, 0.063, 0.055, darkness))
 
 func draw_home_nav_icon(index: int, center: Vector2) -> void:
 	if home_navigation_icons == null:
@@ -3627,19 +3972,113 @@ func draw_home_nav_icon(index: int, center: Vector2) -> void:
 	var atlas_size := home_navigation_icons.get_size()
 	var cell_size := Vector2(atlas_size.x / 3.0, atlas_size.y / 2.0)
 	var source := Rect2(Vector2((index % 3) * cell_size.x, int(index / 3) * cell_size.y), cell_size)
-	draw_texture_rect_region(home_navigation_icons, Rect2(center - Vector2(27.0, 27.0), Vector2(54.0, 54.0)), source, Color.WHITE)
+	draw_texture_rect_region(home_navigation_icons, Rect2(center - Vector2(37.5, 37.5), Vector2(75.0, 75.0)), source, Color.WHITE)
 
 func draw_home_navigation(screen: Vector2) -> void:
-	draw_style_box(make_panel(Color("#071310e8"), Color("#8b6a3d")), Rect2(7.0, 842.0, screen.x - 14.0, 110.0))
+	draw_rect(Rect2(0.0, 835.0, screen.x, screen.y - 835.0), Color("#06110eee"))
+	var nav_panel := Rect2(0.0, 838.0, screen.x, 114.0)
+	if home_navigation_frame != null:
+		draw_texture_rect(home_navigation_frame, nav_panel, false)
+	else:
+		draw_style_box(make_panel(Color("#071310e8"), Color("#8b6a3d")), nav_panel)
 	var labels := ["MAPA", "DRUŻYNA", "OSADA", "ZAPASY", "TRENING"]
 	for index in labels.size():
 		var item_rect := main_menu_nav_rect(index)
-		draw_home_nav_icon(index, Vector2(item_rect.get_center().x, 881.0))
-		draw_string(font, Vector2(item_rect.position.x, 940.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, item_rect.size.x, 10, Color("#e8d9b9"))
+		draw_home_nav_icon(index, Vector2(item_rect.get_center().x, 895.0))
+		draw_string(font, Vector2(item_rect.position.x, 937.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, item_rect.size.x, 10, Color("#f0dfba"))
+
+func hero_face_source(hero_id: String, portrait: Texture2D) -> Rect2:
+	var size := portrait.get_size()
+	var crop_width := 0.58
+	var crop_top := 0.045
+	var crop_center_x := 0.5
+	match hero_id:
+		"lada":
+			crop_width = 0.53
+			crop_top = 0.035
+		"mieta":
+			crop_width = 0.53
+			crop_top = 0.03
+			crop_center_x = 0.51
+		"wszebor":
+			crop_width = 0.55
+			crop_top = 0.10
+			crop_center_x = 0.52
+	var crop_size := minf(size.x * crop_width, size.y * 0.43)
+	return Rect2(clampf(size.x * crop_center_x - crop_size * 0.5, 0.0, size.x - crop_size), size.y * crop_top, crop_size, crop_size)
+
+func home_face_portrait(hero_id: String) -> Texture2D:
+	if home_face_portraits.has(hero_id):
+		return home_face_portraits[hero_id]
+	var portrait: Texture2D = hero_portraits.get(hero_id, null)
+	if portrait == null:
+		return null
+	var source_rect := hero_face_source(hero_id, portrait)
+	var image := portrait.get_image().get_region(Rect2i(Vector2i(source_rect.position), Vector2i(source_rect.size)))
+	image.resize(256, 256, Image.INTERPOLATE_LANCZOS)
+	image.convert(Image.FORMAT_RGBA8)
+	for y in 256:
+		for x in 256:
+			var distance := Vector2(x - 127.5, y - 127.5).length() / 127.5
+			var pixel := image.get_pixel(x, y)
+			pixel.a *= clampf((1.0 - distance) / 0.035, 0.0, 1.0)
+			image.set_pixel(x, y, pixel)
+	var circular_portrait := ImageTexture.create_from_image(image)
+	home_face_portraits[hero_id] = circular_portrait
+	return circular_portrait
+
+func draw_home_party(screen: Vector2) -> void:
+	var card := main_menu_party_rect()
+	if home_party_panel != null:
+		draw_texture_rect(home_party_panel, card, false)
+	else:
+		draw_style_box(make_panel(Color("#071712e8"), Color("#8b6b3a")), card)
+	draw_string(font, Vector2(45.0, 406.0), "WYBRANA DRUŻYNA", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 90.0, 13, Color("#f0dfba"))
+	var spacing := 115.0
+	for index in 3:
+		var center := Vector2(screen.x * 0.5 + spacing * float(index - 1), 472.0)
+		# Otwór w grafice obręczy jest poziomo rozciągnięty; węższy prostokąt
+		# przywraca mu okrągłą perspektywę bez zniekształcania portretu.
+		var ring_rect := Rect2(center - Vector2(48.0, 54.0), Vector2(96.0, 108.0))
+		if index >= active_heroes.size():
+			draw_circle(center, 42.0, Color("#0b211bc8"))
+			if home_party_portrait_ring != null:
+				draw_texture_rect(home_party_portrait_ring, ring_rect, false, Color(0.8, 0.85, 0.78, 0.48))
+			draw_string(font, Vector2(center.x - 24.0, center.y + 11.0), "+", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 30, Color("#d6bd84"))
+			draw_string(font, Vector2(center.x - 54.0, 540.0), "DODAJ", HORIZONTAL_ALIGNMENT_CENTER, 108.0, 11, Color("#b8c8aa"))
+			continue
+		var hero_id: String = active_heroes[index]
+		var face := home_face_portrait(hero_id)
+		if face != null:
+			draw_texture_rect(face, Rect2(center - Vector2(45.0, 45.0), Vector2(90.0, 90.0)), false)
+		else:
+			draw_circle(center, 42.0, Color("#604a34"))
+		if home_party_portrait_ring != null:
+			draw_texture_rect(home_party_portrait_ring, ring_rect, false)
+		else:
+			draw_arc(center, 48.0, 0.0, TAU, 48, Color("#d4ac64"), 3.0, true)
+		draw_string(font, Vector2(center.x - 54.0, 540.0), hero_name(hero_id).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, 108.0, 12, Color("#f2e0b7"))
 
 func draw_home_reward_shelf() -> void:
 	var chest_rect := daily_reward_rect()
-	if home_reward_chests != null:
+	var animated_chests_ready := home_reward_panel != null and home_reward_coin_frames != null and home_reward_wood_frames != null and home_reward_xp_frames != null
+	if animated_chests_ready:
+		draw_texture_rect(home_reward_panel, chest_rect, false)
+		var chest_frames: Array[Texture2D] = [home_reward_coin_frames, home_reward_wood_frames, home_reward_xp_frames]
+		var slot_width := chest_rect.size.x / 3.0
+		for index in chest_frames.size():
+			var frames := chest_frames[index]
+			var frame_index := 0
+			if not daily_reward_available():
+				frame_index = 28
+				if daily_reward_open_time >= 0.0:
+					frame_index = clampi(roundi((daily_reward_open_time - index * 0.0225) / 0.14 * 28.0), 0, 28)
+			var frame_width := frames.get_width() / 29.0
+			var source := Rect2(frame_index * frame_width, 0.0, frame_width, frames.get_height())
+			var center_x := chest_rect.position.x + slot_width * (index + 0.5)
+			var target := Rect2(center_x - 53.0, chest_rect.position.y - 11.0, 106.0, 94.0)
+			draw_texture_rect_region(frames, target, source, Color.WHITE)
+	elif home_reward_chests != null:
 		var source := Rect2(0.0, 0.0, home_reward_chests.get_width(), home_reward_chests.get_height())
 		draw_texture_rect_region(home_reward_chests, chest_rect, source, Color.WHITE)
 	else:
@@ -3648,7 +4087,7 @@ func draw_home_reward_shelf() -> void:
 	var slot_width := chest_rect.size.x / 3.0
 	for index in labels.size():
 		var slot := Rect2(chest_rect.position.x + index * slot_width, chest_rect.position.y, slot_width, chest_rect.size.y)
-		draw_string(font, Vector2(slot.position.x, slot.end.y - 8.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 10, Color("#dbcba9"))
+		draw_string(font, Vector2(slot.position.x, slot.end.y - 18.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 10, Color("#dbcba9"))
 
 func draw_main_menu(screen: Vector2) -> void:
 	draw_main_menu_background(screen)
@@ -3656,30 +4095,53 @@ func draw_main_menu(screen: Vector2) -> void:
 	var focus_level_id := int(focus_level.get("id", unlocked_level))
 	var active_hero_id := active_heroes[0] if not active_heroes.is_empty() else "lada"
 	var active_portrait: Texture2D = hero_portraits.get(active_hero_id, null)
-	draw_style_box(make_panel(Color("#101b19eF"), Color("#b38b4d")), Rect2(15.0, 14.0, screen.x - 30.0, 72.0))
+	draw_circle(Vector2(77.0, 61.0), 57.5, Color("#08261bcf"))
 	if active_portrait != null:
-		draw_texture_rect(active_portrait, texture_aspect_fit_rect(active_portrait, Rect2(23.0, 23.0, 46.0, 46.0)), false)
+		var active_face := home_face_portrait(active_hero_id)
+		if active_face != null:
+			draw_texture_rect(active_face, Rect2(15.5, 3.5, 115.0, 115.0), false)
 	else:
-		draw_circle(Vector2(46.0, 47.0), 22.0, Color("#604a34"))
-	draw_string(font, Vector2(77.0, 42.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 140.0, 15, Color("#fff0c7"))
-	draw_string(font, Vector2(77.0, 64.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 160.0, 10, Color("#c7ddba"))
-	draw_resource_amount(Vector2(244.0, 22.0), "coins", coins, 15.0, 11, Color("#f4d69a"))
-	draw_resource_amount(Vector2(337.0, 22.0), "wood", wood, 15.0, 11, Color("#c7ddba"))
-	draw_resource_amount(Vector2(244.0, 50.0), "experience", experience, 15.0, 11, Color("#8fe8df"))
-	draw_resource_amount(Vector2(337.0, 50.0), "sparks", perun_sparks, 15.0, 11, Color("#f6d779"))
-	draw_button(help_button_rect(), "?", true, 12)
-	draw_button(reset_progress_rect(), "POTWIERDŹ" if reset_confirmation else "RESET", true, 8)
-	draw_game_logo(Vector2(screen.x / 2.0, 177.0), Vector2(190.0, 125.0))
+		draw_circle(Vector2(77.0, 61.0), 42.0, Color("#604a34"))
+	if home_status_header != null:
+		draw_texture_rect(home_status_header, Rect2(5.0, 4.0, screen.x - 10.0, 120.0), false)
+	else:
+		draw_style_box(make_panel(Color("#101b19ef"), Color("#b38b4d")), Rect2(10.0, 8.0, screen.x - 20.0, 104.0))
+	draw_string(font, Vector2(144.0, 64.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 150.0, 16, Color("#fff0c7"))
+	draw_string(font, Vector2(144.0, 80.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 150.0, 11, Color("#c7ddba"))
+	draw_resource_amount(Vector2(317.0, 33.0), "coins", coins, 27.0, 12, Color("#f4d69a"))
+	draw_resource_amount(Vector2(417.0, 33.0), "wood", wood, 27.0, 12, Color("#c7ddba"))
+	draw_resource_amount(Vector2(317.0, 71.0), "experience", experience, 27.0, 12, Color("#8fe8df"))
+	draw_resource_amount(Vector2(417.0, 71.0), "sparks", perun_sparks, 27.0, 12, Color("#f6d779"))
+	draw_game_logo(Vector2(screen.x / 2.0, 184.0), Vector2(190.0, 125.0))
+	if home_help_icon != null:
+		draw_texture_rect(home_help_icon, texture_aspect_fit_rect(home_help_icon, help_button_rect()), false)
+	else:
+		var help_center := help_button_rect().get_center()
+		draw_circle(help_center, 20.0, Color("#0b211bcf"))
+		draw_arc(help_center, 20.0, 0.0, TAU, 36, Color("#a58249"), 1.5, true)
+		draw_string(font, Vector2(help_button_rect().position.x, help_button_rect().position.y + 33.0), "?", HORIZONTAL_ALIGNMENT_CENTER, help_button_rect().size.x, 22, Color("#f7dfa8"))
 	var region_name := region_display_name(main_menu_region_id()).to_upper()
-	var region_panel := Rect2(66.0, 258.0, screen.x - 132.0, 58.0)
-	draw_style_box(make_panel(Color("#111a17df"), Color("#997441")), region_panel)
-	draw_string(font, Vector2(region_panel.position.x, 282.0), region_name, HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x, 17, Color("#f0dfba"))
-	draw_string(font, Vector2(region_panel.position.x, 303.0), "SZLAK %d  •  POZIOM %d" % [int((focus_level_id - 1) / 5) + 1, focus_level_id], HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x, 10, Color("#c5b99e"))
-	var mission_name := str(focus_level.get("name", "Dębowe Pogranicze"))
-	draw_string(font, Vector2(30.0, 562.0), mission_name, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 60.0, 13, Color("#e1d3b3"))
+	var region_panel := Rect2(13.0, 252.0, screen.x - 26.0, 130.0)
+	if map_ui_frames != null:
+		var frame_size := map_ui_frames.get_size()
+		var header_source := Rect2(0.0, frame_size.y * 0.10, frame_size.x, frame_size.y * 0.40)
+		draw_texture_rect_region(map_ui_frames, region_panel, header_source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#111a17df"), Color("#997441")), region_panel)
+	draw_string(font, Vector2(region_panel.position.x + 15.0, 326.0), region_name, HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x - 30.0, 21, Color("#f0dfba"))
+	draw_string(font, Vector2(region_panel.position.x + 15.0, 338.0), "SZLAK %d  •  POZIOM %d" % [int((focus_level_id - 1) / 5) + 1, focus_level_id], HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x - 30.0, 12, Color("#c5b99e"))
+	draw_home_party(screen)
 	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 19)
-	draw_string(font, Vector2(0.0, 719.0), "DZIENNY DAR GAJU" if daily_reward_available() else "DAR GAJU ODEBRANY  •  WRÓĆ JUTRO", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e1d3b3"))
 	draw_home_reward_shelf()
+	var reward_panel := Rect2(106.0, 662.0, screen.x - 212.0, 80.0)
+	if map_ui_frames != null:
+		var reward_frame_size := map_ui_frames.get_size()
+		var reward_source := Rect2(reward_frame_size.x * 0.12, reward_frame_size.y * 0.57, reward_frame_size.x * 0.76, reward_frame_size.y * 0.25)
+		draw_texture_rect_region(map_ui_frames, reward_panel, reward_source, Color.WHITE)
+	else:
+		draw_style_box(make_panel(Color("#101e18ee"), Color("#ad8449")), reward_panel)
+	draw_string(font, Vector2(reward_panel.position.x + 20.0, 705.0), "DZIENNY DAR GAJU", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 14, Color("#f0dfba"))
+	draw_string(font, Vector2(reward_panel.position.x + 20.0, 718.0), "ODBIERZ" if daily_reward_available() else "ODEBRANO  •  WRÓĆ JUTRO", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 10, Color("#e1d3b3"))
 	draw_home_navigation(screen)
 
 func draw_help_overlay(screen: Vector2) -> void:
