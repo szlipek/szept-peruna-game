@@ -228,6 +228,8 @@ var tile_remove_frames: Array[Texture2D] = []
 var village_background: Texture2D
 var village_layout: Texture2D
 var village_inspector_frame: Texture2D
+var village_growth_props: Texture2D
+var village_starting_illustrations := {}
 var village_upgraded_illustrations := {}
 var leszy_portrait: Texture2D
 var wilk_cienia_portrait: Texture2D
@@ -370,7 +372,9 @@ func _ready() -> void:
 	village_background = load_image_texture("res://art/environments/village_debowe_pogranicze_v01.png")
 	village_layout = load_image_texture("res://art/environments/village_layout_v01.png")
 	village_inspector_frame = load_image_texture("res://art/ui/village_inspector_frame_v01.png")
+	village_growth_props = load_image_texture("res://art/environments/village_growth_props_v01.png")
 	for building_id in BUILDING_IDS:
+		village_starting_illustrations[building_id] = load_image_texture("res://art/environments/building_%s_v00.png" % building_id)
 		village_upgraded_illustrations[building_id] = load_image_texture("res://art/environments/building_%s_v02.png" % building_id)
 	leszy_portrait = load_image_texture("res://art/characters/boss_leszy_portrait_v01.png")
 	wilk_cienia_portrait = load_image_texture("res://art/characters/boss_wilk_cienia_portrait_v01.png")
@@ -2202,7 +2206,10 @@ func village_building_rect(building_id: String) -> Rect2:
 func village_building_label_rect(building_id: String) -> Rect2:
 	var building := village_building_rect(building_id)
 	var width := minf(132.0, get_viewport_rect().size.x * 0.32)
-	return Rect2(building.get_center().x - width * 0.5, building.end.y - 5.0, width, 33.0)
+	var lift := 0.0
+	if building_id in ["kuznia", "chata_zielarki", "spichlerz"]:
+		lift = 30.0
+	return Rect2(building.get_center().x - width * 0.5, building.end.y - 5.0 - lift, width, 33.0)
 
 func map_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 178.0, 34.0, 98.0, 32.0)
@@ -2781,7 +2788,9 @@ func daily_reward_available() -> bool:
 
 func claim_daily_reward() -> void:
 	if not daily_reward_available():
-		message = "Dzisiejszy Dar Gaju został już odebrany. Wróć jutro."
+		daily_reward_open_time = 0.0
+		message = "Dar Gaju już odebrany. Odtwarzam animację skrzyń."
+		play_sfx(760.0, 0.16, 0.18)
 		queue_redraw()
 		return
 	var coin_reward := 180 + mini(820, unlocked_level * 10)
@@ -3595,7 +3604,11 @@ func draw_village_overlay(screen: Vector2) -> void:
 		draw_village_inspector()
 
 func village_illustration(building_id: String, level: int) -> Texture2D:
-	if level >= 6:
+	if level <= 6:
+		var starting := village_starting_illustrations.get(building_id, null) as Texture2D
+		if starting != null:
+			return starting
+	if level >= 26:
 		var upgraded := village_upgraded_illustrations.get(building_id, null) as Texture2D
 		if upgraded != null:
 			return upgraded
@@ -3608,19 +3621,52 @@ func village_illustration(building_id: String, level: int) -> Texture2D:
 		"wieza_peruna": return wieza_peruna_illustration
 	return null
 
-func draw_village_growth_details(rect: Rect2, level: int) -> void:
+func village_art_rect(rect: Rect2, level: int) -> Rect2:
+	var scale := 0.38 + level * 0.035 if level <= 6 else (0.82 + (level - 7) * 0.01 if level <= 25 else 0.96 + (level - 26) * 0.006)
+	var size := rect.size * scale
+	var lift := 16.0
+	match village_art_id_for_offset(rect):
+		"wieza_peruna": lift = 22.0
+		"swiety_gaj": lift = 48.0
+		"kuznia": lift = 56.0
+		"chata_zielarki": lift = 56.0
+		"spichlerz": lift = 60.0
+	return Rect2(Vector2(rect.get_center().x - size.x * 0.5, rect.end.y - size.y - lift), size)
+
+func village_art_id_for_offset(rect: Rect2) -> String:
+	for building_id in BUILDING_IDS:
+		if village_building_rect(building_id).position.distance_to(rect.position) < 1.0:
+			return building_id
+	return ""
+
+func draw_village_growth_details(rect: Rect2, level: int, building_id: String) -> void:
 	if level <= 0:
 		return
-	var rune_count := level % 10
-	for rune_index in rune_count:
-		var rune_pos := Vector2(rect.position.x + rect.size.x * (0.17 + rune_index * 0.073), rect.position.y + rect.size.y * 0.78)
-		draw_circle(rune_pos, 3.7, Color("#ffbe5766"))
-		draw_circle(rune_pos, 1.8, Color("#ffe9a1"))
+	var detail_color := Color("#d4a555")
+	match building_id:
+		"chata_zielarki": detail_color = Color("#85ae6b")
+		"swiety_gaj": detail_color = Color("#e9bd60")
+		"wieza_peruna": detail_color = Color("#87c5d7")
+		"kuznia": detail_color = Color("#d9824e")
+	var prop_positions := [Vector2(0.12, 0.92), Vector2(0.86, 0.92), Vector2(0.31, 0.97), Vector2(0.68, 0.97), Vector2(0.50, 0.88)]
+	for prop_index in prop_positions.size():
+		var growth := clampf((float(level) - prop_index * 10.0) / 10.0, 0.0, 1.0)
+		if growth <= 0.0:
+			continue
+		var anchor: Vector2 = rect.position + rect.size * prop_positions[prop_index]
+		var prop_size := Vector2(rect.size.x * (0.12 + growth * 0.10), rect.size.y * (0.17 + growth * 0.13))
+		if village_growth_props != null:
+			var cell_width := village_growth_props.get_width() / 6.0
+			var building_index := BUILDING_IDS.find(building_id)
+			var source := Rect2(building_index * cell_width, 0.0, cell_width, village_growth_props.get_height())
+			draw_texture_rect_region(village_growth_props, Rect2(anchor - Vector2(prop_size.x * 0.5, prop_size.y), prop_size), source, Color.WHITE)
+		else:
+			draw_circle(anchor, prop_size.x * 0.35, detail_color)
 	var pennants := mini(5, int(level / 10))
 	for pennant_index in pennants:
-		var pin := Vector2(rect.position.x + rect.size.x * (0.27 + pennant_index * 0.12), rect.position.y + rect.size.y * 0.27)
-		draw_line(pin, pin + Vector2(0.0, rect.size.y * 0.11), Color("#f6d89a"), 1.5)
-		draw_colored_polygon(PackedVector2Array([pin + Vector2(0.0, 2.0), pin + Vector2(8.0, 5.0), pin + Vector2(0.0, 9.0)]), Color("#d9a344"))
+		var pin := Vector2(rect.position.x + rect.size.x * (0.22 + pennant_index * 0.14), rect.position.y + rect.size.y * 0.19)
+		draw_line(pin, pin + Vector2(0.0, rect.size.y * 0.10), Color("#f6d89a"), 1.5)
+		draw_colored_polygon(PackedVector2Array([pin + Vector2(0.0, 2.0), pin + Vector2(8.0, 5.0), pin + Vector2(0.0, 9.0)]), detail_color)
 
 func draw_village_construction(rect: Rect2, progress: float) -> void:
 	var opacity := 1.0 - progress
@@ -3645,15 +3691,15 @@ func draw_village_building(building_id: String) -> void:
 		level = village_upgrade_from_level
 	var sprite := village_illustration(building_id, level)
 	if sprite != null:
-		var display_rect := rect
+		var display_rect := village_art_rect(rect, level)
 		if animating and progress >= 0.52:
 			var bounce := 1.0 + 0.08 * sin((progress - 0.52) / 0.48 * PI)
-			var bounce_size := rect.size * bounce
+			var bounce_size := display_rect.size * bounce
 			display_rect = Rect2(Vector2(rect.get_center().x - bounce_size.x * 0.5, rect.end.y - bounce_size.y), bounce_size)
 		draw_texture_rect(sprite, display_rect, false, Color("#b9c3b8") if level == 0 else Color.WHITE)
-		draw_village_growth_details(display_rect, level)
+		draw_village_growth_details(display_rect, level, building_id)
 	if animating:
-		draw_village_construction(rect, progress)
+		draw_village_construction(village_art_rect(rect, level), progress)
 	var label_rect := village_building_label_rect(building_id)
 	if map_mission_nameplate != null:
 		draw_texture_rect(map_mission_nameplate, label_rect, false, Color("#ffe0a1") if village_selected_id == building_id else Color.WHITE)
@@ -3692,23 +3738,26 @@ func draw_village_inspector() -> void:
 	var title_size := 18
 	while title_size > 13 and font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > panel.size.x - 110.0:
 		title_size -= 1
-	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 68.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, title_size, Color("#ffe2a3"))
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 83.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, title_size, Color("#ffe2a3"))
 	draw_button(village_inspector_close_rect(), "X", true, 16)
 	var level_text := "POZIOM %d" % level if max_level else "POZIOM %d  →  %d" % [level, level + 1]
-	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 92.0), level_text, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 16, Color("#e3d4ab"))
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 107.0), level_text, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 16, Color("#e3d4ab"))
 	var preview_size := minf(96.0, minf((panel.size.x - 108.0) * 0.5, panel.size.y - 280.0))
 	var preview_y := panel.position.y + 105.0
 	var current_rect := Rect2(panel.position.x + 52.0, preview_y, preview_size, preview_size)
 	var next_rect := Rect2(panel.end.x - 52.0 - preview_size, preview_y, preview_size, preview_size)
 	var current_art := village_illustration(building_id, level)
 	if current_art != null:
-		draw_texture_rect(current_art, current_rect, false)
-		draw_village_growth_details(current_rect, level)
+		var current_art_rect := village_art_rect(current_rect, level)
+		draw_texture_rect(current_art, current_art_rect, false)
+		draw_village_growth_details(current_art_rect, level, building_id)
 	if not max_level:
 		var next_art := village_illustration(building_id, level + 1)
 		if next_art != null:
-			draw_texture_rect(next_art, next_rect, false)
-			draw_village_growth_details(next_rect, level + 1)
+			draw_circle(next_rect.get_center(), preview_size * 0.39, Color("#d9aa5229"))
+			var next_art_rect := village_art_rect(next_rect, level + 1)
+			draw_texture_rect(next_art, next_art_rect, false)
+			draw_village_growth_details(next_art_rect, level + 1, building_id)
 		draw_string(font, Vector2(panel.get_center().x - 18.0, preview_y + preview_size * 0.64), "→", HORIZONTAL_ALIGNMENT_CENTER, 36.0, 25, Color("#f9cd7c"))
 	draw_string(font, Vector2(current_rect.position.x, preview_y + preview_size + 17.0), "TERAZ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#c9d9b8"))
 	if not max_level:
@@ -4141,7 +4190,7 @@ func draw_main_menu(screen: Vector2) -> void:
 	else:
 		draw_style_box(make_panel(Color("#101e18ee"), Color("#ad8449")), reward_panel)
 	draw_string(font, Vector2(reward_panel.position.x + 20.0, 705.0), "DZIENNY DAR GAJU", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 14, Color("#f0dfba"))
-	draw_string(font, Vector2(reward_panel.position.x + 20.0, 718.0), "ODBIERZ" if daily_reward_available() else "ODEBRANO  •  WRÓĆ JUTRO", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 10, Color("#e1d3b3"))
+	draw_string(font, Vector2(reward_panel.position.x + 20.0, 718.0), "ODBIERZ" if daily_reward_available() else "ODEBRANO  •  ODTWÓRZ", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 10, Color("#e1d3b3"))
 	draw_home_navigation(screen)
 
 func draw_help_overlay(screen: Vector2) -> void:

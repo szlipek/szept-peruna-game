@@ -12,7 +12,7 @@ func capture() -> void:
 	scene.set("coins", 3200)
 	scene.set("wood", 480)
 	scene.set("building_levels", {"domostwa": 16, "kuznia": 5, "chata_zielarki": 2, "swiety_gaj": 2, "spichlerz": 6, "wieza_peruna": 3})
-	assert(scene.call("village_illustration", "kuznia", 5) != scene.call("village_illustration", "kuznia", 6))
+	assert(scene.call("village_illustration", "kuznia", 6) != scene.call("village_illustration", "kuznia", 7))
 	for size in [Vector2i(540, 960), Vector2i(390, 844)]:
 		root.size = size
 		for frame in 5:
