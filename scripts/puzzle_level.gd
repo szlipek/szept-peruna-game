@@ -169,6 +169,7 @@ var goal_target := 0
 var goal_progress := 0
 var hero_levels := {"lada": 1, "brun": 0, "mieta": 0, "wszebor": 0, "boruta": 0, "dobromir": 0, "milena": 0, "radomir": 0, "witosz": 0, "jagna": 0, "rada": 0, "welesa": 0, "zorya": 0, "jaromir": 0, "msciwoj": 0, "dobrawa": 0, "perunika": 0, "czernik": 0, "mirka": 0, "wlodzimierz": 0, "zywia": 0, "mokosza": 0, "stribog": 0, "swarog": 0, "weles": 0}
 var hero_experience := {"lada": 0, "brun": 0, "mieta": 0, "wszebor": 0, "boruta": 0, "dobromir": 0, "milena": 0, "radomir": 0, "witosz": 0, "jagna": 0, "rada": 0, "welesa": 0, "zorya": 0, "jaromir": 0, "msciwoj": 0, "dobrawa": 0, "perunika": 0, "czernik": 0, "mirka": 0, "wlodzimierz": 0, "zywia": 0, "mokosza": 0, "stribog": 0, "swarog": 0, "weles": 0}
+var hero_active_charge := {}
 var hero_trees := {}
 var owned_heroes := {"lada": true, "brun": false, "mieta": false, "wszebor": false, "boruta": false, "dobromir": false, "milena": false, "radomir": false, "witosz": false, "jagna": false, "rada": false, "welesa": false, "zorya": false, "jaromir": false, "msciwoj": false, "dobrawa": false, "perunika": false, "czernik": false, "mirka": false, "wlodzimierz": false, "zywia": false, "mokosza": false, "stribog": false, "swarog": false, "weles": false}
 var active_heroes: Array[String] = ["lada"]
@@ -209,6 +210,7 @@ var map_was_dragged := false
 var booster_open := false
 var main_menu_open := true
 var help_open := false
+var defender_help_open := false
 var training_open := false
 var training_mode := false
 var training_battle: Dictionary = {}
@@ -228,9 +230,11 @@ var tile_remove_frames: Array[Texture2D] = []
 var village_background: Texture2D
 var village_layout: Texture2D
 var village_inspector_frame: Texture2D
-var village_growth_props: Texture2D
+var village_popup_close_button: Texture2D
+var village_upgrade_vfx_frames: Texture2D
 var village_starting_illustrations := {}
 var village_upgraded_illustrations := {}
+var village_level_illustrations := {}
 var leszy_portrait: Texture2D
 var wilk_cienia_portrait: Texture2D
 var rusalka_portrait: Texture2D
@@ -302,6 +306,7 @@ var battle_board_roots: Texture2D
 var enemy_role_scout_icon: Texture2D
 var enemy_role_mystic_icon: Texture2D
 var enemy_role_attacker_icon: Texture2D
+var enemy_role_emblems: Texture2D
 var star_rating_icon: Texture2D
 var coin_resource_icon: Texture2D
 var wood_resource_icon: Texture2D
@@ -372,7 +377,8 @@ func _ready() -> void:
 	village_background = load_image_texture("res://art/environments/village_debowe_pogranicze_v01.png")
 	village_layout = load_image_texture("res://art/environments/village_layout_v01.png")
 	village_inspector_frame = load_image_texture("res://art/ui/village_inspector_frame_v01.png")
-	village_growth_props = load_image_texture("res://art/environments/village_growth_props_v01.png")
+	village_popup_close_button = load_image_texture("res://art/ui/village_popup_close_button_v01.png")
+	village_upgrade_vfx_frames = load_image_texture("res://art/vfx/village_upgrade_vfx_frames_v01.png")
 	for building_id in BUILDING_IDS:
 		village_starting_illustrations[building_id] = load_image_texture("res://art/environments/building_%s_v00.png" % building_id)
 		village_upgraded_illustrations[building_id] = load_image_texture("res://art/environments/building_%s_v02.png" % building_id)
@@ -451,6 +457,7 @@ func _ready() -> void:
 	enemy_role_scout_icon = load_image_texture("res://art/ui/enemy_role_scout_v01.png")
 	enemy_role_mystic_icon = load_image_texture("res://art/ui/enemy_role_mystic_v01.png")
 	enemy_role_attacker_icon = load_image_texture("res://art/ui/enemy_role_attacker_v01.png")
+	enemy_role_emblems = load_image_texture("res://art/ui/enemy_role_emblems_v01.png")
 	star_rating_icon = load_image_texture("res://art/ui/icon_star_oak_v01.png")
 	coin_resource_icon = load_image_texture("res://art/ui/icon_coin_oak_v01.png")
 	wood_resource_icon = load_image_texture("res://art/ui/icon_wood_oak_v01.png")
@@ -614,6 +621,7 @@ func fill_sfx_buffer() -> void:
 		sfx_playback.push_frame(Vector2(sample, sample))
 
 func start_level(index: int, level_override: Dictionary = {}) -> void:
+	defender_help_open = false
 	level_index = clampi(index, 0, levels.size() - 1)
 	training_mode = not level_override.is_empty()
 	if not training_mode:
@@ -628,6 +636,8 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	brun_charge = 0
 	brun_targeting = false
 	mieta_charge = 0
+	for hero_id in HERO_IDS:
+		hero_active_charge[hero_id] = 0
 	hammer_count = 1
 	hammer_targeting = false
 	bolt_count = 1
@@ -877,6 +887,17 @@ func handle_release(position: Vector2) -> void:
 		message = "Wyprawa trwa — odnajdź drogę przez krainę."
 		queue_redraw()
 		return
+	if defender_help_open:
+		defender_help_open = false
+		queue_redraw()
+		return
+	if not roster_open and not village_open and not map_open and not booster_open and not training_open and not help_open and not main_menu_open and has_living_defender():
+		for index in enemies.size():
+			var guarded_enemy: Dictionary = enemies[index]
+			if int(guarded_enemy.get("health", 0)) > 0 and str(guarded_enemy.get("role", "attacker")) != "defender" and is_in_button(position, enemy_guard_icon_rect(index)):
+				defender_help_open = true
+				queue_redraw()
+				return
 	for index in enemies.size():
 		if not roster_open and not village_open and not map_open and not booster_open and not training_open and not help_open and not main_menu_open and is_in_button(position, enemy_target_rect(index)) and int(enemies[index].get("health", 0)) > 0:
 			previous_target_index = target_enemy_index
@@ -933,41 +954,10 @@ func handle_release(position: Vector2) -> void:
 		village_selected_id = ""
 		queue_redraw()
 		return
-	if is_in_button(position, lada_skill_rect()) and current_turn_hero() == "lada" and lada_charge >= LADA_MAX_CHARGE:
-		hammer_targeting = false
-		bolt_targeting = false
-		gale_targeting = false
-		brun_targeting = false
-		lada_targeting = true
-		message = "Strzała Peruna: wybierz kolumnę na planszy."
-		queue_redraw()
-		return
-	if is_in_button(position, brun_skill_rect()) and current_turn_hero() == "brun" and brun_charge >= BRUN_MAX_CHARGE:
-		hammer_targeting = false
-		bolt_targeting = false
-		gale_targeting = false
-		lada_targeting = false
-		brun_targeting = true
-		message = "Uderzenie Kowala: wybierz środek obszaru 3×3."
-		queue_redraw()
-		return
-	if is_in_button(position, mieta_skill_rect()) and current_turn_hero() == "mieta" and mieta_charge >= MIETA_MAX_CHARGE:
-		lada_targeting = false
-		brun_targeting = false
-		hammer_targeting = false
-		bolt_targeting = false
-		gale_targeting = false
-		activate_mieta()
-		return
-	if is_in_button(position, hammer_rect()) and hammer_count > 0:
-		lada_targeting = false; brun_targeting = false; bolt_targeting = false; gale_targeting = false
-		hammer_targeting = true; message = "Młot bursztynowy: wybierz środek obszaru 3×3."; queue_redraw(); return
-	if is_in_button(position, bolt_booster_rect()) and bolt_count > 0:
-		lada_targeting = false; brun_targeting = false; hammer_targeting = false; gale_targeting = false
-		bolt_targeting = true; message = "Grom Peruna: wybierz rząd do zniszczenia."; queue_redraw(); return
-	if is_in_button(position, gale_booster_rect()) and gale_count > 0:
-		lada_targeting = false; brun_targeting = false; hammer_targeting = false; bolt_targeting = false
-		gale_targeting = true; message = "Wiatr Gaju: wybierz typ znaku do rozwiania."; queue_redraw(); return
+	for branch in 3:
+		if is_in_button(position, hero_active_skill_rect(branch)):
+			activate_hero_branch_skill(branch)
+			return
 	var released_cell := point_to_cell(position)
 	if released_cell.x < 0:
 		return
@@ -1129,6 +1119,60 @@ func activate_mieta() -> void:
 		finish_special_turn("Krąg Uzdrowienia przywrócił drużynie po %d zdrowia." % healing)
 	queue_redraw()
 
+func activate_hero_branch_skill(branch: int) -> void:
+	var hero_id := current_turn_hero()
+	var rank := hero_active_skill_rank(hero_id, branch)
+	var skill_name := SkillTree.branch_name(hero_id, branch)
+	if rank <= 0:
+		message = "%s jest zablokowana. Zainwestuj punkt w tę gałąź talentów." % skill_name
+		queue_redraw()
+		return
+	var cost := hero_active_skill_cost(branch)
+	var charge := int(hero_active_charge.get(hero_id, 0))
+	if charge < cost:
+		message = "%s potrzebuje jeszcze %d energii żywiołu." % [skill_name, cost - charge]
+		queue_redraw()
+		return
+	hero_active_charge[hero_id] = charge - cost
+	var hero_level := int(hero_levels.get(hero_id, 1))
+	var damage := 0
+	match branch:
+		0:
+			damage = 20 + hero_level * 3 + rank * 6
+			score += damage
+			if has_living_enemies():
+				deal_damage_to_enemies(damage)
+		1:
+			damage = 10 + hero_level * 2 + rank * 4
+			party_shield += 5 + rank * 2
+			heal_all_living_heroes(2 + rank)
+			score += damage
+			if has_living_enemies():
+				deal_damage_to_enemies(damage)
+		2:
+			var favored_element := SkillTree.element(hero_id)
+			var removal_limit := mini(8, 2 + int(rank / 3))
+			var struck := {}
+			for row in BOARD_SIZE:
+				for col in BOARD_SIZE:
+					if struck.size() >= removal_limit:
+						break
+					if board[row][col] == favored_element:
+						struck[Vector2i(col, row)] = true
+				if struck.size() >= removal_limit:
+					break
+			if not struck.is_empty():
+				resolve_matches(struck)
+			damage = 15 + hero_level * 2 + rank * 5 + struck.size() * 4
+			score += damage
+			if has_living_enemies():
+				deal_damage_to_enemies(damage)
+	if is_level_complete():
+		finish_level("%s kończy starcie." % skill_name)
+	else:
+		finish_special_turn("%s: %d obrażeń specjalnych." % [skill_name, damage])
+	queue_redraw()
+
 func finish_special_turn(success_message: String) -> void:
 	await enemy_take_turn()
 	advance_turn()
@@ -1272,6 +1316,9 @@ func resolve_matches(matches: Dictionary) -> void:
 		var hero_extra_shield := 0
 		var talent_damage := 0
 		var element_counts := [fire_count, water_count, leaf_count, amber_count, rune_count]
+		var charge_hero := current_turn_hero()
+		var charge_gain: int = element_counts[SkillTree.element(charge_hero)]
+		hero_active_charge[charge_hero] = mini(12, int(hero_active_charge.get(charge_hero, 0)) + charge_gain)
 		for skill_hero_id in active_heroes:
 			var skill_tree: Dictionary = hero_trees.get(skill_hero_id, {})
 			var favored_count: int = element_counts[SkillTree.element(skill_hero_id)]
@@ -1728,7 +1775,7 @@ func enemy_support_action() -> String:
 func enemy_role_label(enemy: Dictionary) -> String:
 	match str(enemy.get("role", "attacker")):
 		"defender": return "OBROŃCA"
-		"support": return "MISTYK"
+		"support": return "WSPARCIE"
 		"scout": return "ZWIADOWCA"
 	return "NAPASTNIK"
 
@@ -1740,6 +1787,12 @@ func enemy_role_color(enemy: Dictionary) -> Color:
 	return Color("#bd654d")
 
 func draw_enemy_role_icon(center: Vector2, role: String, color: Color) -> void:
+	if enemy_role_emblems != null:
+		var role_index: int = int({"attacker": 0, "defender": 1, "support": 2, "scout": 3}.get(role, 0))
+		var cell_width := enemy_role_emblems.get_width() / 4.0
+		var source := Rect2(role_index * cell_width, 0.0, cell_width, enemy_role_emblems.get_height())
+		draw_texture_rect_region(enemy_role_emblems, Rect2(center - Vector2(14.0, 14.0), Vector2(28.0, 28.0)), source, Color.WHITE)
+		return
 	var role_icon: Texture2D = null
 	if role == "scout":
 		role_icon = enemy_role_scout_icon
@@ -1763,6 +1816,19 @@ func draw_enemy_role_icon(center: Vector2, role: String, color: Color) -> void:
 		_:
 			draw_line(center - Vector2(4.0, 4.0), center + Vector2(4.0, 4.0), Color("#fff5d6"), 1.5)
 			draw_line(center + Vector2(4.0, -4.0), center + Vector2(-4.0, 4.0), Color("#fff5d6"), 1.5)
+
+func draw_enemy_guard_help() -> void:
+	var panel := enemy_guard_help_rect()
+	draw_style_box(make_panel(Color("#0b211cef"), Color("#d2ae62")), panel)
+	draw_enemy_role_icon(panel.position + Vector2(45.0, 48.0), "defender", Color("#75b6dd"))
+	draw_string(font, panel.position + Vector2(72.0, 45.0), "OSŁONA OBROŃCY", HORIZONTAL_ALIGNMENT_LEFT, panel.size.x - 125.0, 16, Color("#ffe9ae"))
+	draw_string(font, panel.position + Vector2(25.0, 82.0), "Dopóki żyje Obrońca, pozostali wrogowie", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#edf4df"))
+	draw_string(font, panel.position + Vector2(25.0, 103.0), "otrzymują tylko 55% obrażeń.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#edf4df"))
+	draw_string(font, panel.position + Vector2(25.0, 128.0), "Pokonaj Obrońcę jako pierwszego.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 13, Color("#b9e58a"))
+	if village_popup_close_button != null:
+		draw_texture_rect(village_popup_close_button, enemy_guard_help_close_rect(), false)
+	else:
+		draw_string(font, enemy_guard_help_close_rect().position + Vector2(0.0, 24.0), "X", HORIZONTAL_ALIGNMENT_CENTER, enemy_guard_help_close_rect().size.x, 16, Color("#ffe9ae"))
 
 func hero_selection_color(hero_id: String) -> Color:
 	match hero_id:
@@ -1985,7 +2051,20 @@ func enemy_card_rect(index: int) -> Rect2:
 	var card_width := minf(165.0, (get_viewport_rect().size.x - 32.0 - gap * float(enemy_count - 1)) / float(enemy_count))
 	var group_width := card_width * float(enemy_count) + gap * float(enemy_count - 1)
 	var start_x := (get_viewport_rect().size.x - group_width) * 0.5
-	return Rect2(start_x + index * (card_width + gap), 74.0, card_width, 212.0)
+	return Rect2(start_x + index * (card_width + gap), 94.0, card_width, 192.0)
+
+func enemy_guard_icon_rect(index: int) -> Rect2:
+	var card := enemy_card_rect(index)
+	return Rect2(card.get_center().x - 18.0, card.position.y + 44.0, 36.0, 36.0)
+
+func enemy_guard_help_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	var width := minf(screen.x - 56.0, 420.0)
+	return Rect2((screen.x - width) * 0.5, 132.0, width, 148.0)
+
+func enemy_guard_help_close_rect() -> Rect2:
+	var panel := enemy_guard_help_rect()
+	return Rect2(panel.end.x - 45.0, panel.position.y + 9.0, 34.0, 34.0)
 
 func boss_portrait_for(name: String) -> Texture2D:
 	if enemy_portraits.has(name):
@@ -2049,18 +2128,31 @@ func next_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 184.0, 902.0, 160.0, 42.0)
 
 func lada_skill_rect() -> Rect2:
-	return Rect2(20.0, 822.0, 160.0, 72.0)
+	return Rect2(20.0, 792.0, 160.0, 72.0)
 
 func brun_skill_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 822.0, 160.0, 72.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 792.0, 160.0, 72.0)
 
 func mieta_skill_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 180.0, 822.0, 160.0, 72.0)
+	return Rect2(get_viewport_rect().size.x - 180.0, 792.0, 160.0, 72.0)
 
 func hero_battle_rect(index: int) -> Rect2:
 	if active_heroes.size() == 1:
-		return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 796.0, 160.0, 72.0)
+		return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 766.0, 160.0, 72.0)
 	return [lada_skill_rect(), brun_skill_rect(), mieta_skill_rect()][index]
+
+func hero_active_skill_rect(branch: int) -> Rect2:
+	var screen_width := get_viewport_rect().size.x
+	var group_width := minf(360.0, screen_width - 54.0)
+	var width := group_width / 3.0
+	var group_left := (screen_width - group_width) * 0.5
+	return Rect2(group_left + branch * width, 884.0, width, 68.0)
+
+func hero_active_skill_cost(branch: int) -> int:
+	return [4, 6, 8][clampi(branch, 0, 2)]
+
+func hero_active_skill_rank(hero_id: String, branch: int) -> int:
+	return SkillTree.branch_total(hero_trees.get(hero_id, {}), branch)
 
 func enemy_target_rect(index: int) -> Rect2:
 	return enemy_card_rect(index)
@@ -2169,7 +2261,7 @@ func village_inspector_rect() -> Rect2:
 
 func village_inspector_close_rect() -> Rect2:
 	var panel := village_inspector_rect()
-	return Rect2(panel.end.x - 63.0, panel.position.y + 28.0, 40.0, 38.0)
+	return Rect2(panel.end.x - 68.0, panel.position.y + 22.0, 48.0, 48.0)
 
 func village_upgrade_rect() -> Rect2:
 	var panel := village_inspector_rect()
@@ -2325,8 +2417,8 @@ func daily_reward_banner_rect() -> Rect2:
 
 func main_menu_nav_rect(index: int) -> Rect2:
 	var screen := get_viewport_rect().size
-	var item_width := 88.0
-	var side_margin := (screen.x - item_width * 5.0) * 0.5
+	var item_width := 110.0
+	var side_margin := (screen.x - item_width * 4.0) * 0.5
 	return Rect2(side_margin + index * item_width, 837.0, item_width, 123.0)
 
 func main_menu_map_rect() -> Rect2:
@@ -2338,11 +2430,8 @@ func main_menu_roster_rect() -> Rect2:
 func main_menu_village_rect() -> Rect2:
 	return main_menu_nav_rect(2)
 
-func main_menu_booster_rect() -> Rect2:
-	return main_menu_nav_rect(3)
-
 func main_menu_training_rect() -> Rect2:
-	return main_menu_nav_rect(4)
+	return main_menu_nav_rect(3)
 
 func help_button_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 58.0, 124.0, 50.0, 50.0)
@@ -2369,12 +2458,21 @@ func building_cost(building_id: String) -> Dictionary:
 	var multiplier := 1.0 + float(building_levels[building_id]) * 0.25
 	return {"coins": int(round(int(base["coins"]) * multiplier)), "wood": int(round(int(base["wood"]) * multiplier))}
 
+func building_level_cap() -> int:
+	# Co około 30 ukończonych etapów kampanii odblokowuje się kolejny poziom osady.
+	# Poziom 50 staje się dostępny dopiero w końcowej części drogi do 1500.
+	return mini(MAX_BUILDING_LEVEL, maxi(1, int(floor(float(unlocked_level) / 30.0))))
+
 func try_upgrade_building(building_id: String) -> bool:
 	var building_index := BUILDING_IDS.find(building_id)
 	if building_index < 0:
 		return false
-	if int(building_levels.get(building_id, 0)) >= MAX_BUILDING_LEVEL:
-		message = "%s osiągnęła maksymalny poziom %d." % [BUILDING_NAMES[building_index], MAX_BUILDING_LEVEL]
+	var level_cap := building_level_cap()
+	if int(building_levels.get(building_id, 0)) >= level_cap:
+		if level_cap < MAX_BUILDING_LEVEL:
+			message = "%s: kolejny poziom odblokuje się wraz z postępem mapy (obecny limit: %d/%d)." % [BUILDING_NAMES[building_index], level_cap, MAX_BUILDING_LEVEL]
+		else:
+			message = "%s osiągnęła maksymalny poziom %d." % [BUILDING_NAMES[building_index], MAX_BUILDING_LEVEL]
 		return false
 	var cost := building_cost(building_id)
 	if coins < int(cost["coins"]) or wood < int(cost["wood"]):
@@ -2729,11 +2827,6 @@ func handle_main_menu_input(position: Vector2) -> void:
 		village_selected_id = ""
 		queue_redraw()
 		return
-	if is_in_button(position, main_menu_booster_rect()):
-		main_menu_open = false
-		booster_open = true
-		queue_redraw()
-		return
 	if is_in_button(position, main_menu_training_rect()):
 		main_menu_open = false
 		training_open = true
@@ -2931,9 +3024,9 @@ func _draw() -> void:
 		draw_texture_rect(hud_oak_ornament, Rect2(20, 20, screen.x - 40, 104), false)
 	var level_title := "Trening  •  %s" % str(level.get("name", "Krąg treningowy")) if training_mode else "Poziom %d  •  %s" % [int(level.get("id", level_index + 1)), str(level.get("name", "Wyprawa"))]
 	var turn_title := "Tura: %s  •  wybieraj kafelki i łącz znaki" % HERO_NAMES[HERO_IDS.find(current_turn_hero())]
-	draw_string(font, Vector2(44, 85), "P. %d" % int(level.get("id", level_index + 1)), HORIZONTAL_ALIGNMENT_CENTER, 96, 17, Color("#fff0c7"))
+	draw_string(font, Vector2(34, 80), "P. %d" % int(level.get("id", level_index + 1)), HORIZONTAL_ALIGNMENT_CENTER, 96, 17, Color("#fff0c7"))
 	draw_string(font, Vector2(140, 85), str(level.get("name", "Wyprawa")), HORIZONTAL_ALIGNMENT_CENTER, 250, 17, Color("#fff0c7"))
-	draw_string(font, Vector2(458, 84), "Tura: %s" % HERO_NAMES[HERO_IDS.find(current_turn_hero())], HORIZONTAL_ALIGNMENT_CENTER, 70, 11, Color("#d8efac"))
+	draw_string(font, Vector2(428, 79), "Tura: %s" % HERO_NAMES[HERO_IDS.find(current_turn_hero())], HORIZONTAL_ALIGNMENT_CENTER, 70, 11, Color("#d8efac"))
 	var active_synergy_count := active_synergy_pairs().size()
 	if active_synergy_count > 0:
 		draw_string(font, Vector2(390, 111), "SYNERGIA +%d%%" % (active_synergy_count * 8), HORIZONTAL_ALIGNMENT_CENTER, 104, 10, Color("#f4d06d"))
@@ -2942,12 +3035,12 @@ func _draw() -> void:
 	var turn_banner := "RUCH PRZECIWNIKA" if enemy_attack_anim > 0.0 else ("PRZETRWAJ  •  %d/%d" % [goal_progress, goal_target] if goal_type == "survive" else "TWÓJ RUCH  •  %d" % moves_left)
 	var turn_banner_color := Color("#ff9b72") if enemy_attack_anim > 0.0 else Color("#b9e58a")
 	if not enemies.is_empty():
-		var banner_rect := Rect2(screen.x / 2.0 - 126.0, 288.0, 252.0, 38.0)
+		var banner_rect := Rect2(screen.x / 2.0 - 126.0, 288.0, 252.0, 48.0)
 		if turn_banner_oak != null:
 			draw_texture_rect(turn_banner_oak, banner_rect.grow(10.0), false)
 		else:
 			draw_style_box(make_panel(Color("#102a22f2"), Color("#d9b45d")), banner_rect)
-		draw_string(font, Vector2(banner_rect.position.x, banner_rect.position.y + 25), turn_banner, HORIZONTAL_ALIGNMENT_CENTER, banner_rect.size.x, 16, turn_banner_color)
+		draw_string(font, Vector2(banner_rect.position.x, banner_rect.position.y + 28), turn_banner, HORIZONTAL_ALIGNMENT_CENTER, banner_rect.size.x, 16, turn_banner_color)
 		for enemy_index in enemies.size():
 			var enemy: Dictionary = enemies[enemy_index]
 			var card := enemy_card_rect(enemy_index)
@@ -2960,47 +3053,48 @@ func _draw() -> void:
 			var enemy_color := Color("#fff0c7") if alive else Color("#879087")
 			var shown_health := float(displayed_enemy_health.get(str(enemy.get("name", "")), enemy_health_value))
 			var enemy_ratio := shown_health / float(maxi(1, enemy_max_health_value))
-			var health_y := card.position.y + 142.0
+			var health_y := card.position.y + 158.0
 			var portrait := boss_portrait_for(str(enemy.get("name", "")))
-			var portrait_window := Rect2(card.position.x + (card.size.x - 138.0) / 2.0, card.position.y + 3.0, 138.0, 138.0)
+			var portrait_window := Rect2(card.position.x + (card.size.x - 86.0) / 2.0, card.position.y + 48.0, 86.0, 86.0)
 			draw_rect(portrait_window.grow(-8.0), Color("#071d17"))
 			if is_target and enemy_square_card_frame != null:
 				draw_texture_rect(enemy_square_card_frame, portrait_window, false, Color(1.0, 0.9, 0.58, 1.0) if alive else Color(0.45, 0.5, 0.46, 0.8))
 			elif portrait_backdrop_oak != null:
 				draw_texture_rect(portrait_backdrop_oak, portrait_window, false, Color(0.62, 0.84, 0.65, 0.9) if alive else Color(0.45, 0.5, 0.46, 0.8))
 			if portrait != null:
-				var portrait_size := 110.0 + (sin(ui_anim_time * 4.0) * 2.5 if is_target else 0.0)
+				var portrait_size := 62.0 + (sin(ui_anim_time * 4.0) * 2.0 if is_target else 0.0)
 				var attack_bob := sin((6.5 - enemy_attack_anim) * 5.0) * 7.0 if enemy_attack_anim > 0.0 else 0.0
 				var portrait_y := portrait_window.get_center().y - portrait_size / 2.0 + attack_bob
 				draw_texture_rect(portrait, Rect2(card.position.x + (card.size.x - portrait_size) / 2.0, portrait_y, portrait_size, portrait_size), false)
 			if portrait == null:
 				draw_circle(portrait_window.get_center(), 28, Color("#5b356e") if alive else Color("#424843"))
-			var role_rect := Rect2(card.position.x + 12, card.position.y + 102, card.size.x - 24, 19)
+			var role_rect := Rect2(card.position.x + 12, card.position.y + 148.0, card.size.x - 24, 28)
 			var role_color := enemy_role_color(enemy)
-			draw_style_box(make_panel(Color(role_color, 0.88), Color("#fff0c7") if is_target else role_color.lightened(0.25)), role_rect)
 			var role_name := enemy_role_label(enemy)
-			var role_text_width := font.get_string_size(role_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x
-			var role_content_width := role_text_width + 22.0
+			var role_text_width := font.get_string_size(role_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+			var role_content_width := role_text_width + 34.0
 			var role_x := role_rect.get_center().x - role_content_width * 0.5
-			draw_enemy_role_icon(Vector2(role_x + 8.0, role_rect.get_center().y), str(enemy.get("role", "attacker")), role_color)
-			draw_string(font, Vector2(role_x + 18.0, role_rect.position.y + 13), role_name, HORIZONTAL_ALIGNMENT_LEFT, role_text_width + 2.0, 9, Color("#fff8df"))
+			draw_enemy_role_icon(Vector2(role_x + 14.0, role_rect.get_center().y), str(enemy.get("role", "attacker")), role_color)
+			draw_string(font, Vector2(role_x + 31.0, role_rect.position.y + 18), role_name, HORIZONTAL_ALIGNMENT_LEFT, role_text_width + 2.0, 10, Color("#fff1c5"))
 			if bool(enemy.get("enraged", false)):
 				draw_string(font, Vector2(card.position.x, role_rect.position.y - 5.0), "SZAŁ", HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 10, Color("#ffbf69"))
 			if alive and str(enemy.get("role", "attacker")) != "defender" and has_living_defender():
-				draw_string(font, Vector2(card.position.x, card.position.y + 31), "OSŁONA OBROŃCY", HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 9, Color("#b8d9ed"))
+				draw_enemy_role_icon(enemy_guard_icon_rect(enemy_index).get_center(), "defender", Color("#75b6dd"))
 			if enemy_damage_popup_time > 0.0 and enemy_damage_popup_index == enemy_index:
 				var hit_alpha := enemy_damage_popup_time / 0.9
 				draw_string(font, Vector2(card.position.x, card.position.y - 10.0 - (0.9 - enemy_damage_popup_time) * 28.0), "-%d" % enemy_damage_popup_value, HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 22, Color(1.0, 0.82, 0.32, hit_alpha))
-			var info_y := card.position.y + 140.0
+			var info_y := card.position.y + 145.0
 			draw_string(font, Vector2(card.position.x, info_y), str(enemy.get("name", "Wróg")), HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 11, enemy_color)
-			var bar_rect := Rect2(card.position.x + 12, health_y + 2, card.size.x - 24, 58)
+			var bar_rect := Rect2(card.position.x + 12, health_y + 2, card.size.x - 24, 42)
 			if healthbar_fill != null:
 				draw_texture_rect(healthbar_fill, Rect2(bar_rect.position + Vector2(3, 4), Vector2((bar_rect.size.x - 6) * enemy_ratio, bar_rect.size.y - 8)), false)
 			if healthbar_frame != null:
 				draw_texture_rect(healthbar_frame, bar_rect, false)
 			else:
 				draw_style_box(make_panel(Color("#2a2524dd"), Color("#8e6b45")), bar_rect)
-			draw_string(font, Vector2(bar_rect.position.x, health_y + 36.0), "%d/%d" % [enemy_health_value, enemy_max_health_value], HORIZONTAL_ALIGNMENT_CENTER, bar_rect.size.x, 13, Color("#fff8df"))
+			draw_string(font, Vector2(bar_rect.position.x, health_y + 27.0), "%d/%d" % [enemy_health_value, enemy_max_health_value], HORIZONTAL_ALIGNMENT_CENTER, bar_rect.size.x, 13, Color("#fff8df"))
+		if defender_help_open:
+			draw_enemy_guard_help()
 	var rect := board_rect()
 	if battle_board_roots != null:
 		draw_texture_rect(battle_board_roots, Rect2(rect.position + Vector2(-25.0, -25.0), rect.size + Vector2(50.0, 50.0)), false)
@@ -3106,8 +3200,8 @@ func _draw() -> void:
 		draw_string(font, Vector2(rect.position.x, rect.get_center().y + 17), "Powstaje nowa ścieżka kombinacji", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 13, Color("#e3efc9"))
 	# Wybrany cel jest podświetlany przy postaci; nie powielamy go tekstem nad bohaterami.
 	if not message.begins_with("Cel:"):
-		draw_string(font, Vector2(28, 755), message, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 56, 13, Color("#d9e4bd"))
-	# Rozbudowana podstawa korzeni jest tłem dla bohatera i boosterów.
+		draw_string(font, Vector2(28, 775), message, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 56, 13, Color("#d9e4bd"))
+	# Rozbudowana podstawa korzeni jest tłem dla aktywnej drużyny.
 	if booster_roots_pedestal != null:
 		draw_texture_rect(booster_roots_pedestal, Rect2(16, 844, screen.x - 32, 174), false)
 	# Bohaterowie są rysowani bez paneli: portret, nazwa, zdrowie i moc.
@@ -3139,18 +3233,29 @@ func _draw() -> void:
 		if damage_popup_time > 0.0 and current_turn_hero() == hero_id:
 			var popup_alpha := damage_popup_time / 0.8
 			draw_string(font, battle_card.position + Vector2(62, -8.0 - (0.8 - damage_popup_time) * 22.0), "-%d" % damage_popup_value, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1.0, 0.35, 0.25, popup_alpha))
-	for booster_data in [[hammer_rect(), booster_hammer_icon, "Młot", hammer_count], [bolt_booster_rect(), booster_bolt_icon, "Grom", bolt_count], [gale_booster_rect(), booster_gale_icon, "Wiatr", gale_count]]:
-		var booster_rect: Rect2 = booster_data[0]
-		var booster_icon: Texture2D = booster_data[1]
-		var booster_count_value: int = booster_data[3]
-		if booster_icon != null:
-			draw_texture_rect(booster_icon, Rect2(booster_rect.position, Vector2(booster_rect.size.y, booster_rect.size.y)), false, Color.WHITE if booster_count_value > 0 else Color(0.35, 0.35, 0.35, 0.7))
-		var count_center := booster_rect.position + Vector2(79.0, 25.0)
-		if booster_count_medallion != null:
-			draw_texture_rect(booster_count_medallion, Rect2(count_center - Vector2(27.0, 27.0), Vector2(54.0, 54.0)), false)
+	var skill_hero := current_turn_hero()
+	var skill_charge := int(hero_active_charge.get(skill_hero, 0))
+	var skill_energy_icons := [fire_tile_icon, water_tile_icon, leaf_tile_icon, amber_tile_icon, rune_tile_icon]
+	var skill_energy_icon := skill_energy_icons[SkillTree.element(skill_hero)] as Texture2D
+	for branch in 3:
+		var skill_rect := hero_active_skill_rect(branch)
+		var skill_rank := hero_active_skill_rank(skill_hero, branch)
+		var skill_cost := hero_active_skill_cost(branch)
+		var skill_unlocked := skill_rank > 0
+		var skill_ready := skill_unlocked and skill_charge >= skill_cost and not enemy_turn_active and not animation_busy
+		draw_skill_node_icon(Vector2(skill_rect.get_center().x, skill_rect.position.y + 17.0), skill_hero, branch, 0, skill_unlocked, maxi(1, skill_rank))
+		var skill_label := SkillTree.branch_name(skill_hero, branch).to_upper()
+		draw_string(font, Vector2(skill_rect.position.x + 3.0, skill_rect.position.y + 49.0), skill_label, HORIZONTAL_ALIGNMENT_CENTER, skill_rect.size.x - 6.0, 11, Color("#fff0c7") if skill_unlocked else Color("#aeb8ae"))
+		var charge_label := "%d/%d" % [skill_charge, skill_cost] if skill_unlocked else "ZABLOKOWANA"
+		if skill_unlocked and skill_energy_icon != null:
+			var charge_font_size := 11
+			var charge_text_width := font.get_string_size(charge_label, HORIZONTAL_ALIGNMENT_LEFT, -1, charge_font_size).x
+			var charge_content_width := 15.0 + 4.0 + charge_text_width
+			var charge_x := skill_rect.get_center().x - charge_content_width * 0.5
+			draw_texture_rect(skill_energy_icon, Rect2(charge_x, skill_rect.position.y + 52.0, 15.0, 15.0), false)
+			draw_string(font, Vector2(charge_x + 19.0, skill_rect.position.y + 65.0), charge_label, HORIZONTAL_ALIGNMENT_LEFT, charge_text_width + 2.0, charge_font_size, Color("#bff3ca") if skill_ready else Color("#c4cbb6"))
 		else:
-			draw_circle(count_center, 27.0, Color("#193126e8"))
-		draw_string(font, Vector2(count_center.x - 27.0, count_center.y + 7.0), "%d" % booster_count_value, HORIZONTAL_ALIGNMENT_CENTER, 54.0, 20, Color("#fff4d4"))
+			draw_string(font, Vector2(skill_rect.position.x + 3.0, skill_rect.position.y + 65.0), charge_label, HORIZONTAL_ALIGNMENT_CENTER, skill_rect.size.x - 6.0, 10, Color("#aeb5a5"))
 	if held_tooltip != "":
 		var tooltip_rect := Rect2(28, 836, screen.x - 56, 34)
 		draw_style_box(make_panel(Color("#193d38f2"), Color("#f0d57a")), tooltip_rect)
@@ -3604,6 +3709,15 @@ func draw_village_overlay(screen: Vector2) -> void:
 		draw_village_inspector()
 
 func village_illustration(building_id: String, level: int) -> Texture2D:
+	if level > 0:
+		var exact_level := clampi(level, 1, MAX_BUILDING_LEVEL)
+		var cache_key := "%s_%02d" % [building_id, exact_level]
+		if not village_level_illustrations.has(cache_key):
+			var exact_path := "res://art/environments/building_levels/%s/building_%s_level_%02d.png" % [building_id, building_id, exact_level]
+			village_level_illustrations[cache_key] = load_image_texture(exact_path)
+		var exact_illustration := village_level_illustrations.get(cache_key, null) as Texture2D
+		if exact_illustration != null:
+			return exact_illustration
 	if level <= 6:
 		var starting := village_starting_illustrations.get(building_id, null) as Texture2D
 		if starting != null:
@@ -3623,14 +3737,21 @@ func village_illustration(building_id: String, level: int) -> Texture2D:
 
 func village_art_rect(rect: Rect2, level: int) -> Rect2:
 	var scale := 0.38 + level * 0.035 if level <= 6 else (0.82 + (level - 7) * 0.01 if level <= 25 else 0.96 + (level - 26) * 0.006)
-	var size := rect.size * scale
+	var building_id := village_art_id_for_offset(rect)
+	var building_scale := 1.0
+	match building_id:
+		"domostwa": building_scale = 0.84
+		"swiety_gaj": building_scale = 1.25
+		"wieza_peruna": building_scale = 1.28
+		"chata_zielarki": building_scale = 1.22
+	var size := rect.size * scale * building_scale
 	var lift := 16.0
-	match village_art_id_for_offset(rect):
+	match building_id:
 		"wieza_peruna": lift = 22.0
 		"swiety_gaj": lift = 48.0
 		"kuznia": lift = 56.0
 		"chata_zielarki": lift = 56.0
-		"spichlerz": lift = 60.0
+		"spichlerz": lift = 80.0
 	return Rect2(Vector2(rect.get_center().x - size.x * 0.5, rect.end.y - size.y - lift), size)
 
 func village_art_id_for_offset(rect: Rect2) -> String:
@@ -3639,48 +3760,20 @@ func village_art_id_for_offset(rect: Rect2) -> String:
 			return building_id
 	return ""
 
-func draw_village_growth_details(rect: Rect2, level: int, building_id: String) -> void:
-	if level <= 0:
-		return
-	var detail_color := Color("#d4a555")
-	match building_id:
-		"chata_zielarki": detail_color = Color("#85ae6b")
-		"swiety_gaj": detail_color = Color("#e9bd60")
-		"wieza_peruna": detail_color = Color("#87c5d7")
-		"kuznia": detail_color = Color("#d9824e")
-	var prop_positions := [Vector2(0.12, 0.92), Vector2(0.86, 0.92), Vector2(0.31, 0.97), Vector2(0.68, 0.97), Vector2(0.50, 0.88)]
-	for prop_index in prop_positions.size():
-		var growth := clampf((float(level) - prop_index * 10.0) / 10.0, 0.0, 1.0)
-		if growth <= 0.0:
-			continue
-		var anchor: Vector2 = rect.position + rect.size * prop_positions[prop_index]
-		var prop_size := Vector2(rect.size.x * (0.12 + growth * 0.10), rect.size.y * (0.17 + growth * 0.13))
-		if village_growth_props != null:
-			var cell_width := village_growth_props.get_width() / 6.0
-			var building_index := BUILDING_IDS.find(building_id)
-			var source := Rect2(building_index * cell_width, 0.0, cell_width, village_growth_props.get_height())
-			draw_texture_rect_region(village_growth_props, Rect2(anchor - Vector2(prop_size.x * 0.5, prop_size.y), prop_size), source, Color.WHITE)
-		else:
-			draw_circle(anchor, prop_size.x * 0.35, detail_color)
-	var pennants := mini(5, int(level / 10))
-	for pennant_index in pennants:
-		var pin := Vector2(rect.position.x + rect.size.x * (0.22 + pennant_index * 0.14), rect.position.y + rect.size.y * 0.19)
-		draw_line(pin, pin + Vector2(0.0, rect.size.y * 0.10), Color("#f6d89a"), 1.5)
-		draw_colored_polygon(PackedVector2Array([pin + Vector2(0.0, 2.0), pin + Vector2(8.0, 5.0), pin + Vector2(0.0, 9.0)]), detail_color)
-
 func draw_village_construction(rect: Rect2, progress: float) -> void:
-	var opacity := 1.0 - progress
-	if progress < 0.58:
-		var left := Vector2(rect.position.x + rect.size.x * 0.1, rect.position.y + rect.size.y * 0.22)
-		var right := Vector2(rect.end.x - rect.size.x * 0.1, rect.position.y + rect.size.y * 0.22)
-		var lower_left := Vector2(left.x, rect.end.y - 5.0)
-		var lower_right := Vector2(right.x, rect.end.y - 5.0)
-		for endpoints in [[left, lower_left], [right, lower_right], [left, right], [left, lower_right], [right, lower_left]]:
-			draw_line(endpoints[0], endpoints[1], Color(0.39, 0.22, 0.09, opacity), 5.0)
-	for dust_index in 12:
-		var seed := float(dust_index)
-		var dust_pos := Vector2(rect.position.x + rect.size.x * (0.12 + fposmod(seed * 0.37, 0.76)), rect.end.y - rect.size.y * (0.10 + progress * (0.3 + fposmod(seed * 0.21, 0.35))))
-		draw_circle(dust_pos, 2.0 + fposmod(seed * 1.7, 3.0), Color(0.95, 0.77, 0.48, opacity * 0.72))
+	if village_upgrade_vfx_frames != null:
+		var frame_index := clampi(int(floor(progress * 10.0)), 0, 9)
+		var frame_width := village_upgrade_vfx_frames.get_width() / 10.0
+		var effect_source := Rect2(frame_index * frame_width, 0.0, frame_width, village_upgrade_vfx_frames.get_height())
+		var effect_size := Vector2(rect.size.x * 1.55, rect.size.y * 1.65)
+		var source_aspect := effect_source.size.x / effect_source.size.y
+		var contain_size := effect_size
+		if contain_size.x / contain_size.y > source_aspect:
+			contain_size.x = contain_size.y * source_aspect
+		else:
+			contain_size.y = contain_size.x / source_aspect
+		var effect_rect := Rect2(Vector2(rect.get_center().x - contain_size.x * 0.5, rect.end.y - contain_size.y + rect.size.y * 0.12), contain_size)
+		draw_texture_rect_region(village_upgrade_vfx_frames, effect_rect, effect_source, Color(1.0, 1.0, 1.0, 0.92))
 
 func draw_village_building(building_id: String) -> void:
 	var rect := village_building_rect(building_id)
@@ -3690,16 +3783,13 @@ func draw_village_building(building_id: String) -> void:
 	if animating and progress < 0.52:
 		level = village_upgrade_from_level
 	var sprite := village_illustration(building_id, level)
-	if sprite != null:
+	if not animating and sprite != null:
 		var display_rect := village_art_rect(rect, level)
-		if animating and progress >= 0.52:
-			var bounce := 1.0 + 0.08 * sin((progress - 0.52) / 0.48 * PI)
-			var bounce_size := display_rect.size * bounce
-			display_rect = Rect2(Vector2(rect.get_center().x - bounce_size.x * 0.5, rect.end.y - bounce_size.y), bounce_size)
 		draw_texture_rect(sprite, display_rect, false, Color("#b9c3b8") if level == 0 else Color.WHITE)
-		draw_village_growth_details(display_rect, level, building_id)
 	if animating:
 		draw_village_construction(village_art_rect(rect, level), progress)
+	if animating:
+		return
 	var label_rect := village_building_label_rect(building_id)
 	if map_mission_nameplate != null:
 		draw_texture_rect(map_mission_nameplate, label_rect, false, Color("#ffe0a1") if village_selected_id == building_id else Color.WHITE)
@@ -3733,13 +3823,18 @@ func draw_village_inspector() -> void:
 	if index < 0:
 		return
 	var level := int(building_levels[building_id])
+	var level_cap := building_level_cap()
 	var max_level := level >= MAX_BUILDING_LEVEL
+	var progression_locked := not max_level and level >= level_cap
 	var title: String = BUILDING_NAMES[index].to_upper()
 	var title_size := 18
 	while title_size > 13 and font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x > panel.size.x - 110.0:
 		title_size -= 1
 	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 83.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, title_size, Color("#ffe2a3"))
-	draw_button(village_inspector_close_rect(), "X", true, 16)
+	if village_popup_close_button != null:
+		draw_texture_rect(village_popup_close_button, village_inspector_close_rect(), false)
+	else:
+		draw_button(village_inspector_close_rect(), "X", true, 16)
 	var level_text := "POZIOM %d" % level if max_level else "POZIOM %d  →  %d" % [level, level + 1]
 	draw_string(font, Vector2(panel.position.x + 48.0, panel.position.y + 107.0), level_text, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 16, Color("#e3d4ab"))
 	var preview_size := minf(96.0, minf((panel.size.x - 108.0) * 0.5, panel.size.y - 280.0))
@@ -3750,14 +3845,11 @@ func draw_village_inspector() -> void:
 	if current_art != null:
 		var current_art_rect := village_art_rect(current_rect, level)
 		draw_texture_rect(current_art, current_art_rect, false)
-		draw_village_growth_details(current_art_rect, level, building_id)
 	if not max_level:
 		var next_art := village_illustration(building_id, level + 1)
 		if next_art != null:
-			draw_circle(next_rect.get_center(), preview_size * 0.39, Color("#d9aa5229"))
 			var next_art_rect := village_art_rect(next_rect, level + 1)
-			draw_texture_rect(next_art, next_art_rect, false)
-			draw_village_growth_details(next_art_rect, level + 1, building_id)
+			draw_texture_rect(next_art, next_art_rect, false, Color("#8f9b8c") if progression_locked else Color.WHITE)
 		draw_string(font, Vector2(panel.get_center().x - 18.0, preview_y + preview_size * 0.64), "→", HORIZONTAL_ALIGNMENT_CENTER, 36.0, 25, Color("#f9cd7c"))
 	draw_string(font, Vector2(current_rect.position.x, preview_y + preview_size + 17.0), "TERAZ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#c9d9b8"))
 	if not max_level:
@@ -3767,6 +3859,13 @@ func draw_village_inspector() -> void:
 	if max_level:
 		draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 96.0), "Budynek w pełni rozbudowany", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 13, Color("#f5d18c"))
 		draw_button(village_upgrade_rect(), "MAKS. POZIOM", false, 13)
+		return
+	if progression_locked:
+		var required_map_level := mini(levels.size(), (level + 1) * 30)
+		var remaining_map_levels := maxi(1, required_map_level - unlocked_level)
+		var lock_message := "Przejdź jeszcze %d poziomów mapy, aby odblokować poziom %d" % [remaining_map_levels, level + 1]
+		draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 96.0), lock_message, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 11, Color("#f5d18c"))
+		draw_button(village_upgrade_rect(), "ZABLOKOWANE", false, 13)
 		return
 	var cost := building_cost(building_id)
 	draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 101.0), "KOSZT", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 12, Color("#c7d9b7"))
@@ -4030,10 +4129,11 @@ func draw_home_navigation(screen: Vector2) -> void:
 		draw_texture_rect(home_navigation_frame, nav_panel, false)
 	else:
 		draw_style_box(make_panel(Color("#071310e8"), Color("#8b6a3d")), nav_panel)
-	var labels := ["MAPA", "DRUŻYNA", "OSADA", "ZAPASY", "TRENING"]
+	var labels := ["MAPA", "DRUŻYNA", "OSADA", "TRENING"]
+	var icon_indices := [0, 1, 2, 4]
 	for index in labels.size():
 		var item_rect := main_menu_nav_rect(index)
-		draw_home_nav_icon(index, Vector2(item_rect.get_center().x, 895.0))
+		draw_home_nav_icon(icon_indices[index], Vector2(item_rect.get_center().x, 895.0))
 		draw_string(font, Vector2(item_rect.position.x, 937.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, item_rect.size.x, 10, Color("#f0dfba"))
 
 func hero_face_source(hero_id: String, portrait: Texture2D) -> Rect2:
