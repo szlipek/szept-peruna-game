@@ -1,0 +1,4 @@
+Tool: built-in image_gen (2026-10-08)
+Asset: board_cell_stone_v01.png
+Prompt:
+Use case: stylized-concept. Asset type: square background texture for a Slavic forest fantasy match-3 board cell. One single square dark teal mossy ancient stone slab seen strictly from overhead, subtle hand painted organic stone grain, barely visible etched Slavic knotwork in four corners, very restrained moss along outer edge, fine softly beveled edges. Center is dark quiet empty space to keep bright jewel game pieces readable. Elegant understated low contrast texture, palette deep green teal #102925, subdued olive, muted antique bronze. Full bleed opaque square asset, no surrounding scenery, no tiles or symbols or grid, no text, no bright highlights, no objects.

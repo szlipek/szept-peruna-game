@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="128" height="128" viewBox="0 0 128 128">
+ <defs>
+  <linearGradient id="gold" x2="0.7" y2="1"><stop stop-color="#fff3b6"/><stop offset=".5" stop-color="#e4bd62"/><stop offset="1" stop-color="#ad7936"/></linearGradient>
+  <g id="corner">
+   <path d="M8 42V20Q8 8 20 8H42" fill="none" stroke="#102b25" stroke-width="8"/>
+   <path d="M8 42V20Q8 8 20 8H42" fill="none" stroke="url(#gold)" stroke-width="3"/>
+   <path d="M14 32Q18 18 32 14M17 25Q13 14 22 14Q26 18 17 25M25 17Q24 8 34 11Q34 17 25 17" fill="#cfb16c" stroke="#fff1b0" stroke-width=".8"/>
+   <path d="M8 48l3 5-3 5-3-5zM48 8l5 3 5-3-5-3z" fill="#fff1b0"/>
+  </g>
+ </defs>
+ <rect x="7" y="7" width="114" height="114" rx="14" fill="none" stroke="#e1bf70" stroke-opacity=".24" stroke-width="1"/>
+ <use xlink:href="#corner"/><use xlink:href="#corner" transform="translate(128 0) rotate(90)"/><use xlink:href="#corner" transform="translate(128 128) rotate(180)"/><use xlink:href="#corner" transform="translate(0 128) rotate(270)"/>
+</svg>

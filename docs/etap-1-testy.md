@@ -6,17 +6,17 @@ Etap 1 można uznać za zakończony dopiero po przejściu poniższej listy w uru
 
 - [ ] Plansza startuje bez gotowych połączeń trzech symboli.
 - [ ] Każda wygenerowana plansza ma co najmniej jeden prawidłowy ruch.
-- [ ] Zmiana sąsiednich kafelków tworząca połączenie zużywa jeden ruch.
+- [ ] Zmiana sąsiednich kafelków tworząca połączenie rozpoczyna turę gracza, po której żywi przeciwnicy odpowiadają atakiem.
 - [ ] Kafelek można zaznaczyć kliknięciem, a następnie zamienić kliknięciem na sąsiednie pole.
-- [ ] Nieprawidłowa zmiana wraca na poprzednie pola i nie zużywa ruchu.
+- [ ] Nieprawidłowa zmiana wraca na poprzednie pola i nie wywołuje ataku przeciwnika.
 - [ ] Połączenie trzech lub większej liczby symboli znika, daje punkty i uzupełnia planszę.
 - [ ] Kaskady naliczają dodatkowe punkty i po zakończeniu pozostawiają planszę z prawidłowym ruchem.
 - [ ] Gdy po kaskadzie nie ma prawidłowego ruchu, pojawia się komunikat „Przetasowanie gaju”, a plansza zachowuje pulę kafelków zamiast wyglądać na reset poziomu.
 - [ ] Wynik równy celowi kończy poziom zwycięstwem i odblokowuje następny poziom.
-- [ ] Koniec ruchów przed celem kończy poziom porażką.
-- [ ] Przycisk restartu odtwarza bieżący poziom z pełną pulą ruchów.
-- [ ] Młot bursztynowy niszczy obszar 3×3 i nie zużywa ruchu.
-- [ ] Liście ładują Strzałę Peruna, która niszczy wybraną kolumnę bez kosztu ruchu.
+- [ ] Utrata całego zdrowia drużyny kończy poziom porażką.
+- [ ] Przycisk restartu odtwarza bieżący poziom z pełnym zdrowiem drużyny.
+- [ ] Młot bursztynowy niszczy obszar 3×3 i nie wywołuje ataku przeciwnika.
+- [ ] Liście ładują Strzałę Peruna, która niszczy wybraną kolumnę bez wywoływania ataku przeciwnika.
 - [ ] Monety, drewno, PD i odblokowane poziomy pozostają po ponownym uruchomieniu gry.
 
 ## Szybki test z użytkownikiem
@@ -33,7 +33,7 @@ Poproś pięć osób, które nie znają gry, aby uruchomiły poziom 1 bez instru
 
 ## Kryterium decyzji
 
-Jeśli co najmniej cztery z pięciu osób wykonają pierwszy poprawny ruch w 30 sekund, a większość będzie chciała rozegrać kolejną próbę, można przejść do Etapu 2. W przeciwnym razie należy najpierw poprawić instrukcję, cele punktowe lub liczbę ruchów.
+Jeśli co najmniej cztery z pięciu osób wykonają pierwszy poprawny ruch w 30 sekund, a większość będzie chciała rozegrać kolejną próbę, można przejść do Etapu 2. W przeciwnym razie należy najpierw poprawić instrukcję, cele lub siłę przeciwników.
 
 ## Uwaga po rozpoczęciu Etapu 2
 

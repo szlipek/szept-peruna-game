@@ -10,22 +10,22 @@ Faza A ma potwierdzić, że sama plansza logiczna jest przyjemna. Prototyp zawie
 - Orientacja: pionowa, projektowana dla telefonu 540×960.
 - Plansza: 8×8.
 - Wejście: przeciągnięcie lub zamiana dwóch sąsiednich kafelków.
-- Warunek zwycięstwa: wymagany wynik przed wyczerpaniem ruchów.
-- Lada: kafelki liści ładują jej Strzałę Peruna; po ośmiu ładunkach gracz wybiera kolumnę, którą zdolność niszczy bez kosztu ruchu.
-- Booster testowy: na początku poziomu gracz ma jeden Młot bursztynowy, niszczący obszar 3×3 bez kosztu ruchu.
+- Warunek zwycięstwa: pokonanie przeciwników albo osiągnięcie celu poziomu zadaniowego. Porażka następuje po utracie całego zdrowia drużyny.
+- Lada: kafelki liści ładują jej Strzałę Peruna; po ośmiu ładunkach gracz wybiera kolumnę, którą zdolność niszczy bez wywoływania ataku przeciwnika.
+- Booster testowy: na początku poziomu gracz ma jeden Młot bursztynowy, niszczący obszar 3×3 bez wywoływania ataku przeciwnika.
 - Dane poziomów: `data/levels.json`; mechanika ma awaryjną konfigurację tylko na wypadek braku lub błędu pliku danych.
 - Nagrody: ukończenie poziomu przyznaje zdefiniowane w danych monety, drewno i PD. Portfel oraz odblokowany poziom są zapisywane lokalnie w `user://progress.cfg`.
 - Walka, osada, reklamy i finalna oprawa: poza prototypem; zostaną dodane dopiero po teście grywalności.
 
 ## Zawartość pięciu poziomów prototypu
 
-| Poziom | Nazwa | Ruchy | Cel punktowy |
-|---:|---|---:|---:|
-| 1 | Pierwszy szept | 18 | 600 |
-| 2 | Ślad w mchu | 17 | 850 |
-| 3 | Żar kowadła | 16 | 1050 |
-| 4 | Źródło Miety | 15 | 1250 |
-| 5 | Próba dębu | 14 | 1500 |
+| Poziom | Nazwa | Cel punktowy prototypu |
+|---:|---|---:|
+| 1 | Pierwszy szept | 600 |
+| 2 | Ślad w mchu | 850 |
+| 3 | Żar kowadła | 1050 |
+| 4 | Źródło Miety | 1250 |
+| 5 | Próba dębu | 1500 |
 
 ## Jak uruchomić
 
@@ -61,15 +61,15 @@ Portret Leszego oraz panorama osady rozwijają ten sam wzorzec: naturalne drewno
 
 ## Boostery MVP
 
-Każdy poziom udostępnia po jednym Młocie bursztynowym (obszar 3×3), Gromie Peruna (rząd) i Wietrze Gaju (wszystkie kafelki wybranego typu). Wszystkie działają bez kosztu ruchu.
+Każdy poziom udostępnia po jednym Młocie bursztynowym (obszar 3×3), Gromie Peruna (rząd) i Wietrze Gaju (wszystkie kafelki wybranego typu). Wszystkie działają bez wywoływania ataku przeciwnika.
 
 ## Gwiazdki
 
-Zwycięstwo daje 1–3 gwiazdki zależnie od liczby pozostałych ruchów. Najlepszy wynik jest zapisywany lokalnie i widoczny na mapie poziomów.
+Zwycięstwo daje trzy gwiazdki przy co najmniej 75% zdrowia drużyny, dwie przy co najmniej 40%, a jedną poniżej 40%. Najlepszy wynik jest zapisywany lokalnie i widoczny na mapie poziomów. Na poziomach bez przeciwników pełne zdrowie daje trzy gwiazdki.
 
 ## Następny krok
 
-Przeprowadzić krótkie testy bez instrukcji: czas zrozumienia pierwszego ruchu i aktywacji umiejętności Ledy, odsetek ukończeń poziomu 1 oraz wrażenie z kaskad. Po nich należy dostroić cele, limity ruchów i koszt umiejętności.
+Przeprowadzić krótkie testy bez instrukcji: czas zrozumienia pierwszego ruchu i aktywacji umiejętności Ledy, odsetek ukończeń poziomu 1 oraz wrażenie z kaskad. Po nich należy dostroić cele, zdrowie i atak wrogów oraz koszt umiejętności.
 
 ## Krąg treningowy
 
@@ -77,7 +77,7 @@ Menu główne udostępnia trzy powtarzalne walki treningowe: Mchy, Żar i Straż
 
 Ekran porażki zawiera skrót do Kręgu treningowego, a karty drużyny pokazują poziom oraz PD wymagane do kolejnego poziomu.
 
-Pierwsze pięć starć kampanii ma łagodniejsze zdrowie i atak wrogów oraz dodatkowe ruchy. Widoczna kombinacja przeciwnika nadal jest elementem napięcia, ale jej obrażenia zostały ograniczone do 10% wartości technicznej kaskady, aby nie kończyła walki jednym ruchem.
+Pierwsze pięć starć kampanii ma łagodniejsze zdrowie i atak wrogów. Widoczna kombinacja przeciwnika nadal jest elementem napięcia, ale jej obrażenia zostały ograniczone do 10% wartości technicznej kaskady, aby nie kończyła walki jednym ruchem.
 
 ## Role przeciwników
 

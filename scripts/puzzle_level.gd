@@ -1,9 +1,11 @@
 extends Node2D
 
 const SkillTree = preload("res://scripts/hero_skill_tree.gd")
+const PlayerOpening = preload("res://scripts/player_opening.gd")
+var player_opening = PlayerOpening.new()
 
 ## Prototyp Fazy A: plansza 8×8, zamiana sąsiednich kafelków, match-3,
-## kaskady, punkty, limit ruchów, pięć konfiguracji poziomów i lokalny zapis.
+## kaskady, punkty, walka turowa i lokalny zapis.
 
 const BOARD_SIZE := 8
 const TILE_TYPES := 5
@@ -34,7 +36,7 @@ const HERO_SKILLS := {
 	"jaromir": "Straż Przodków: obrońcy otrzymują 15% więcej obrażeń",
 	"msciwoj": "Ostrze Gromu: ogień w kombie 4+ zadaje +4 obrażenia",
 	"dobrawa": "Tkanie Run: runy zwiększają tarczę o 2",
-	"perunika": "Piorunowa Strzała: kombinacja 5+ dodaje +1 ruch",
+	"perunika": "Piorunowa Strzała: kombinacja 5+ daje +6 tarczy",
 	"czernik": "Cień Kurhanu: klątwy szybciej tracą wytrzymałość",
 	"mirka": "Dar Pokoju: leczenie rozdziela 2 zdrowia na drużynę",
 	"wlodzimierz": "Kamienny Znak: kamienie mają o 1 mniej wytrzymałości",
@@ -46,11 +48,11 @@ const HERO_SKILLS := {
 const BUILDING_IDS := ["domostwa", "kuznia", "chata_zielarki", "swiety_gaj", "spichlerz", "wieza_peruna"]
 const BUILDING_NAMES := ["Domostwa", "Kuźnia", "Chata Zielarki", "Święty Gaj", "Spichlerz", "Wieża Peruna"]
 const DEFAULT_LEVELS := [
-	{"id": 1, "moves": 18, "target": 600, "name": "Pierwszy szept"},
-	{"id": 2, "moves": 17, "target": 850, "name": "Ślad w mchu"},
-	{"id": 3, "moves": 16, "target": 1050, "name": "Żar kowadła"},
-	{"id": 4, "moves": 15, "target": 1250, "name": "Źródło Miety"},
-	{"id": 5, "moves": 14, "target": 1500, "name": "Próba dębu"}
+	{"id": 1, "target": 600, "name": "Pierwszy szept"},
+	{"id": 2, "target": 850, "name": "Ślad w mchu"},
+	{"id": 3, "target": 1050, "name": "Żar kowadła"},
+	{"id": 4, "target": 1250, "name": "Źródło Miety"},
+	{"id": 5, "target": 1500, "name": "Próba dębu"}
 ]
 const TILE_COLORS := [Color("#c4523b"), Color("#4a92bd"), Color("#5f9c56"), Color("#d49a34"), Color("#8b61a8")]
 const TILE_SIGNS := ["✦", "≈", "♣", "◆", "ᚱ"]
@@ -71,9 +73,9 @@ const ENEMY_ROLES := {
 	"Czarny Bóg Przesmyku": "attacker", "Serce Starego Dębu": "defender"
 }
 const TRAINING_BATTLES := [
-	{"name": "Ćwiczenie: Mchy", "moves": 20, "goal_type": "defeat_enemy", "enemies": [{"name": "Cień mchu", "health": 42, "attack": 2}], "rewards": {"coins": 8, "wood": 0, "experience": 55}},
-	{"name": "Ćwiczenie: Żar", "moves": 19, "goal_type": "defeat_enemy", "enemies": [{"name": "Popielny chochlik", "health": 58, "attack": 3}], "rewards": {"coins": 10, "wood": 0, "experience": 75}},
-	{"name": "Ćwiczenie: Straż gaju", "moves": 18, "goal_type": "defeat_enemy", "enemies": [{"name": "Korzeniowy strażnik", "health": 76, "attack": 4}], "rewards": {"coins": 12, "wood": 2, "experience": 100}}
+	{"name": "Ćwiczenie: Mchy", "goal_type": "defeat_enemy", "enemies": [{"name": "Cień mchu", "health": 42, "attack": 2}], "rewards": {"coins": 8, "wood": 0, "experience": 55}},
+	{"name": "Ćwiczenie: Żar", "goal_type": "defeat_enemy", "enemies": [{"name": "Popielny chochlik", "health": 58, "attack": 3}], "rewards": {"coins": 10, "wood": 0, "experience": 75}},
+	{"name": "Ćwiczenie: Straż gaju", "goal_type": "defeat_enemy", "enemies": [{"name": "Korzeniowy strażnik", "health": 76, "attack": 4}], "rewards": {"coins": 12, "wood": 2, "experience": 100}}
 ]
 const REGION_INTROS := {
 	21: ["ŚWIĘTY GAJ", "Korzenie starych dębów pamiętają imiona tych, którzy zaginęli. Idź ostrożnie — gaj słucha każdego kroku."],
@@ -119,7 +121,6 @@ var obstacles: Array = []
 var levels: Array = []
 var level_index := 0
 var score := 0
-var moves_left := 0
 var unlocked_level := 1
 var state := "playing" # playing, won, lost
 var touch_start := Vector2i(-1, -1)
@@ -161,6 +162,7 @@ var enemies: Array = []
 var target_enemy_index := 0
 var held_tooltip := ""
 var animation_busy := false
+var player_cascade_active := false
 var enemy_turn_active := false
 var tile_offsets := {}
 var removal_effects := {}
@@ -273,6 +275,8 @@ var hud_oak_ornament: Texture2D
 var portrait_backdrop_oak: Texture2D
 var pause_button_oak: Texture2D
 var turn_banner_oak: Texture2D
+var board_cell_stone: Texture2D
+var board_hint_frame: Texture2D
 var booster_roots_pedestal: Texture2D
 var booster_count_medallion: Texture2D
 var defeat_modal_oak: Texture2D
@@ -362,8 +366,8 @@ const SFX_MIX_RATE := 22050.0
 func _ready() -> void:
 	font = ThemeDB.fallback_font
 	skill_tree_connector_arrow = load_image_texture("res://art/ui/skill_tree_connector_arrow_v01.png")
-	for background_hero_id in HERO_IDS:
-		skill_tree_backgrounds[background_hero_id] = load("res://art/skill_backgrounds/skill_tree_%s.png" % background_hero_id) as Texture2D
+	# Tła kart są już ładowane przy otwarciu wybranego bohatera.
+	# Na starcie nie trzymaj w pamięci wszystkich 25 dużych ilustracji.
 	var alegreya_font := FontFile.new()
 	if alegreya_font.load_dynamic_font("res://art/fonts/AlegreyaSans-Bold.ttf") == OK:
 		font = alegreya_font
@@ -420,6 +424,9 @@ func _ready() -> void:
 	portrait_backdrop_oak = load_image_texture("res://art/vfx/portrait_backdrop_oak_v01.png")
 	pause_button_oak = load_image_texture("res://art/vfx/pause_button_oak_v01.png")
 	turn_banner_oak = load_image_texture("res://art/vfx/turn_banner_oak_v01.png")
+	# Grafiki planszy są wymagane; brak importu nie może ukryć ich za starym tłem.
+	board_cell_stone = preload("res://art/ui/board_cell_stone_v01.png")
+	board_hint_frame = preload("res://art/ui/board_hint_frame_v01.svg")
 	booster_roots_pedestal = load_image_texture("res://art/vfx/booster_roots_pedestal_v01.png")
 	booster_count_medallion = load_image_texture("res://art/vfx/booster_count_medallion_v01.png")
 	defeat_modal_oak = load_image_texture("res://art/vfx/defeat_modal_oak_v01.png")
@@ -549,9 +556,9 @@ func _process(delta: float) -> void:
 			village_upgrade_id = ""
 		queue_redraw()
 	fill_sfx_buffer()
-	if state == "playing" and not animation_busy and not main_menu_open and not roster_open and not village_open and not map_open and not booster_open and not training_open and not region_intro_open:
+	if state == "playing" and not animation_busy and not player_cascade_active and not main_menu_open and not roster_open and not village_open and not map_open and not booster_open and not training_open and not region_intro_open:
 		idle_hint_time += delta
-		if idle_hint_time >= 7.0 and hinted_cells.is_empty():
+		if (idle_hint_time >= 7.0 or (player_opening.tutorial_active(self) and player_opening.tutorial_moves == 0)) and hinted_cells.is_empty():
 			hinted_cells = find_hint_move()
 			queue_redraw()
 	if target_transition > 0.0:
@@ -628,7 +635,6 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 		training_battle.clear()
 	var level: Dictionary = level_override if not level_override.is_empty() else levels[level_index]
 	current_battle = level.duplicate(true)
-	moves_left = level.moves
 	score = 0
 	state = "playing"
 	lada_charge = 0
@@ -667,7 +673,8 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	goal_type = str(level.get("goal_type", "score"))
 	goal_target = int(level.get("goal_value", level.get("target", 0)))
 	goal_progress = 0
-	message = "Trening: pokonaj przeciwnika i zdobądź PD dla aktywnego składu." if training_mode else ("Cel: %d pkt. Przeciągnij sąsiednie znaki, aby połączyć co najmniej 3." % int(level.get("target", 0)) if level_index == 0 and not tutorial_completed else "Połącz trzy takie same znaki.")
+	player_opening.tutorial_moves = 0
+	message = "Trening: pokonaj przeciwnika i zdobądź PD dla aktywnego składu." if training_mode else "Połącz trzy takie same znaki."
 	fill_fresh_board()
 	setup_obstacles(level)
 	var intro_level_id := int(level.get("id", 0))
@@ -751,6 +758,14 @@ func generate_clean_board() -> void:
 					choices.erase(square_type)
 			board[row].append(choices.pick_random())
 
+func obstacle_limit(level: Dictionary) -> int:
+	var level_id := int(level.get("id", level_index + 1))
+	var late_campaign_obstacles := int(maxi(0, level_id - 1000) / 100)
+	var budget := mini(48, mini(36, 8 + int(level_id / 12)) + late_campaign_obstacles)
+	if str(level.get("goal_type", "")) == "clear_obstacles":
+		budget = maxi(budget, mini(48, int(level.get("goal_value", 0))))
+	return budget
+
 func setup_obstacles(level: Dictionary) -> void:
 	obstacles.clear()
 	for row in BOARD_SIZE:
@@ -761,9 +776,7 @@ func setup_obstacles(level: Dictionary) -> void:
 	var types := {"root": 1, "stone": 2, "curse": 3}
 	# Trudniejsze etapy stopniowo wypełniają planszę przeszkodami, ale zostawiają
 	# co najmniej 16 pól na kombinacje nawet w końcówce kampanii.
-	var level_id := int(level.get("id", level_index + 1))
-	var late_campaign_obstacles := int(maxi(0, level_id - 1000) / 100)
-	var obstacle_budget := mini(48, mini(36, 8 + int(level_id / 12)) + late_campaign_obstacles)
+	var obstacle_budget := obstacle_limit(level)
 	var planned: Array[int] = []
 	for obstacle_id in types:
 		for ignored in int(obstacle_config.get(obstacle_id, 0)):
@@ -814,6 +827,8 @@ func find_hint_move() -> Array[Vector2i]:
 	return []
 
 func _unhandled_input(event: InputEvent) -> void:
+	if player_opening.stage != "" and event is InputEventKey:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if village_open and event.keycode == KEY_ESCAPE:
 			if village_selected_id != "":
@@ -851,6 +866,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			handle_release(event.position)
 
 func handle_press(position: Vector2) -> void:
+	if player_cascade_active:
+		return
+	if player_opening.stage != "":
+		return
 	if state != "playing":
 		return
 	idle_hint_time = 0.0
@@ -870,6 +889,12 @@ func handle_press(position: Vector2) -> void:
 	touch_start = point_to_cell(position)
 
 func handle_release(position: Vector2) -> void:
+	if player_cascade_active:
+		touch_start = Vector2i(-1, -1)
+		return
+	if player_opening.stage != "":
+		player_opening.handle_input(self, position)
+		return
 	var pressed_cell := touch_start
 	touch_start = Vector2i(-1, -1)
 	if enemy_turn_active:
@@ -1005,7 +1030,7 @@ func handle_tile_click(cell: Vector2i) -> void:
 	queue_redraw()
 
 func try_swap(a: Vector2i, b: Vector2i) -> void:
-	if animation_busy or enemy_turn_active:
+	if animation_busy or enemy_turn_active or player_cascade_active:
 		return
 	swap_tiles(a, b)
 	var matches := find_matches()
@@ -1018,22 +1043,11 @@ func try_swap(a: Vector2i, b: Vector2i) -> void:
 		return
 	await animate_swap(a, b)
 	play_sfx(540.0, 0.08, 0.16)
-	resolve_matches(matches)
-	if goal_type == "survive":
-		goal_progress = mini(goal_target, goal_progress + 1)
-	# Limit ruchów jest zużywany wyłącznie po prawidłowej zamianie tworzącej
-	# kombinację. Nietrafione przesunięcie nadal pozostaje bez kosztu.
-	moves_left = maxi(0, moves_left - 1)
-	if level_index == 0 and not tutorial_completed:
-		tutorial_completed = true
-		save_progress()
+	await resolve_matches(matches)
+	if level_index == 0 and not training_mode and not tutorial_completed:
+		player_opening.tutorial_moves += 1
 	if is_level_complete():
 		finish_level("Las odpowiada na twój szept.")
-		return
-	if moves_left <= 0:
-		state = "lost"
-		message = "Brak ruchów. Wróć silniejszy albo spróbuj innej kombinacji."
-		queue_redraw()
 		return
 	# Plansza musi najpierw pokazać opadanie i nowe znaki. Dopiero na
 	# ustabilizowanej planszy przeciwnik zaczyna analizować swój ruch.
@@ -1044,6 +1058,11 @@ func try_swap(a: Vector2i, b: Vector2i) -> void:
 		state = "lost"
 		message = "Drużyna została pokonana przez %s." % enemy_name
 	else:
+		if goal_type == "survive":
+			goal_progress = mini(goal_target, goal_progress + 1)
+			if is_level_complete():
+				finish_level("Drużyna przetrwała ataki przeciwnika.")
+				return
 		if not message.contains("KOMBO") and not message.contains("ULTRA"):
 			message = last_enemy_attack_text if last_enemy_attack_text != "" else "Dobra kombinacja!"
 	queue_redraw()
@@ -1076,9 +1095,7 @@ func activate_lada(target: Vector2i) -> void:
 	var struck := {}
 	for row in BOARD_SIZE:
 		struck[Vector2i(target.x, row)] = true
-	resolve_matches(struck)
-	if has_living_enemies():
-		deal_damage_to_enemies(8 * int(hero_levels["lada"]) + int(building_levels["wieza_peruna"]) * 5)
+	await resolve_matches(struck, 8 * int(hero_levels["lada"]) + int(building_levels["wieza_peruna"]) * 5)
 	if is_level_complete():
 		finish_level("Piorun Ledy prowadzi cię dalej.")
 	else:
@@ -1092,9 +1109,7 @@ func activate_brun(target: Vector2i) -> void:
 	for row in range(maxi(0, target.y - 1), mini(BOARD_SIZE, target.y + 2)):
 		for col in range(maxi(0, target.x - 1), mini(BOARD_SIZE, target.x + 2)):
 			struck[Vector2i(col, row)] = true
-	resolve_matches(struck)
-	if has_living_enemies():
-		deal_damage_to_enemies(25 + 10 * int(hero_levels["brun"]) + int(building_levels["kuznia"]) * 5)
+	await resolve_matches(struck, 25 + 10 * int(hero_levels["brun"]) + int(building_levels["kuznia"]) * 5)
 	if is_level_complete():
 		finish_level("Uderzenie Bruna skruszyło obronę wroga.")
 	else:
@@ -1112,7 +1127,7 @@ func activate_mieta() -> void:
 	var healing := healed_tiles * (6 + int(hero_levels["mieta"]) + int(building_levels["chata_zielarki"]))
 	heal_all_living_heroes(healing)
 	collapse_board()
-	resolve_matches(find_matches())
+	await resolve_matches(find_matches())
 	if is_level_complete():
 		finish_level("Krąg Uzdrowienia ocalił drużynę.")
 	else:
@@ -1161,11 +1176,11 @@ func activate_hero_branch_skill(branch: int) -> void:
 						struck[Vector2i(col, row)] = true
 				if struck.size() >= removal_limit:
 					break
-			if not struck.is_empty():
-				resolve_matches(struck)
 			damage = 15 + hero_level * 2 + rank * 5 + struck.size() * 4
 			score += damage
-			if has_living_enemies():
+			if not struck.is_empty():
+				await resolve_matches(struck, damage)
+			elif has_living_enemies():
 				deal_damage_to_enemies(damage)
 	if is_level_complete():
 		finish_level("%s kończy starcie." % skill_name)
@@ -1189,7 +1204,7 @@ func activate_hammer(target: Vector2i) -> void:
 	for row in range(maxi(0, target.y - 1), mini(BOARD_SIZE, target.y + 2)):
 		for col in range(maxi(0, target.x - 1), mini(BOARD_SIZE, target.x + 2)):
 			struck[Vector2i(col, row)] = true
-	resolve_matches(struck)
+	await resolve_matches(struck)
 	if is_level_complete():
 		finish_level("Uderzenie młota otworzyło dalszą drogę.")
 	else:
@@ -1202,7 +1217,7 @@ func activate_bolt(target: Vector2i) -> void:
 	var struck := {}
 	for col in BOARD_SIZE:
 		struck[Vector2i(col, target.y)] = true
-	resolve_matches(struck)
+	await resolve_matches(struck)
 	if is_level_complete():
 		finish_level("Grom Peruna otworzył dalszą drogę.")
 	else:
@@ -1218,14 +1233,17 @@ func activate_gale(target: Vector2i) -> void:
 		for col in BOARD_SIZE:
 			if board[row][col] == selected_type:
 				struck[Vector2i(col, row)] = true
-	resolve_matches(struck)
+	await resolve_matches(struck)
 	if is_level_complete():
 		finish_level("Wiatr Gaju odsłonił nową ścieżkę.")
 	else:
 		message = "Wiatr Gaju rozwiał wszystkie znaki tego typu!"
 	queue_redraw()
 
-func resolve_matches(matches: Dictionary) -> void:
+func resolve_matches(matches: Dictionary, initial_bonus_damage := 0) -> void:
+	player_cascade_active = true
+	hinted_cells.clear()
+	idle_hint_time = 0.0
 	var chain := 1
 	var cascade_steps := 0
 	while not matches.is_empty() and cascade_steps < MAX_CASCADE_STEPS:
@@ -1356,7 +1374,7 @@ func resolve_matches(matches: Dictionary) -> void:
 		if active_heroes.has("dobrawa") and rune_count > 0:
 			hero_extra_shield += rune_count * 2
 		if active_heroes.has("perunika") and has_five:
-			moves_left += 1
+			hero_extra_shield += 6
 		if active_heroes.has("mirka") and water_count > 0:
 			heal_all_living_heroes(2)
 		if active_heroes.has("mokosza") and leaf_count > 0 and water_count > 0:
@@ -1446,8 +1464,14 @@ func resolve_matches(matches: Dictionary) -> void:
 				damage += rune_count * 6 * int(hero_levels["zywia"])
 			damage += hero_bonus_damage + talent_damage
 			var synergy_damage := int(round(float(damage * chain * cascade_damage_multiplier) * (1.0 + 0.08 * synergy_count)))
+			# Bonus umiejętności należy do pierwszej kasacji i tego samego celu.
+			if chain == 1:
+				synergy_damage += initial_bonus_damage
 			deal_damage_to_enemies(synergy_damage, defender_damage_multiplier)
 		collapse_board()
+		queue_redraw()
+		# Kolejny cel może dostać obrażenia dopiero po widocznej następnej kasacji.
+		await wait_for_board_to_settle()
 		matches = find_matches()
 		chain += 1
 		cascade_steps += 1
@@ -1455,6 +1479,9 @@ func resolve_matches(matches: Dictionary) -> void:
 	# pozostawiamy planszę w jej rzeczywistym stanie, zamiast wyglądać jak reset.
 	if not board_has_legal_move():
 		reshuffle_board()
+	await wait_for_board_to_settle()
+	player_cascade_active = false
+	queue_redraw()
 
 func enemy_match_value(matches: Dictionary) -> int:
 	# Ta sama wartość, która jest później naliczana przez wrogą kaskadę.
@@ -1549,21 +1576,23 @@ func finish_level(success_message: String) -> void:
 	var gained_event_mark := grant_event_mark()
 	last_reward["sparks"] = 1 if gained_spark else 0
 	last_reward["event_marks"] = 1 if gained_event_mark else 0
+	player_opening.on_victory(self, level_id)
 	save_progress()
 	message = success_message
 
 func calculate_stars() -> int:
-	if moves_left >= 9:
+	if party_max_health <= 0:
+		return 1
+	if party_health * 4 >= party_max_health * 3:
 		return 3
-	if moves_left >= 4:
+	if party_health * 5 >= party_max_health * 2:
 		return 2
 	return 1
 
 func enemy_take_turn() -> void:
 	if not has_living_enemies():
 		return
-	# Blokada wejścia zostaje aktywna przez całą czytelną turę przeciwnika,
-	# również podczas jego namysłu i po animacji zamiany.
+	# Blokujemy wejście tylko do zakończenia zamiany i opadania znaków.
 	enemy_turn_active = true
 	animation_busy = true
 	var total_attack := 0
@@ -1580,12 +1609,11 @@ func enemy_take_turn() -> void:
 				total_attack += maxi(3, int(enemy_attack_value / 2))
 	var target_hero := scout_target_hero()
 	enemy_attack_anim = 6.5
-	message = "Wróg obserwuje planszę i szuka najmocniejszego ruchu..."
+	message = "Przeciwnik wykonuje ruch."
 	var support_text := enemy_support_action()
 	enemy_action_phase = 0
 	enemy_action_cells.clear()
 	queue_redraw()
-	await get_tree().create_timer(1.35).timeout
 	var best_move := enemy_choose_best_move()
 	var combo_damage := 0
 	if not best_move.is_empty():
@@ -1595,7 +1623,7 @@ func enemy_take_turn() -> void:
 		enemy_action_phase = 1
 		message = "Wróg wybrał dwa znaki — za chwilę je zamieni."
 		queue_redraw()
-		await get_tree().create_timer(1.45).timeout
+		await get_tree().create_timer(0.25).timeout
 		swap_tiles(first, second)
 		queue_redraw()
 		await animate_swap(first, second)
@@ -1609,8 +1637,6 @@ func enemy_take_turn() -> void:
 		animation_busy = false
 		message = "Znaki opadają po ruchu przeciwnika..."
 		await wait_for_board_to_settle()
-		animation_busy = true
-		await get_tree().create_timer(0.35).timeout
 	enemy_action_cells.clear()
 	enemy_action_phase = 0
 	# Kombinacja przeciwnika jest czytelną zapowiedzią zagrożenia, nie pojedynczym
@@ -1630,6 +1656,10 @@ func enemy_take_turn() -> void:
 	message = "Twój ruch — wybierz kafelek i wykonaj ruch."
 	animation_busy = false
 	enemy_turn_active = false
+	enemy_attack_anim = 0.0
+	idle_hint_time = 0.0
+	hinted_cells.clear()
+	queue_redraw()
 
 func refresh_party_health() -> void:
 	party_health = 0
@@ -1786,12 +1816,21 @@ func enemy_role_color(enemy: Dictionary) -> Color:
 		"scout": return Color("#b18bca")
 	return Color("#bd654d")
 
-func draw_enemy_role_icon(center: Vector2, role: String, color: Color) -> void:
+func draw_enemy_role_icon(center: Vector2, role: String, color: Color, icon_size := 28.0) -> void:
 	if enemy_role_emblems != null:
-		var role_index: int = int({"attacker": 0, "defender": 1, "support": 2, "scout": 3}.get(role, 0))
-		var cell_width := enemy_role_emblems.get_width() / 4.0
-		var source := Rect2(role_index * cell_width, 0.0, cell_width, enemy_role_emblems.get_height())
-		draw_texture_rect_region(enemy_role_emblems, Rect2(center - Vector2(14.0, 14.0), Vector2(28.0, 28.0)), source, Color.WHITE)
+		# Arkusz ma różne szerokości symboli; równe ćwiartki ucinały tarczę.
+		var regions := {
+			"attacker": Rect2(0.0, 0.08, 0.28, 0.84),
+			"defender": Rect2(0.27, 0.08, 0.30, 0.84),
+			"support": Rect2(0.57, 0.0, 0.17, 1.0),
+			"scout": Rect2(0.74, 0.06, 0.26, 0.91)
+		}
+		var region: Rect2 = regions.get(role, regions["attacker"])
+		var sheet_size := enemy_role_emblems.get_size()
+		var source := Rect2(region.position * sheet_size, region.size * sheet_size)
+		var scale_factor := icon_size / maxf(source.size.x, source.size.y)
+		var fitted_size := source.size * scale_factor
+		draw_texture_rect_region(enemy_role_emblems, Rect2(center - fitted_size * 0.5, fitted_size), source, Color.WHITE)
 		return
 	var role_icon: Texture2D = null
 	if role == "scout":
@@ -1801,7 +1840,7 @@ func draw_enemy_role_icon(center: Vector2, role: String, color: Color) -> void:
 	elif role == "attacker":
 		role_icon = enemy_role_attacker_icon
 	if role_icon != null:
-		draw_texture_rect(role_icon, Rect2(center - Vector2(10.0, 10.0), Vector2(20.0, 20.0)), false)
+		draw_texture_rect(role_icon, texture_aspect_fit_rect(role_icon, Rect2(center - Vector2.ONE * icon_size * 0.5, Vector2.ONE * icon_size)), false)
 		return
 	draw_circle(center, 8.0, Color(color, 0.94))
 	draw_circle(center, 8.0, Color("#f6e3aa"), false, 1.0)
@@ -1819,12 +1858,16 @@ func draw_enemy_role_icon(center: Vector2, role: String, color: Color) -> void:
 
 func draw_enemy_guard_help() -> void:
 	var panel := enemy_guard_help_rect()
-	draw_style_box(make_panel(Color("#0b211cef"), Color("#d2ae62")), panel)
-	draw_enemy_role_icon(panel.position + Vector2(45.0, 48.0), "defender", Color("#75b6dd"))
-	draw_string(font, panel.position + Vector2(72.0, 45.0), "OSŁONA OBROŃCY", HORIZONTAL_ALIGNMENT_LEFT, panel.size.x - 125.0, 16, Color("#ffe9ae"))
-	draw_string(font, panel.position + Vector2(25.0, 82.0), "Dopóki żyje Obrońca, pozostali wrogowie", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#edf4df"))
-	draw_string(font, panel.position + Vector2(25.0, 103.0), "otrzymują tylko 55% obrażeń.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#edf4df"))
-	draw_string(font, panel.position + Vector2(25.0, 128.0), "Pokonaj Obrońcę jako pierwszego.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 13, Color("#b9e58a"))
+	if defeat_modal_oak != null:
+		draw_texture_rect(defeat_modal_oak, panel, false)
+	else:
+		draw_style_box(make_panel(Color("#0b211c"), Color("#d2ae62")), panel)
+	var layout_scale := panel.size.x / 420.0
+	draw_enemy_role_icon(panel.position + Vector2(84.0, 103.0) * layout_scale, "defender", Color("#75b6dd"), 52.0 * layout_scale)
+	draw_string(font, panel.position + Vector2(135.0, 108.0) * layout_scale, "OSŁONA OBROŃCY", HORIZONTAL_ALIGNMENT_LEFT, panel.size.x - 174.0 * layout_scale, 16, Color("#ffe9ae"))
+	draw_string(font, panel.position + Vector2(42.0, 157.0) * layout_scale - Vector2(0.0, 20.0), "Dopóki żyje Obrońca, pozostali wrogowie", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 84.0 * layout_scale, 12, Color("#edf4df"))
+	draw_string(font, panel.position + Vector2(42.0, 180.0) * layout_scale - Vector2(0.0, 20.0), "otrzymują tylko 55% obrażeń.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 84.0 * layout_scale, 12, Color("#edf4df"))
+	draw_string(font, panel.position + Vector2(42.0, 209.0) * layout_scale - Vector2(0.0, 20.0), "Pokonaj Obrońcę jako pierwszego.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 84.0 * layout_scale, 13, Color("#b9e58a"))
 	if village_popup_close_button != null:
 		draw_texture_rect(village_popup_close_button, enemy_guard_help_close_rect(), false)
 	else:
@@ -1862,12 +1905,15 @@ func enemy_tactical_hint(enemy: Dictionary) -> String:
 		return "Zwiadowca: atak %d, wybiera najbardziej rannego bohatera." % attack
 	return "Napastnik: atak %d. Priorytetowy cel." % attack
 
+func campaign_reward(level: Dictionary) -> Dictionary:
+	var reward: Dictionary = level.get("rewards", {})
+	return {"coins": int(reward.get("coins", 0)) + int(building_levels["spichlerz"]) * 10, "wood": int(reward.get("wood", 0)), "experience": int(reward.get("experience", 0))}
+
 func grant_level_reward() -> void:
-	var reward: Dictionary = levels[level_index].get("rewards", {})
-	var received_coins := int(reward.get("coins", 0))
-	var received_wood := int(reward.get("wood", 0))
-	var received_experience := int(reward.get("experience", 0))
-	received_coins += int(building_levels["spichlerz"]) * 10
+	var reward := campaign_reward(levels[level_index])
+	var received_coins := int(reward["coins"])
+	var received_wood := int(reward["wood"])
+	var received_experience := int(reward["experience"])
 	coins += received_coins
 	wood += received_wood
 	experience += received_experience
@@ -2060,11 +2106,13 @@ func enemy_guard_icon_rect(index: int) -> Rect2:
 func enemy_guard_help_rect() -> Rect2:
 	var screen := get_viewport_rect().size
 	var width := minf(screen.x - 56.0, 420.0)
-	return Rect2((screen.x - width) * 0.5, 132.0, width, 148.0)
+	# Proporcje ilustracji 3:2 zachowują pełną ramę, bez obcinania korzeni.
+	return Rect2((screen.x - width) * 0.5, 116.0, width, width * 2.0 / 3.0)
 
 func enemy_guard_help_close_rect() -> Rect2:
 	var panel := enemy_guard_help_rect()
-	return Rect2(panel.end.x - 45.0, panel.position.y + 9.0, 34.0, 34.0)
+	var layout_scale := panel.size.x / 420.0
+	return Rect2(panel.end.x - 67.0 * layout_scale - 30.0, panel.position.y + 40.0 * layout_scale + 40.0, 34.0, 34.0)
 
 func boss_portrait_for(name: String) -> Texture2D:
 	if enemy_portraits.has(name):
@@ -2794,6 +2842,10 @@ func handle_training_input(position: Vector2) -> void:
 			return
 
 func handle_main_menu_input(position: Vector2) -> void:
+	if Rect2(15, 4, 115, 115).has_point(position):
+		player_opening.edit_avatar()
+		queue_redraw()
+		return
 	if is_in_button(position, help_button_rect()):
 		help_open = true
 		queue_redraw()
@@ -2858,6 +2910,7 @@ func reset_progress() -> void:
 	seen_region_intros.clear()
 	seen_region_chapters.clear()
 	tutorial_completed = false
+	player_opening.reset_profile()
 	for hero_id in HERO_IDS:
 		hero_levels[hero_id] = 1 if hero_id == "lada" else 0
 		hero_experience[hero_id] = 0
@@ -3009,6 +3062,9 @@ func draw_game_logo(center: Vector2, max_size: Vector2) -> void:
 
 func _draw() -> void:
 	var screen := get_viewport_rect().size
+	if player_opening.stage != "":
+		player_opening.draw(self)
+		return
 	if oak_borderland_background != null:
 		draw_texture_rect(oak_borderland_background, Rect2(Vector2.ZERO, screen), false)
 	else:
@@ -3032,8 +3088,8 @@ func _draw() -> void:
 		draw_string(font, Vector2(390, 111), "SYNERGIA +%d%%" % (active_synergy_count * 8), HORIZONTAL_ALIGNMENT_CENTER, 104, 10, Color("#f4d06d"))
 	if enemies.is_empty():
 		draw_string(font, Vector2(140, 111), "CEL: %s" % goal_label(), HORIZONTAL_ALIGNMENT_CENTER, 250, 12, Color("#b9e7ca"))
-	var turn_banner := "RUCH PRZECIWNIKA" if enemy_attack_anim > 0.0 else ("PRZETRWAJ  •  %d/%d" % [goal_progress, goal_target] if goal_type == "survive" else "TWÓJ RUCH  •  %d" % moves_left)
-	var turn_banner_color := Color("#ff9b72") if enemy_attack_anim > 0.0 else Color("#b9e58a")
+	var turn_banner := "RUCH PRZECIWNIKA" if enemy_turn_active else "TWÓJ RUCH"
+	var turn_banner_color := Color("#ff9b72") if enemy_turn_active else Color("#b9e58a")
 	if not enemies.is_empty():
 		var banner_rect := Rect2(screen.x / 2.0 - 126.0, 288.0, 252.0, 48.0)
 		if turn_banner_oak != null:
@@ -3093,8 +3149,6 @@ func _draw() -> void:
 			else:
 				draw_style_box(make_panel(Color("#2a2524dd"), Color("#8e6b45")), bar_rect)
 			draw_string(font, Vector2(bar_rect.position.x, health_y + 27.0), "%d/%d" % [enemy_health_value, enemy_max_health_value], HORIZONTAL_ALIGNMENT_CENTER, bar_rect.size.x, 13, Color("#fff8df"))
-		if defender_help_open:
-			draw_enemy_guard_help()
 	var rect := board_rect()
 	if battle_board_roots != null:
 		draw_texture_rect(battle_board_roots, Rect2(rect.position + Vector2(-25.0, -25.0), rect.size + Vector2(50.0, 50.0)), false)
@@ -3102,14 +3156,21 @@ func _draw() -> void:
 		var frame_rect := Rect2(rect.position + Vector2(-32.0, -72.0), rect.size + Vector2(64.0, 144.0))
 		draw_texture_rect(board_roots_frame, frame_rect, false)
 	var cell := rect.size.x / BOARD_SIZE
+	# Kamienne pola pozostają na miejscu, poruszają się wyłącznie znaki.
+	for row in BOARD_SIZE:
+		for col in BOARD_SIZE:
+			var field_rect := Rect2(rect.position + Vector2(col, row) * cell, Vector2.ONE * cell)
+			# Wyraźna szachownica: jasny kamień w kolorze szałwii i ciemny turkus.
+			var field_tint := Color(1.55, 1.65, 1.30) if (row + col) % 2 == 0 else Color(0.68, 0.85, 0.86)
+			if board_cell_stone != null:
+				draw_texture_rect(board_cell_stone, field_rect, false, field_tint)
+			else:
+				draw_rect(field_rect, Color("#354d39") if (row + col) % 2 == 0 else Color("#0a2428"))
 	for row in BOARD_SIZE:
 		for col in BOARD_SIZE:
 			var tile_cell := Vector2i(col, row)
 			var offset_cells: Vector2 = tile_offsets.get(tile_cell, Vector2.ZERO)
 			var tile_rect := Rect2(rect.position + Vector2(col * cell + 3, row * cell + 3) + offset_cells * cell, Vector2(cell - 6, cell - 6))
-			var checker_color := Color("#102925") if (row + col) % 2 == 0 else Color("#0a211f")
-			draw_rect(tile_rect.grow(1.5), checker_color)
-			draw_rect(tile_rect.grow(1.5), Color("#2e5c51"), false, 1.0)
 			if selected_cell == tile_cell:
 				var selected_center := tile_rect.get_center()
 				var active_hero := current_turn_hero()
@@ -3159,11 +3220,22 @@ func _draw() -> void:
 					var angle := float(spark) * TAU / 6.0
 					var spark_pos := effect_center + Vector2(cos(angle), sin(angle)) * cell * (0.12 + effect_progress * 0.28)
 					draw_circle(spark_pos, 2.5 * (1.0 - effect_progress), Color(1.0, 0.95, 0.65, 1.0 - effect_progress))
-	if not hinted_cells.is_empty():
-		var hint_alpha := 0.45 + sin(ui_anim_time * 5.0) * 0.25
+	if not hinted_cells.is_empty() and not animation_busy and not enemy_turn_active and not player_cascade_active:
+		var hint_alpha := 0.78 + sin(ui_anim_time * 3.5) * 0.18
 		for hint_cell in hinted_cells:
 			var hint_center := rect.position + Vector2((hint_cell.x + 0.5) * cell, (hint_cell.y + 0.5) * cell)
-			draw_circle(hint_center, cell * 0.43, Color(0.96, 0.78, 0.28, hint_alpha), false, 3.0)
+			if board_hint_frame != null:
+				draw_texture_rect(board_hint_frame, Rect2(hint_center - Vector2.ONE * cell * 0.5, Vector2.ONE * cell), false, Color(1, 1, 1, hint_alpha))
+		if hinted_cells.size() == 2:
+			var direction := Vector2(hinted_cells[1] - hinted_cells[0]).normalized()
+			var across := Vector2(-direction.y, direction.x)
+			var midpoint := rect.position + (Vector2(hinted_cells[0] + hinted_cells[1]) * 0.5 + Vector2.ONE * 0.5) * cell
+			var arrow_color := Color(1.0, 0.89, 0.52, hint_alpha)
+			for sign_value in [-1.0, 1.0]:
+				var tip: Vector2 = midpoint + direction * cell * 0.18 * sign_value
+				var tail: Vector2 = tip - direction * cell * 0.11 * sign_value
+				draw_polyline(PackedVector2Array([tail + across * cell * 0.08, tip, tail - across * cell * 0.08]), Color("#17332c"), 5.0, true)
+				draw_polyline(PackedVector2Array([tail + across * cell * 0.08, tip, tail - across * cell * 0.08]), arrow_color, 2.5, true)
 
 	for effect_cell in removal_effects:
 		var effect_progress: float = clampf(float(removal_effects[effect_cell]) / 0.34, 0.0, 1.0)
@@ -3188,18 +3260,18 @@ func _draw() -> void:
 			draw_line(action_center - Vector2(7, cell * 0.30), action_center - Vector2(0, cell * 0.18), Color("#f6c76d"), 3.0, true)
 			draw_line(action_center + Vector2(7, -cell * 0.30), action_center - Vector2(0, cell * 0.18), Color("#f6c76d"), 3.0, true)
 		draw_string(font, Vector2(0, rect.position.y - 10), "WRÓG PRZEKŁADA KAFELKI", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 15, Color("#f6c76d"))
-	elif enemy_attack_anim > 0.0 and enemy_action_phase == 0:
-		var thought_alpha := 0.28 + sin(ui_anim_time * 4.0) * 0.10
-		draw_rect(rect, Color(0.10, 0.07, 0.18, thought_alpha))
-		draw_string(font, Vector2(rect.position.x, rect.get_center().y - 12), "WRÓG ROZWAŻA RUCH...", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 20, Color("#e7c47a"))
-		draw_string(font, Vector2(rect.position.x, rect.get_center().y + 14), "Przegląda możliwe zamiany znaków", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 13, Color("#dfd2ad"))
 	if board_shuffle_time > 0.0:
 		var alpha := minf(0.72, board_shuffle_time * 0.65)
 		draw_rect(rect, Color(0.06, 0.24, 0.18, alpha))
 		draw_string(font, Vector2(rect.position.x, rect.get_center().y - 8), "PRZETASOWANIE GAJU", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 22, Color("#ffe19a"))
 		draw_string(font, Vector2(rect.position.x, rect.get_center().y + 17), "Powstaje nowa ścieżka kombinacji", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 13, Color("#e3efc9"))
+	# Popup rysujemy nad planszą, żeby większa rama nie była przez nią zasłaniana.
+	if defender_help_open and not enemies.is_empty():
+		draw_enemy_guard_help()
 	# Wybrany cel jest podświetlany przy postaci; nie powielamy go tekstem nad bohaterami.
-	if not message.begins_with("Cel:"):
+	if player_opening.tutorial_active(self):
+		player_opening.draw_tutorial(self)
+	elif not message.begins_with("Cel:"):
 		draw_string(font, Vector2(28, 775), message, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 56, 13, Color("#d9e4bd"))
 	# Rozbudowana podstawa korzeni jest tłem dla aktywnej drużyny.
 	if booster_roots_pedestal != null:
@@ -3242,7 +3314,7 @@ func _draw() -> void:
 		var skill_rank := hero_active_skill_rank(skill_hero, branch)
 		var skill_cost := hero_active_skill_cost(branch)
 		var skill_unlocked := skill_rank > 0
-		var skill_ready := skill_unlocked and skill_charge >= skill_cost and not enemy_turn_active and not animation_busy
+		var skill_ready := skill_unlocked and skill_charge >= skill_cost and not enemy_turn_active and not animation_busy and not player_cascade_active
 		draw_skill_node_icon(Vector2(skill_rect.get_center().x, skill_rect.position.y + 17.0), skill_hero, branch, 0, skill_unlocked, maxi(1, skill_rank))
 		var skill_label := SkillTree.branch_name(skill_hero, branch).to_upper()
 		draw_string(font, Vector2(skill_rect.position.x + 3.0, skill_rect.position.y + 49.0), skill_label, HORIZONTAL_ALIGNMENT_CENTER, skill_rect.size.x - 6.0, 11, Color("#fff0c7") if skill_unlocked else Color("#aeb8ae"))
@@ -4242,11 +4314,11 @@ func draw_main_menu(screen: Vector2) -> void:
 	draw_main_menu_background(screen)
 	var focus_level := main_menu_focus_level()
 	var focus_level_id := int(focus_level.get("id", unlocked_level))
-	var active_hero_id := active_heroes[0] if not active_heroes.is_empty() else "lada"
-	var active_portrait: Texture2D = hero_portraits.get(active_hero_id, null)
+	var active_hero_id: String = player_opening.avatar_id
+	var active_portrait: Texture2D = player_opening.avatar_catalog.portrait(self, active_hero_id)
 	draw_circle(Vector2(77.0, 61.0), 57.5, Color("#08261bcf"))
 	if active_portrait != null:
-		var active_face := home_face_portrait(active_hero_id)
+		var active_face := active_portrait
 		if active_face != null:
 			draw_texture_rect(active_face, Rect2(15.5, 3.5, 115.0, 115.0), false)
 	else:
@@ -4257,6 +4329,7 @@ func draw_main_menu(screen: Vector2) -> void:
 		draw_style_box(make_panel(Color("#101b19ef"), Color("#b38b4d")), Rect2(10.0, 8.0, screen.x - 20.0, 104.0))
 	draw_string(font, Vector2(144.0, 64.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 150.0, 16, Color("#fff0c7"))
 	draw_string(font, Vector2(144.0, 80.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 150.0, 11, Color("#c7ddba"))
+	draw_string(font, Vector2(144.0, 97.0), "Dotknij portretu, aby zmienić awatar", HORIZONTAL_ALIGNMENT_LEFT, 160.0, 10, Color("#c7ddba"))
 	draw_resource_amount(Vector2(317.0, 33.0), "coins", coins, 27.0, 12, Color("#f4d69a"))
 	draw_resource_amount(Vector2(417.0, 33.0), "wood", wood, 27.0, 12, Color("#c7ddba"))
 	draw_resource_amount(Vector2(317.0, 71.0), "experience", experience, 27.0, 12, Color("#8fe8df"))
@@ -4305,7 +4378,7 @@ func draw_help_overlay(screen: Vector2) -> void:
 		["1. ŁĄCZ ZNAKI", "Przeciągnij kafelek na sąsiednie pole albo wybierz dwa sąsiednie kafelki. Ruch liczy się tylko, jeśli tworzy co najmniej trzy takie same znaki."],
 		["2. WYKORZYSTAJ ŻYWIOŁY", "Ogień i runy ranią wrogów, woda leczy aktywnego bohatera, a liście budują tarczę drużyny."],
 		["3. WYBIERAJ CELE", "Naciśnij kartę wroga, aby go wybrać. Najpierw usuń obrońców — osłaniają pozostałych przeciwników."],
-		["4. ŁADUJ UMIEJĘTNOŚCI", "Kombinacje liści, ognia i wody ładują zdolności Lady, Bruna oraz Miety. Boostery nie zużywają ruchu."],
+		["4. ŁADUJ UMIEJĘTNOŚCI", "Kombinacje liści, ognia i wody ładują zdolności Lady, Bruna oraz Miety. Boostery nie wywołują ataku przeciwnika."],
 		["5. ROZWIJAJ DRUŻYNĘ", "Nagrody wydaj w osadzie i na bohaterów. Gdy kampania jest za trudna, trening daje PD bez ryzyka utraty postępu."]
 	]
 	for index in guide.size():
@@ -4339,6 +4412,13 @@ func draw_training_overlay(screen: Vector2) -> void:
 		draw_button(Rect2(card.position.x + card.size.x - 112, card.position.y + 82, 96, 26), "WALCZ", true, 11)
 	draw_button(training_close_rect(), "Wróć do menu", true, 14)
 
+func load_reward_claims(data: ConfigFile) -> void:
+	for level in levels:
+		var level_id := int(level.get("id", 0))
+		claimed_boss_sparks[level_id] = bool(data.get_value("bosses", "spark_%d" % level_id, false))
+		if level_id % 5 == 0:
+			claimed_boss_sparks[-level_id] = bool(data.get_value("bosses", "spark_%d" % -level_id, false))
+
 func load_progress() -> void:
 	var data := ConfigFile.new()
 	if data.load("user://progress.cfg") == OK:
@@ -4350,9 +4430,7 @@ func load_progress() -> void:
 		event_marks = int(data.get_value("wallet", "event_marks", 0))
 		daily_reward_day = str(data.get_value("progress", "daily_reward_day", ""))
 		sfx_enabled = bool(data.get_value("settings", "sfx_enabled", true))
-		for level in levels:
-			var boss_level_id := int(level.get("id", 0))
-			claimed_boss_sparks[boss_level_id] = bool(data.get_value("bosses", "spark_%d" % boss_level_id, false))
+		load_reward_claims(data)
 		tutorial_completed = bool(data.get_value("progress", "tutorial_completed", false))
 		for intro_level_id in REGION_INTROS:
 			seen_region_intros[intro_level_id] = bool(data.get_value("region_intros", "level_%d" % int(intro_level_id), false))
@@ -4379,6 +4457,7 @@ func load_progress() -> void:
 	# Zapis może pochodzić ze starszej wersji gry albo zostać przerwany w trakcie
 	# zamykania aplikacji. Zawsze doprowadzamy go do bezpiecznego stanu przed startem.
 	sanitize_progress()
+	player_opening.load_profile(data, self)
 
 func sanitize_progress() -> void:
 	var max_level_index := maxi(1, levels.size())
@@ -4410,6 +4489,7 @@ func sanitize_progress() -> void:
 
 func save_progress() -> void:
 	var data := ConfigFile.new()
+	player_opening.save_profile(data)
 	data.set_value("progress", "unlocked_level", unlocked_level)
 	data.set_value("progress", "tutorial_completed", tutorial_completed)
 	data.set_value("progress", "daily_reward_day", daily_reward_day)
@@ -4518,29 +4598,29 @@ func append_generated_levels(handcrafted_levels: Array) -> Array:
 		if is_chapter_boss:
 			obstacle_profile = {"root": 6 + int(tier / 160), "stone": 5 + int(tier / 190), "curse": 4 + int(tier / 230)}
 			var boss_reward_multiplier := 2 if level_id % 50 == 0 else 1
-			result.append({"id": level_id, "region": region, "name": name, "moves": 17, "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 11200 + tier * 52 * boss_reward_multiplier, "wood": 1850 + tier * 10 * boss_reward_multiplier, "experience": 2300 + tier * 13 * boss_reward_multiplier}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 11200 + tier * 52 * boss_reward_multiplier, "wood": 1850 + tier * 10 * boss_reward_multiplier, "experience": 2300 + tier * 13 * boss_reward_multiplier}})
 		elif is_survival_stage:
 			var survival_target := 6 + int(tier / 200)
 			name = "Przetrwanie %d — szlak %s" % [level_id, str(region_names[region])]
 			enemies = [{"name": enemy_pool[level_id % enemy_pool.size()], "health": base_health * 3, "attack": base_attack + 6}]
 			obstacle_profile = {"root": 5 + int(tier / 180), "stone": 4 + int(tier / 220), "curse": 2 + int(tier / 250)}
-			result.append({"id": level_id, "region": region, "name": name, "moves": survival_target + 6, "goal_type": "survive", "goal_value": survival_target, "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 45, "wood": 1550 + tier * 9, "experience": 1850 + tier * 11}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "survive", "goal_value": survival_target, "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 45, "wood": 1550 + tier * 9, "experience": 1850 + tier * 11}})
 		elif is_cleansing_stage:
 			name = "Oczyszczenie %d — szlak %s" % [level_id, str(region_names[region])]
 			obstacle_profile = {"root": 8 + int(tier / 150), "stone": 6 + int(tier / 180), "curse": 5 + int(tier / 220)}
 			var cleansing_target := 11 + int(tier / 95)
-			result.append({"id": level_id, "region": region, "name": name, "moves": 18, "goal_type": "clear_obstacles", "goal_value": cleansing_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 42, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "clear_obstacles", "goal_value": cleansing_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 42, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
 		elif is_collection_stage:
 			var collect_runes := level_id % 30 == 0
 			var collection_target := 11 + int(tier / 140)
 			name = ("Zbieranie run %d" if collect_runes else "Zbieranie bursztynu %d") % level_id
 			obstacle_profile = {"root": 4 + int(tier / 220), "stone": 3 + int(tier / 260), "curse": 2}
-			result.append({"id": level_id, "region": region, "name": name, "moves": 19, "goal_type": "collect_rune" if collect_runes else "collect_amber", "goal_value": collection_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 40, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "collect_rune" if collect_runes else "collect_amber", "goal_value": collection_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 40, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
 		elif is_score_stage:
 			name = "Echo reliktu %d" % level_id
 			var score_target := 1500 + tier * 2
 			obstacle_profile = {"root": 3 + int(tier / 300), "stone": 2 + int(tier / 360), "curse": 1}
-			result.append({"id": level_id, "region": region, "name": name, "moves": 17, "goal_type": "score", "target": score_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 41, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "score", "target": score_target, "enemies": [], "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 41, "wood": 1550 + tier * 8, "experience": 1850 + tier * 10}})
 		else:
-			result.append({"id": level_id, "region": region, "name": name, "moves": maxi(14, 16 - int(tier / 900)), "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 38, "wood": 1550 + tier * 7, "experience": 1850 + tier * 9}})
+			result.append({"id": level_id, "region": region, "name": name, "goal_type": "defeat_enemy", "enemies": enemies, "obstacles": obstacle_profile, "rewards": {"coins": 9200 + tier * 38, "wood": 1550 + tier * 7, "experience": 1850 + tier * 9}})
 	return result

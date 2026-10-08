@@ -90,8 +90,8 @@ func _init() -> void:
 		if int(level.get("id", 0)) != expected_id:
 			fail("Nieciągły identyfikator poziomu przy pozycji %d." % expected_id)
 			return
-		if str(level.get("name", "")).strip_edges().is_empty() or int(level.get("moves", 0)) <= 0:
-			fail("Poziom %d nie ma nazwy albo dodatniego limitu ruchów." % expected_id)
+		if str(level.get("name", "")).strip_edges().is_empty() or level.has("moves"):
+			fail("Poziom %d nie ma nazwy albo zawiera nieaktualne pole moves." % expected_id)
 			return
 		var region := str(level.get("region", "debowepogranicze"))
 		if not EXPECTED_REGIONS.has(region):
@@ -156,7 +156,7 @@ func _init() -> void:
 		if not configured_enemies.is_empty() and encounter_test.enemies.size() != configured_enemies.size():
 			fail("Poziom %d uruchamia inną liczbę przeciwników niż zapisano w kampanii." % int(level.get("id", 0)))
 			return
-	encounter_test.setup_enemies({"id": 0, "moves": 10, "target": 100})
+	encounter_test.setup_enemies({"id": 0, "target": 100})
 	if encounter_test.enemies.size() != 1:
 		fail("Starszy poziom bez konfiguracji przeciwników nie otrzymuje bezpiecznego wroga awaryjnego.")
 		return

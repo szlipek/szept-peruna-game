@@ -10,9 +10,23 @@ Rozwijana wersja 1.0 gry 2D match-3 RPG w Godot 4. Kampania zawiera 2000 poziom�
 
 Po uruchomieniu wybierz **GRAJ**, aby kontynuować od ostatnio odblokowanego poziomu, albo otwórz mapę krainy.
 
+## Początek przygody
+
+Nowy gracz zobaczy krótki, możliwy do pominięcia wstęp oraz wybór jednego z 30 awatarów. Okrągłe portrety są dostępne na trzech stronach po 10, z dużym podglądem i złotą ramką zaznaczenia. Awatar jest kosmetycznym portretem profilu; później można go zmienić, dotykając portretu w lewym górnym rogu menu.
+
+Pierwszą walkę rozpoczynasz z Ladą. Podświetlony ruch pomaga wykonać pierwsze dopasowanie, a kolejne podpowiedzi wyjaśniają atak, leczenie i tarczę. Tutorial kończy się po zwycięstwie, a nie po pojedynczym ruchu.
+
+Po poziomie 1 wybierasz bezpłatnie Bruna albo Mietę — wybrana postać od razu dołącza do składu. Po poziomie 5 otrzymujesz drugiego towarzysza. Talenty bohaterów rozwijasz wraz z ich poziomami w menu drużyny.
+
+Awatar i wybór towarzysza są zapisywane lokalnie. Przerwany wybór po pierwszym zwycięstwie wraca przy ponownym uruchomieniu. Starsze zapisy z postępem kontynuują grę bez ponownego wprowadzenia; reset uruchamia cały początek od nowa.
+
 Lokalny Godot 4.5.2 znajduje się w `tools/Godot/`. To przenośna instalacja — nie wymaga instalatora ani konta administratora.
 
 ## Sterowanie
+
+**GRAJ**, wybór poziomu na mapie i przejście do kolejnego poziomu od razu rozpoczynają rozgrywkę. Skład bohaterów zmienisz w menu **DRUŻYNA**.
+
+Jedna kasacja (trójka, czwórka, piątka lub kwadrat) zadaje obrażenia tylko jednemu przeciwnikowi. Nadmiar obrażeń przepada. Po opadnięciu kafelków następna kasacja może zaatakować kolejnego wroga; bonus umiejętności należy do pierwszego trafienia.
 
 - przeciągnij kafelek na sąsiednie pole **albo** kliknij kafelek, a potem sąsiedni, aby utworzyć połączenie co najmniej trzech symboli;
 - **Lada**: po zebraniu ośmiu liści wybierz kolumnę do zniszczenia;
@@ -37,7 +51,7 @@ W prawym górnym rogu menu głównego wybierz **RESET**, a następnie **POTWIERD
 
 Przycisk **Mapa** na dole ekranu otwiera Dębowe Pogranicze i pozwala wybrać odblokowany poziom. Pierwsza kraina zawiera obecnie 20 poziomów na czterech stronach mapy.
 
-Po ukończeniu poziomu wynik jest oceniany od jednej do trzech gwiazdek zależnie od pozostałych ruchów.
+Walka trwa do pokonania przeciwników lub utraty całego zdrowia drużyny. Poziomy zadaniowe kończą się po osiągnięciu celu. Zwycięstwo daje trzy gwiazdki przy co najmniej 75% zdrowia drużyny, dwie przy co najmniej 40%, a jedną poniżej 40%. Najlepsze dotychczasowe gwiazdki pozostają w zapisie.
 
 ## Testy i wydanie
 

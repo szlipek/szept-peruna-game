@@ -48,7 +48,7 @@ To jest wersja MVP, czyli minimalna wersja, która pozwala sprawdzić, czy gra j
 - rozdzielczość i orientacja ekranu;
 - styl grafiki: ręcznie malowane 2D, bardziej komiksowy albo realistyczny;
 - dokładna mechanika planszy;
-- liczba ruchów na poziom;
+- zdrowie i atak przeciwników na poziomie;
 - sposób zdobywania surowców;
 - nazwy walut;
 - system energii i żyć;
@@ -79,7 +79,7 @@ Powstaje krótki dokument projektowy zawierający:
 - łączenie 3 lub więcej symboli;
 - znikanie elementów i uzupełnianie planszy;
 - liczenie punktów;
-- limit ruchów;
+- walka do pokonania wrogów lub utraty zdrowia drużyny;
 - warunki zwycięstwa;
 - warunki przegranej;
 - restart poziomu;
@@ -312,7 +312,6 @@ Przy każdym zakupie lub pobraniu dźwięku należy zachować licencję w folder
 
 Najpierw należy wdrożyć wyłącznie reklamy nagradzane:
 
-- dodatkowy ruch po przegranej;
 - podwojenie nagrody;
 - darmowa skrzynia;
 - natychmiastowe ukończenie budynku;
@@ -658,7 +657,6 @@ Wartości są startowe i muszą zostać sprawdzone podczas testów.
 
 Reklama może dawać:
 
-- jeden dodatkowy ruch;
 - podwojenie nagrody;
 - jedną darmową skrzynię dziennie;
 - skrócenie budowy;
@@ -674,7 +672,7 @@ Reklama nie powinna być wymagana do przejścia kampanii.
 ### Kategorie bohaterów
 
 - **Wojownik** — obrażenia i niszczenie przeszkód;
-- **Zwiadowca** — kombinacje i dodatkowe ruchy;
+- **Zwiadowca** — kombinacje i precyzyjne ataki;
 - **Zielarz** — leczenie i ochrona;
 - **Druid** — kontrola natury i planszy;
 - **Rzemieślnik** — wzmacnianie boosterów;
@@ -687,7 +685,7 @@ Reklama nie powinna być wymagana do przejścia kampanii.
 - żywioł: liść;
 - zdolność: niszczy pionowy rząd;
 - bonus: każdy zniszczony liść zwiększa siłę kolejnej umiejętności;
-- pasywna cecha: szansa na dodatkowy ruch po dużej kombinacji.
+- pasywna cecha: premia do tarczy po dużej kombinacji.
 
 #### Brun — Kowal
 
@@ -832,7 +830,6 @@ Każdy poziom powinien mieć osobny rekord danych:
 {
   "id": 1,
   "region": "debowepogranicze",
-  "moves": 20,
   "goal_type": "defeat_boss",
   "goal_value": 500,
   "blocked_tiles": ["stone"],
@@ -845,7 +842,6 @@ Każdy poziom powinien mieć osobny rekord danych:
 }
 ```
 
-Wartość `moves` należy zastąpić liczbą w prawidłowym formacie przed użyciem w grze.
 
 ---
 

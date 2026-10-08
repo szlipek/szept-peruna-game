@@ -1,0 +1,198 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-10-08",
+  "assets": [
+    {
+      "id": "lada",
+      "path": "art/avatars/avatar_lada_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: young Slavic woman with brown hair, small oak leaf crown, embroidered green cloak. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "brun",
+      "path": "art/avatars/avatar_brun_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: strong bearded Slavic blacksmith with braided copper beard, leather apron and soot on cheek. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "mieta",
+      "path": "art/avatars/avatar_mieta_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: young herbalist woman with silver blonde hair, wreath of chamomile and pale green hood. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "dobromir",
+      "path": "art/avatars/avatar_dobromir_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: mature Slavic guardian with shoulder length golden hair and short beard, dark green wool cloak. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "wilk",
+      "path": "art/avatars/avatar_wilk_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: majestic grey wolf with intelligent amber eyes. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "lis",
+      "path": "art/avatars/avatar_lis_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: red fox with alert kind eyes and lush rust fur. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "kruk",
+      "path": "art/avatars/avatar_kruk_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: black raven with violet sheen, expressive bright eye. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "sowa",
+      "path": "art/avatars/avatar_sowa_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: tawny owl with golden eyes and beautifully patterned feathers. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "jelen",
+      "path": "art/avatars/avatar_jelen_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: noble stag with modest branched antlers and moss detail. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "rys",
+      "path": "art/avatars/avatar_rys_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: Eurasian lynx with tufted ears and piercing pale eyes. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "niedzwiedz",
+      "path": "art/avatars/avatar_niedzwiedz_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: brown bear with warm expressive eyes and small oak sprig. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "dzik",
+      "path": "art/avatars/avatar_dzik_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: wild boar with handsome bristles and small tusks. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "zubr",
+      "path": "art/avatars/avatar_zubr_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: European bison with deep brown fur and curved horns. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "zajac",
+      "path": "art/avatars/avatar_zajac_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: wild hare with tall ears and gentle eyes. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "borsuk",
+      "path": "art/avatars/avatar_borsuk_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: European badger with black and white facial markings. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "leszy",
+      "path": "art/avatars/avatar_leszy_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: benevolent woodland spirit with bark face, moss beard and twig crown. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "rusalka",
+      "path": "art/avatars/avatar_rusalka_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: mystical Slavic river woman with long teal hair and water lilies. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "zmij",
+      "path": "art/avatars/avatar_zmij_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: friendly ancient Slavic dragon with emerald scales and bronze horns. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "plomyk",
+      "path": "art/avatars/avatar_plomyk_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: small friendly fire spirit with glowing amber eyes and flame-shaped hair. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "duch_debu",
+      "path": "art/avatars/avatar_duch_debu_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: ancient oak spirit with warm wooden face and golden autumn leaves. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "kaplanka",
+      "path": "art/avatars/avatar_kaplanka_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: wise Slavic priestess with red embroidered headdress and hazel eyes. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "lowczyni",
+      "path": "art/avatars/avatar_lowczyni_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: confident dark-haired Slavic huntress with leather hood and feather charm. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "wojownik",
+      "path": "art/avatars/avatar_wojownik_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: young Slavic warrior with dark hair, bronze headband and chainmail collar. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "wedrowiec",
+      "path": "art/avatars/avatar_wedrowiec_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: old travelling storyteller with white beard and blue hood. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "tkaczka",
+      "path": "art/avatars/avatar_tkaczka_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: Slavic woman with auburn braid, woven cream headscarf and embroidered dress. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "bartnik",
+      "path": "art/avatars/avatar_bartnik_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: cheerful mature beekeeper with dark beard, straw hat and honey amber cloak. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "wieszczka",
+      "path": "art/avatars/avatar_wieszczka_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: elderly seer woman with silver braid, moon pendant and indigo headscarf. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "guslarz",
+      "path": "art/avatars/avatar_guslarz_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: mysterious Slavic ritual elder with grey beard, raven feather and green hood. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "strzyga",
+      "path": "art/avatars/avatar_strzyga_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: elegant folkloric night spirit woman with pale face, dark feather crown and burgundy hair. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "zorza",
+      "path": "art/avatars/avatar_zorza_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: individual game profile avatar, square portrait. Subject: radiant dawn spirit woman with copper hair, delicate golden sun crown and rose cloak. Cohesive premium hand-painted Slavic forest fantasy RPG artwork, detailed face, antique bronze, moss greens, rich natural muted colours, soft golden woodland lighting. Tight centered head and shoulder portrait, front or subtle three-quarter view, eyes clear and face readable at 80 pixels. Whole head including ears, horns or headdress contained safely within the central 80 percent circle. Dark teal softly blurred woodland backdrop. No borders, no letters, no text, no weapons covering face, no extra faces, no watermark. Square full bleed composition."
+    },
+    {
+      "id": "background",
+      "path": "art/avatars/avatar_selection_background_v01.png",
+      "transparent": false,
+      "prompt": "Use case: stylized-concept. Asset type: vertical 9:16 mobile game avatar selection background. Elegant hand painted Slavic sacred oak grove at twilight, huge ancient oak trunks forming delicate ornate frame at outer left and right edges, fine braided roots, moss, oak leaves and tiny amber fireflies, antique gold sunlight at top, deep muted forest teal centre. Large uncluttered dark green central 80 percent area for 30 circular portrait UI icons and text. Atmospheric subtle illustration, rich natural materials, low contrast behind content. No portraits, no UI controls, no text, no symbols in center, no watermark. Full bleed vertical image."
+    },
+    {
+      "id": "ring",
+      "path": "art/avatars/avatar_selected_ring_v01.png",
+      "transparent": true,
+      "prompt": "Use case: stylized-concept. Asset type: circular selected-avatar frame sprite for a Slavic woodland fantasy RPG. Single perfectly round thin ornate wreath of antique gold oak leaves and fine interwoven roots, warm amber glow, small luminous golden diamond at bottom, restrained premium hand painted style. Center hole completely transparent, all outside of circular ring transparent. Ring centered, occupies 85 percent of square canvas, even thin rim so portrait remains readable, no background, no portrait, no text, no checkerboard, no watermark. Actual transparent alpha."
+    }
+  ]
+}

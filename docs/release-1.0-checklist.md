@@ -13,12 +13,14 @@ Ten dokument rozdziela elementy, które można sprawdzić automatycznie w projek
 
 ## Kontrola przed kompilacją
 
+- [x] `tests/battle_duration_test.gd` sprawdza 60 kolejnych tur walki, porażkę przez utratę zdrowia, pełne tury przetrwania i progi gwiazdek oparte na zdrowiu; test nie zapisuje postępu gracza.
+
 - [ ] Godot uruchamia projekt bez `SCRIPT ERROR` i `Parse Error`.
 - [ ] `tools/verify-release.ps1` potwierdza składnię oraz spójność 2000 poziomów kampanii.
 - [ ] Poziomy 1, 20, 21, 50, 100, 101, 125, 150, 200 i 300 można otworzyć po odblokowaniu.
 - [ ] Każdy z pięciu celów poziomu może zostać ukończony.
 - [x] Dane poziomu są zgodne z pętlą gry: etap z przeciwnikami używa celu `defeat_enemy`, a poziom zadaniowy nie zawiera przeciwników.
-- [ ] Prawidłowy ruch nigdy nie resetuje planszy; nieprawidłowy nie zużywa ruchu.
+- [ ] Prawidłowy ruch nigdy nie resetuje planszy; nieprawidłowy nie wywołuje ataku przeciwnika.
 - [x] Automatyczny test tworzy 100 plansz i potwierdza brak gotowych połączeń, legalny ruch oraz limit 48 przeszkód nawet dla bardzo późnego poziomu.
 - [ ] Po ruchu gracza plansza kończy spadanie kafelków przed ruchem przeciwnika; po ruchu przeciwnika — przed odblokowaniem wejścia gracza.
 - [ ] Obrońca, mistyk, zwiadowca i napastnik zachowują się zgodnie z opisem.
@@ -30,6 +32,10 @@ Ten dokument rozdziela elementy, które można sprawdzić automatycznie w projek
 - [ ] W instrukcji `?` przełącznik `DŹWIĘKI` włącza i wyłącza efekty, a ustawienie pozostaje po restarcie gry.
 
 ## Testy urządzeń
+
+- [x] `tests/opening_flow_test.gd` sprawdza start z Ladą, kosmetyczny awatar, wybór towarzysza, wznowienie wyboru, drugi nabór po poziomie 5, starszy zapis i reset; test używa zapisu w pamięci.
+- [ ] Nowy gracz na telefonie przechodzi wstęp, wybiera awatar, kończy pierwszą walkę i rozumie wybór towarzysza bez dodatkowego objaśnienia.
+- [ ] Zmiana awatara przez dotknięcie portretu w menu oraz wybór obu towarzyszy są czytelne na telefonie i tablecie.
 
 - [ ] Android 8+ / słabszy telefon: 10 kolejnych poziomów bez zawieszenia.
 - [ ] Telefon 16:9 oraz wysoki 20:9: bez obciętych przycisków, tekstów i portretów.
