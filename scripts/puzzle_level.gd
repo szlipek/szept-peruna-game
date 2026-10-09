@@ -1641,13 +1641,16 @@ func finish_level(success_message: String) -> void:
 	message = success_message
 
 func calculate_stars() -> int:
-	if party_max_health <= 0:
+	var total_heroes := active_heroes.size()
+	if total_heroes <= 0:
 		return 1
-	if party_health * 4 >= party_max_health * 3:
-		return 3
-	if party_health * 5 >= party_max_health * 2:
-		return 2
-	return 1
+	var living_heroes := 0
+	for hero_id in active_heroes:
+		if int(hero_health.get(hero_id, 0)) > 0:
+			living_heroes += 1
+	# Pełny skład przy życiu daje 3 gwiazdki. Za każdą utraconą
+	# część składu spada o jeden poziom, niezależnie od wielkości drużyny.
+	return clampi(int(ceil(float(living_heroes) * 3.0 / float(total_heroes))), 1, 3)
 
 func enemy_take_turn() -> void:
 	if not has_living_enemies():
@@ -2389,7 +2392,7 @@ func village_building_rect(building_id: String) -> Rect2:
 	var dimensions := Vector2(150.0, 150.0)
 	match building_id:
 		"domostwa":
-			center = Vector2(85.0, 205.0)
+			center = Vector2(90.0, 160.0)
 			dimensions = Vector2(150.0, 150.0)
 		"swiety_gaj":
 			center = Vector2(268.0, 180.0)
@@ -2398,13 +2401,13 @@ func village_building_rect(building_id: String) -> Rect2:
 			center = Vector2(453.0, 215.0)
 			dimensions = Vector2(124.0, 188.0)
 		"kuznia":
-			center = Vector2(100.0, 412.0)
+			center = Vector2(100.0, 402.0)
 			dimensions = Vector2(174.0, 162.0)
 		"chata_zielarki":
 			center = Vector2(437.0, 415.0)
 			dimensions = Vector2(169.0, 169.0)
 		"spichlerz":
-			center = Vector2(448.0, 618.0)
+			center = Vector2(438.0, 603.0)
 			dimensions = Vector2(150.0, 160.0)
 	var scale_factor := minf(screen.x / 540.0, screen.y / 960.0)
 	var size := dimensions * scale_factor
