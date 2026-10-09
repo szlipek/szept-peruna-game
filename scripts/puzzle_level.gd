@@ -4422,7 +4422,7 @@ func draw_main_menu(screen: Vector2) -> void:
 	if active_portrait != null:
 		var active_face := active_portrait
 		if active_face != null:
-			draw_texture_rect(active_face, Rect2(17.5, 5.5, 95.0, 95.0), false)
+			draw_texture_rect(active_face, Rect2(37.5, 15.5, 95.0, 95.0), false)
 	else:
 		draw_circle(Vector2(77.0, 61.0), 42.0, Color("#604a34"))
 	if home_status_header != null:
