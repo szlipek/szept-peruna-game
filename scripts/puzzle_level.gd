@@ -73,9 +73,20 @@ const ENEMY_ROLES := {
 	"Czarny Bóg Przesmyku": "attacker", "Serce Starego Dębu": "defender"
 }
 const TRAINING_BATTLES := [
-	{"name": "Ćwiczenie: Mchy", "goal_type": "defeat_enemy", "enemies": [{"name": "Cień mchu", "health": 42, "attack": 2}], "rewards": {"coins": 8, "wood": 0, "experience": 55}},
-	{"name": "Ćwiczenie: Żar", "goal_type": "defeat_enemy", "enemies": [{"name": "Popielny chochlik", "health": 58, "attack": 3}], "rewards": {"coins": 10, "wood": 0, "experience": 75}},
-	{"name": "Ćwiczenie: Straż gaju", "goal_type": "defeat_enemy", "enemies": [{"name": "Korzeniowy strażnik", "health": 76, "attack": 4}], "rewards": {"coins": 12, "wood": 2, "experience": 100}}
+	{"required_level": 1, "name": "Ćwiczenie: Mchy", "goal_type": "defeat_enemy", "mechanic": "Podstawowe kombinacje", "enemies": [{"name": "Cień mchu", "health": 42, "attack": 2}], "rewards": {"coins": 8, "wood": 0, "experience": 55}},
+	{"required_level": 5, "name": "Ćwiczenie: Żar", "goal_type": "defeat_enemy", "mechanic": "Ogień zadaje większe obrażenia", "enemies": [{"name": "Popielny chochlik", "health": 58, "attack": 3}], "rewards": {"coins": 15, "wood": 0, "experience": 100}},
+	{"required_level": 10, "name": "Ćwiczenie: Straż gaju", "goal_type": "defeat_enemy", "mechanic": "Korzenie zarastają pola", "enemies": [{"name": "Korzeniowy strażnik", "health": 76, "attack": 4}], "rewards": {"coins": 30, "wood": 2, "experience": 180}},
+	{"required_level": 15, "name": "Próba kamienia", "goal_type": "defeat_enemy", "mechanic": "Kamienie chronią wroga", "enemies": [{"name": "Kamienny gąsienicznik", "health": 120, "attack": 6}], "obstacles": {"stone": 8}, "rewards": {"coins": 45, "wood": 5, "experience": 280}},
+	{"required_level": 20, "name": "Próba klątwy", "goal_type": "defeat_enemy", "mechanic": "Klątwy wzmacniają atak", "enemies": [{"name": "Ropuch kurhanów", "health": 155, "attack": 8}], "obstacles": {"curse": 7}, "rewards": {"coins": 70, "wood": 8, "experience": 400}},
+	{"required_level": 25, "name": "Krąg strażnika", "goal_type": "defeat_enemy", "mechanic": "Korzenie, kamienie i klątwy", "enemies": [{"name": "Strażnik totemu", "health": 230, "attack": 11}], "obstacles": {"root": 5, "stone": 5, "curse": 4}, "rewards": {"coins": 110, "wood": 12, "experience": 600}},
+	{"required_level": 30, "name": "Próba bagien", "goal_type": "defeat_enemy", "mechanic": "Woda leczy, klątwy wzmacniają atak", "enemies": [{"name": "Topielec źródlany", "health": 280, "attack": 13}], "obstacles": {"root": 6, "curse": 5}, "rewards": {"coins": 150, "wood": 16, "experience": 820}},
+	{"required_level": 40, "name": "Próba mgły", "goal_type": "defeat_enemy", "mechanic": "Wróg wspiera swoich sojuszników", "enemies": [{"name": "Mglisty sługa", "health": 340, "attack": 15}], "obstacles": {"stone": 7, "curse": 5}, "rewards": {"coins": 210, "wood": 22, "experience": 1100}},
+	{"required_level": 50, "name": "Strażnik szczytów", "goal_type": "defeat_enemy", "mechanic": "Kamienny pancerz i silne kaskady", "enemies": [{"name": "Strażnik szronu", "health": 420, "attack": 18}], "obstacles": {"stone": 9, "root": 5}, "rewards": {"coins": 290, "wood": 30, "experience": 1450}},
+	{"required_level": 60, "name": "Próba Żmija", "goal_type": "defeat_enemy", "mechanic": "Ogień przełamuje obronę", "enemies": [{"name": "Żmijowe pisklę", "health": 510, "attack": 21}], "obstacles": {"curse": 8, "stone": 6}, "rewards": {"coins": 380, "wood": 38, "experience": 1850}},
+	{"required_level": 70, "name": "Próba Nawii", "goal_type": "defeat_enemy", "mechanic": "Runy osłabiają nadchodzący atak", "enemies": [{"name": "Nawijski strażnik", "health": 620, "attack": 24}], "obstacles": {"root": 8, "curse": 8}, "rewards": {"coins": 490, "wood": 48, "experience": 2350}},
+	{"required_level": 80, "name": "Próba równowagi", "goal_type": "defeat_enemy", "mechanic": "Wróg łączy trzy role", "enemies": [{"name": "Strażnik równowagi", "health": 750, "attack": 28}], "obstacles": {"root": 7, "stone": 7, "curse": 7}, "rewards": {"coins": 620, "wood": 60, "experience": 2950}},
+	{"required_level": 90, "name": "Próba burzy", "goal_type": "defeat_enemy", "mechanic": "Każda tura zwiększa presję", "enemies": [{"name": "Władca Kruczych Znaków", "health": 900, "attack": 32}], "obstacles": {"stone": 10, "curse": 8}, "rewards": {"coins": 780, "wood": 74, "experience": 3650}},
+	{"required_level": 100, "name": "Wielki krąg", "goal_type": "defeat_enemy", "mechanic": "Pełny sprawdzian wszystkich przeszkód", "enemies": [{"name": "Czarny Bóg Przesmyku", "health": 1100, "attack": 38}], "obstacles": {"root": 9, "stone": 9, "curse": 9}, "rewards": {"coins": 1000, "wood": 95, "experience": 4600}}
 ]
 const REGION_INTROS := {
 	21: ["ŚWIĘTY GAJ", "Korzenie starych dębów pamiętają imiona tych, którzy zaginęli. Idź ostrożnie — gaj słucha każdego kroku."],
@@ -161,6 +172,7 @@ var enemy_attack := 0
 var enemies: Array = []
 var target_enemy_index := 0
 var held_tooltip := ""
+var held_tooltip_icon: Texture2D
 var animation_busy := false
 var player_cascade_active := false
 var enemy_turn_active := false
@@ -214,6 +226,7 @@ var main_menu_open := true
 var help_open := false
 var defender_help_open := false
 var training_open := false
+var training_scroll := 0.0
 var training_mode := false
 var training_battle: Dictionary = {}
 var region_intro_open := false
@@ -275,6 +288,7 @@ var hud_oak_ornament: Texture2D
 var portrait_backdrop_oak: Texture2D
 var pause_button_oak: Texture2D
 var turn_banner_oak: Texture2D
+var tutorial_tooltip_banner: Texture2D
 var board_cell_stone: Texture2D
 var board_hint_frame: Texture2D
 var booster_roots_pedestal: Texture2D
@@ -333,6 +347,7 @@ var home_navigation_frame: Texture2D
 var home_status_header: Texture2D
 var home_party_panel: Texture2D
 var home_party_portrait_ring: Texture2D
+var home_party_add_plus: Texture2D
 var home_face_portraits := {}
 var hero_portraits := {}
 var hero_accent_textures := {}
@@ -424,6 +439,7 @@ func _ready() -> void:
 	portrait_backdrop_oak = load_image_texture("res://art/vfx/portrait_backdrop_oak_v01.png")
 	pause_button_oak = load_image_texture("res://art/vfx/pause_button_oak_v01.png")
 	turn_banner_oak = load_image_texture("res://art/vfx/turn_banner_oak_v01.png")
+	tutorial_tooltip_banner = load_image_texture("res://art/ui/tutorial_tooltip_banner_v01.png")
 	# Grafiki planszy są wymagane; brak importu nie może ukryć ich za starym tłem.
 	board_cell_stone = preload("res://art/ui/board_cell_stone_v01.png")
 	board_hint_frame = preload("res://art/ui/board_hint_frame_v01.svg")
@@ -465,7 +481,7 @@ func _ready() -> void:
 	enemy_role_mystic_icon = load_image_texture("res://art/ui/enemy_role_mystic_v01.png")
 	enemy_role_attacker_icon = load_image_texture("res://art/ui/enemy_role_attacker_v01.png")
 	enemy_role_emblems = load_image_texture("res://art/ui/enemy_role_emblems_v01.png")
-	star_rating_icon = load_image_texture("res://art/ui/icon_star_oak_v01.png")
+	star_rating_icon = load_image_texture("res://art/ui/icon_star_oak_v02.png")
 	coin_resource_icon = load_image_texture("res://art/ui/icon_coin_oak_v01.png")
 	wood_resource_icon = load_image_texture("res://art/ui/icon_wood_oak_v01.png")
 	experience_resource_icon = load_image_texture("res://art/ui/icon_xp_oak_v01.png")
@@ -499,6 +515,7 @@ func _ready() -> void:
 	home_status_header = load_image_texture("res://art/ui/home_status_header_v02.png")
 	home_party_panel = load_image_texture("res://art/ui/home_party_panel_v01.png")
 	home_party_portrait_ring = load_image_texture("res://art/ui/home_party_portrait_ring_v01.png")
+	home_party_add_plus = load_image_texture("res://art/ui/home_party_add_plus_v01.png")
 	for enemy_name_key in NORMAL_ENEMY_PORTRAIT_SLUGS:
 		var enemy_slug: String = NORMAL_ENEMY_PORTRAIT_SLUGS[enemy_name_key]
 		enemy_portraits[enemy_name_key] = load_image_texture("res://art/characters/normal_enemies/enemy_%s_portrait_v01.png" % enemy_slug)
@@ -678,6 +695,8 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	fill_fresh_board()
 	setup_obstacles(level)
 	var intro_level_id := int(level.get("id", 0))
+	if not training_mode and intro_level_id == 6:
+		message = "Nowe przeszkody: korzenie zarastają pola, kamienie chronią wrogów, a klątwy wzmacniają ich atak."
 	active_region_intro = []
 	active_region_intro_key = ""
 	region_intro_open = false
@@ -796,6 +815,36 @@ func setup_obstacles(level: Dictionary) -> void:
 		obstacles[cell.y][cell.x] = obstacle_type
 		obstacle_budget -= 1
 
+func obstacle_count(kind: int) -> int:
+	var total := 0
+	for row in BOARD_SIZE:
+		for col in BOARD_SIZE:
+			if int(obstacles[row][col]) == kind:
+				total += 1
+	return total
+
+func apply_obstacle_powers() -> String:
+	var roots: Array[Vector2i] = []
+	for row in BOARD_SIZE:
+		for col in BOARD_SIZE:
+			if int(obstacles[row][col]) == 1:
+				roots.append(Vector2i(col, row))
+	if roots.is_empty():
+		return ""
+	var candidates: Array[Vector2i] = []
+	for root in roots:
+		for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var target: Vector2i = root + offset
+			if target.x < 0 or target.y < 0 or target.x >= BOARD_SIZE or target.y >= BOARD_SIZE:
+				continue
+			if int(obstacles[target.y][target.x]) == 0 and int(board[target.y][target.x]) >= 0 and not candidates.has(target):
+				candidates.append(target)
+	if candidates.is_empty():
+		return ""
+	var grown: Vector2i = candidates.pick_random()
+	obstacles[grown.y][grown.x] = 1
+	return "Korzenie zarosły sąsiednie pole."
+
 func board_has_legal_move() -> bool:
 	for row in BOARD_SIZE:
 		for col in BOARD_SIZE:
@@ -854,6 +903,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			skill_tree_open = false
 			queue_redraw()
 			return
+	if training_open and event is InputEventMouseButton and event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+		training_scroll = clampf(training_scroll + (-118.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 118.0), 0.0, training_scroll_max())
+		queue_redraw()
+		return
+	if training_open and event is InputEventScreenDrag:
+		training_scroll = clampf(training_scroll - event.relative.y, 0.0, training_scroll_max())
+		queue_redraw()
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			handle_press(event.position)
@@ -878,12 +935,14 @@ func handle_press(position: Vector2) -> void:
 		if is_in_button(position, enemy_target_rect(index)):
 			var enemy: Dictionary = enemies[index]
 			held_tooltip = "%s • %s" % [str(enemy.get("name", "Wróg")), enemy_tactical_hint(enemy)]
+			held_tooltip_icon = boss_portrait_for(str(enemy.get("name", "Wróg")))
 			queue_redraw()
 			return
 	for index in active_heroes.size():
 		if is_in_button(position, hero_battle_rect(index)):
 			var hero_id: String = active_heroes[index]
 			held_tooltip = "%s • %s" % [HERO_NAMES[HERO_IDS.find(hero_id)], HERO_SKILLS[hero_id]]
+			held_tooltip_icon = hero_portraits.get(hero_id, null)
 			queue_redraw()
 			return
 	touch_start = point_to_cell(position)
@@ -901,6 +960,7 @@ func handle_release(position: Vector2) -> void:
 		return
 	if held_tooltip != "":
 		held_tooltip = ""
+		held_tooltip_icon = null
 		queue_redraw()
 	if region_intro_open:
 		region_intro_open = false
@@ -1595,6 +1655,7 @@ func enemy_take_turn() -> void:
 	# Blokujemy wejście tylko do zakończenia zamiany i opadania znaków.
 	enemy_turn_active = true
 	animation_busy = true
+	var obstacle_effect_text := apply_obstacle_powers()
 	var total_attack := 0
 	var enrage_text := ""
 	for enemy in enemies:
@@ -1607,6 +1668,9 @@ func enemy_take_turn() -> void:
 					enemy["enraged"] = true
 					enrage_text = "%s wpada w szał!" % str(enemy.get("name", "Wróg"))
 				total_attack += maxi(3, int(enemy_attack_value / 2))
+	var curse_count := obstacle_count(3)
+	if curse_count > 0:
+		total_attack += curse_count * 2
 	var target_hero := scout_target_hero()
 	enemy_attack_anim = 6.5
 	message = "Przeciwnik wykonuje ruch."
@@ -1652,7 +1716,7 @@ func enemy_take_turn() -> void:
 		damage_popup_time = 0.8
 	refresh_party_health()
 	var attack_name := "Kombinacja przeciwnika" if not best_move.is_empty() else "Atak przeciwnika"
-	last_enemy_attack_text = "%s%s%s: %d obrażeń w %s%s." % ["%s " % enrage_text if enrage_text != "" else "", "%s " % support_text if support_text != "" else "", attack_name, damage, HERO_NAMES[HERO_IDS.find(target_hero)], " (tarcza pochłonęła %d)" % absorbed if absorbed > 0 else ""]
+	last_enemy_attack_text = "%s%s%s: %d obrażeń w %s%s.%s" % ["%s " % enrage_text if enrage_text != "" else "", "%s " % support_text if support_text != "" else "", attack_name, damage, HERO_NAMES[HERO_IDS.find(target_hero)], " (tarcza pochłonęła %d)" % absorbed if absorbed > 0 else "", " %s" % obstacle_effect_text if obstacle_effect_text != "" else ""]
 	message = "Twój ruch — wybierz kafelek i wykonaj ruch."
 	animation_busy = false
 	enemy_turn_active = false
@@ -1757,6 +1821,10 @@ func deal_damage_to_enemies(amount: int, defender_damage_multiplier := 1.0) -> v
 		return
 	var target: Dictionary = enemies[damaged_index]
 	var actual_damage := amount
+	var stone_count := obstacle_count(2)
+	if stone_count > 0:
+		# Każdy aktywny kamień osłabia pierwsze obrażenia zadane w tej fali.
+		actual_damage = maxi(1, actual_damage - stone_count * 2)
 	if str(target.get("role", "attacker")) == "defender":
 		actual_damage = int(round(float(actual_damage) * defender_damage_multiplier))
 	if str(target.get("role", "attacker")) != "defender" and has_living_defender():
@@ -2186,7 +2254,7 @@ func mieta_skill_rect() -> Rect2:
 
 func hero_battle_rect(index: int) -> Rect2:
 	if active_heroes.size() == 1:
-		return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 766.0, 160.0, 72.0)
+		return Rect2(get_viewport_rect().size.x / 2.0 - 80.0, 796.0, 160.0, 72.0)
 	return [lada_skill_rect(), brun_skill_rect(), mieta_skill_rect()][index]
 
 func hero_active_skill_rect(branch: int) -> Rect2:
@@ -2485,16 +2553,39 @@ func help_button_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 58.0, 124.0, 50.0, 50.0)
 
 func help_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 730.0, 240.0, 48.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 704.0, 240.0, 48.0)
 
 func sound_toggle_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 668.0, 240.0, 46.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 642.0, 240.0, 46.0)
 
 func training_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 75.0, 760.0, 150.0, 38.0)
+	return Rect2(get_viewport_rect().size.x / 2.0 - 75.0, 892.0, 150.0, 38.0)
 
 func training_choice_rect(index: int) -> Rect2:
-	return Rect2(54.0, 220.0 + index * 142.0, get_viewport_rect().size.x - 108.0, 118.0)
+	return Rect2(42.0, 158.0 + index * 118.0 - training_scroll, get_viewport_rect().size.x - 84.0, 112.0)
+
+func training_scroll_max() -> float:
+	return maxf(0.0, float(TRAINING_BATTLES.size() * 118 - 690))
+
+func visible_training_indices() -> Array[int]:
+	var unlocked: Array[int] = []
+	for index in TRAINING_BATTLES.size():
+		if int(TRAINING_BATTLES[index].get("required_level", 1)) <= unlocked_level:
+			unlocked.append(index)
+	var first := maxi(0, unlocked.size() - 3)
+	var visible: Array[int] = []
+	for index in range(first, unlocked.size()):
+		visible.append(unlocked[index])
+	return visible
+
+func display_training_indices() -> Array[int]:
+	var available := visible_training_indices()
+	var display: Array[int] = available.duplicate()
+	var next_index := available.size()
+	while display.size() < 3 and next_index < TRAINING_BATTLES.size():
+		display.append(next_index)
+		next_index += 1
+	return display
 
 func building_cost(building_id: String) -> Dictionary:
 	var bases := {
@@ -2835,6 +2926,9 @@ func handle_training_input(position: Vector2) -> void:
 		return
 	for index in TRAINING_BATTLES.size():
 		if is_in_button(position, training_choice_rect(index)):
+			if int(TRAINING_BATTLES[index].get("required_level", 1)) > unlocked_level:
+				message = "Ta próba odblokuje się po ukończeniu poziomu %d." % int(TRAINING_BATTLES[index].get("required_level", 1))
+				return
 			training_battle = TRAINING_BATTLES[index].duplicate(true)
 			training_mode = true
 			training_open = false
@@ -2882,6 +2976,7 @@ func handle_main_menu_input(position: Vector2) -> void:
 	if is_in_button(position, main_menu_training_rect()):
 		main_menu_open = false
 		training_open = true
+		training_scroll = 0.0
 		queue_redraw()
 
 func handle_help_input(position: Vector2) -> void:
@@ -2934,9 +3029,7 @@ func daily_reward_available() -> bool:
 
 func claim_daily_reward() -> void:
 	if not daily_reward_available():
-		daily_reward_open_time = 0.0
-		message = "Dar Gaju już odebrany. Odtwarzam animację skrzyń."
-		play_sfx(760.0, 0.16, 0.18)
+		message = "Dar Gaju został już dziś odebrany."
 		queue_redraw()
 		return
 	var coin_reward := 180 + mini(820, unlocked_level * 10)
@@ -2971,6 +3064,7 @@ func handle_action_button(position: Vector2) -> void:
 		restart_current_battle()
 	elif state == "lost" and not training_mode and is_in_button(position, defeat_training_rect()):
 		training_open = true
+		training_scroll = 0.0
 		queue_redraw()
 
 func draw_button(rect: Rect2, label: String, enabled := true, text_size := 18) -> void:
@@ -3139,7 +3233,8 @@ func _draw() -> void:
 			if enemy_damage_popup_time > 0.0 and enemy_damage_popup_index == enemy_index:
 				var hit_alpha := enemy_damage_popup_time / 0.9
 				draw_string(font, Vector2(card.position.x, card.position.y - 10.0 - (0.9 - enemy_damage_popup_time) * 28.0), "-%d" % enemy_damage_popup_value, HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 22, Color(1.0, 0.82, 0.32, hit_alpha))
-			var info_y := card.position.y + 145.0
+			# Nazwa przeciwnika znajduje się pod grafiką portretu.
+			var info_y := card.position.y + 143.0
 			draw_string(font, Vector2(card.position.x, info_y), str(enemy.get("name", "Wróg")), HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 11, enemy_color)
 			var bar_rect := Rect2(card.position.x + 12, health_y + 2, card.size.x - 24, 42)
 			if healthbar_fill != null:
@@ -3329,9 +3424,16 @@ func _draw() -> void:
 		else:
 			draw_string(font, Vector2(skill_rect.position.x + 3.0, skill_rect.position.y + 65.0), charge_label, HORIZONTAL_ALIGNMENT_CENTER, skill_rect.size.x - 6.0, 10, Color("#aeb5a5"))
 	if held_tooltip != "":
-		var tooltip_rect := Rect2(28, 836, screen.x - 56, 34)
-		draw_style_box(make_panel(Color("#193d38f2"), Color("#f0d57a")), tooltip_rect)
-		draw_string(font, Vector2(tooltip_rect.position.x + 8, tooltip_rect.position.y + 22), held_tooltip, HORIZONTAL_ALIGNMENT_CENTER, tooltip_rect.size.x - 16, 12, Color("#fff0c7"))
+		var tooltip_rect := Rect2(16, 812, screen.x - 32, 78)
+		if tutorial_tooltip_banner != null:
+			draw_texture_rect(tutorial_tooltip_banner, tooltip_rect, false)
+		elif turn_banner_oak != null:
+			draw_texture_rect(turn_banner_oak, tooltip_rect, false, Color(0.92, 0.98, 0.9, 1.0))
+		else:
+			draw_style_box(make_panel(Color("#193d38f2"), Color("#f0d57a")), tooltip_rect)
+		if held_tooltip_icon != null:
+			draw_texture_rect(held_tooltip_icon, Rect2(tooltip_rect.position + Vector2(14, 13), Vector2(52, 52)), false)
+		draw_multiline_string(font, Vector2(tooltip_rect.position.x + 76, tooltip_rect.position.y + 25), held_tooltip, HORIZONTAL_ALIGNMENT_LEFT, tooltip_rect.size.x - 90, 12, 17, Color("#fff0c7"))
 	if state != "playing":
 		# Modal przejmuje uwagę — przygaszamy całą bitwę pod nim.
 		draw_rect(Rect2(Vector2.ZERO, screen), Color(0.035, 0.055, 0.05, 0.66))
@@ -3935,8 +4037,8 @@ func draw_village_inspector() -> void:
 	if progression_locked:
 		var required_map_level := mini(levels.size(), (level + 1) * 30)
 		var remaining_map_levels := maxi(1, required_map_level - unlocked_level)
-		var lock_message := "Przejdź jeszcze %d poziomów mapy, aby odblokować poziom %d" % [remaining_map_levels, level + 1]
-		draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 96.0), lock_message, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 11, Color("#f5d18c"))
+		var lock_message := "Przejdź jeszcze %d poziomów mapy,\naby odblokować poziom %d" % [remaining_map_levels, level + 1]
+		draw_multiline_string(font, Vector2(panel.position.x + 35.0, panel.end.y - 112.0), lock_message, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 70.0, 11, 14, Color("#f5d18c"))
 		draw_button(village_upgrade_rect(), "ZABLOKOWANE", false, 13)
 		return
 	var cost := building_cost(building_id)
@@ -3970,7 +4072,8 @@ func draw_map_overlay(screen: Vector2, include_background := true, include_chrom
 		var focus_level: Dictionary = levels[focus_index] if not levels.is_empty() else {}
 		draw_string(font, Vector2(0, 114), region_display_name(str(focus_level.get("region", "debowepogranicze"))).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#fff0cf"))
 		draw_string(font, Vector2(0, 131), "SZLAK %d" % [map_page + 1], HORIZONTAL_ALIGNMENT_CENTER, screen.x, 11, Color("#e8d5ad"))
-		draw_button(map_previous_page_rect(), "POPRZEDNI", map_page > 0, 12)
+		if map_page > 0:
+			draw_button(map_previous_page_rect(), "POPRZEDNI", true, 12)
 		if map_has_unlocked_next_page():
 			draw_button(map_next_page_rect(), "NASTĘPNY", true, 12)
 	if include_missions:
@@ -3979,15 +4082,10 @@ func draw_map_overlay(screen: Vector2, include_background := true, include_chrom
 			if index >= levels.size() or index >= unlocked_level:
 				continue
 			var unlocked := true
-			var active := index == level_index
 			var node_rect := map_level_rect(slot)
 			var center := node_rect.get_center()
 			var level: Dictionary = levels[index]
 			var boss_mission := is_boss_level(level)
-			if active:
-				var active_radius := 64.0 if boss_mission else 46.0
-				draw_circle(center, active_radius + 1.0, Color("#f5d37638"))
-				draw_arc(center, active_radius, 0.0, TAU, 48, Color("#ffe8a8"), 2.5, true)
 			draw_map_mission_icon(center, level, boss_mission, unlocked)
 			var number_rect := Rect2(center + Vector2(-29.0, 52.0 if boss_mission else 32.0), Vector2(58.0, 28.0))
 			if map_level_number_plate != null:
@@ -4265,13 +4363,17 @@ func draw_home_party(screen: Vector2) -> void:
 			draw_circle(center, 42.0, Color("#0b211bc8"))
 			if home_party_portrait_ring != null:
 				draw_texture_rect(home_party_portrait_ring, ring_rect, false, Color(0.8, 0.85, 0.78, 0.48))
-			draw_string(font, Vector2(center.x - 24.0, center.y + 11.0), "+", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 30, Color("#d6bd84"))
+			if home_party_add_plus != null:
+				draw_texture_rect(home_party_add_plus, Rect2(center - Vector2(22.5, 22.5), Vector2(45.0, 45.0)), false)
+			else:
+				draw_string(font, Vector2(center.x - 24.0, center.y + 11.0), "+", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 30, Color("#d6bd84"))
 			draw_string(font, Vector2(center.x - 54.0, 540.0), "DODAJ", HORIZONTAL_ALIGNMENT_CENTER, 108.0, 11, Color("#b8c8aa"))
 			continue
 		var hero_id: String = active_heroes[index]
 		var face := home_face_portrait(hero_id)
 		if face != null:
-			draw_texture_rect(face, Rect2(center - Vector2(45.0, 45.0), Vector2(90.0, 90.0)), false)
+			var face_center := center + Vector2(3.0, 3.0)
+			draw_texture_rect(face, Rect2(face_center - Vector2(45.0, 45.0), Vector2(90.0, 90.0)), false)
 		else:
 			draw_circle(center, 42.0, Color("#604a34"))
 		if home_party_portrait_ring != null:
@@ -4320,16 +4422,16 @@ func draw_main_menu(screen: Vector2) -> void:
 	if active_portrait != null:
 		var active_face := active_portrait
 		if active_face != null:
-			draw_texture_rect(active_face, Rect2(15.5, 3.5, 115.0, 115.0), false)
+			draw_texture_rect(active_face, Rect2(17.5, 5.5, 95.0, 95.0), false)
 	else:
 		draw_circle(Vector2(77.0, 61.0), 42.0, Color("#604a34"))
 	if home_status_header != null:
 		draw_texture_rect(home_status_header, Rect2(5.0, 4.0, screen.x - 10.0, 120.0), false)
 	else:
 		draw_style_box(make_panel(Color("#101b19ef"), Color("#b38b4d")), Rect2(10.0, 8.0, screen.x - 20.0, 104.0))
-	draw_string(font, Vector2(144.0, 64.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 150.0, 16, Color("#fff0c7"))
-	draw_string(font, Vector2(144.0, 80.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 150.0, 11, Color("#c7ddba"))
-	draw_string(font, Vector2(144.0, 97.0), "Dotknij portretu, aby zmienić awatar", HORIZONTAL_ALIGNMENT_LEFT, 160.0, 10, Color("#c7ddba"))
+	draw_string(font, Vector2(144.0, 50.0), "Strażnik Gaju", HORIZONTAL_ALIGNMENT_LEFT, 150.0, 16, Color("#fff0c7"))
+	draw_string(font, Vector2(144.0, 66.0), "Poziom %d  •  Drużyna %d/%d" % [unlocked_level, party_health, party_max_health], HORIZONTAL_ALIGNMENT_LEFT, 150.0, 11, Color("#c7ddba"))
+	draw_string(font, Vector2(144.0, 83.0), "Dotknij portretu, aby zmienić awatar", HORIZONTAL_ALIGNMENT_LEFT, 160.0, 10, Color("#c7ddba"))
 	draw_resource_amount(Vector2(317.0, 33.0), "coins", coins, 27.0, 12, Color("#f4d69a"))
 	draw_resource_amount(Vector2(417.0, 33.0), "wood", wood, 27.0, 12, Color("#c7ddba"))
 	draw_resource_amount(Vector2(317.0, 71.0), "experience", experience, 27.0, 12, Color("#8fe8df"))
@@ -4363,17 +4465,17 @@ func draw_main_menu(screen: Vector2) -> void:
 	else:
 		draw_style_box(make_panel(Color("#101e18ee"), Color("#ad8449")), reward_panel)
 	draw_string(font, Vector2(reward_panel.position.x + 20.0, 705.0), "DZIENNY DAR GAJU", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 14, Color("#f0dfba"))
-	draw_string(font, Vector2(reward_panel.position.x + 20.0, 718.0), "ODBIERZ" if daily_reward_available() else "ODEBRANO  •  ODTWÓRZ", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 10, Color("#e1d3b3"))
+	draw_string(font, Vector2(reward_panel.position.x + 20.0, 718.0), "ODBIERZ" if daily_reward_available() else "ODEBRANO", HORIZONTAL_ALIGNMENT_CENTER, reward_panel.size.x - 40.0, 10, Color("#e1d3b3"))
 	draw_home_navigation(screen)
 
 func draw_help_overlay(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511e8"))
-	var panel := Rect2(28, 108, screen.x - 56, 706)
-	if defeat_modal_oak != null:
-		draw_texture_rect(defeat_modal_oak, panel, false, Color(0.95, 1.0, 0.96, 1.0))
-	else:
-		draw_style_box(make_panel(Color("#193d38"), Color("#e1bd6a")), panel)
-	draw_string(font, Vector2(panel.position.x, 164), "JAK GRAĆ", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 25, Color("#ffe6a4"))
+	# Spokojne, pionowe tło zostawia ciemną polanę pośrodku na czytelny tekst.
+	if oak_borderland_background != null:
+		draw_texture_rect(oak_borderland_background, Rect2(Vector2.ZERO, screen), false, Color(0.72, 0.82, 0.76, 1.0))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511b8"))
+	# Tekst leży bezpośrednio na grafice; nie dodajemy osobnej tafli ani ramki.
+	var content := Rect2((screen.x - 430.0) * 0.5, 36, 430, 570)
+	draw_string(font, Vector2(content.position.x, content.position.y + 38), "JAK GRAĆ", HORIZONTAL_ALIGNMENT_CENTER, content.size.x, 30, Color("#ffe6a4"))
 	var guide := [
 		["1. ŁĄCZ ZNAKI", "Przeciągnij kafelek na sąsiednie pole albo wybierz dwa sąsiednie kafelki. Ruch liczy się tylko, jeśli tworzy co najmniej trzy takie same znaki."],
 		["2. WYKORZYSTAJ ŻYWIOŁY", "Ogień i runy ranią wrogów, woda leczy aktywnego bohatera, a liście budują tarczę drużyny."],
@@ -4381,35 +4483,62 @@ func draw_help_overlay(screen: Vector2) -> void:
 		["4. ŁADUJ UMIEJĘTNOŚCI", "Kombinacje liści, ognia i wody ładują zdolności Lady, Bruna oraz Miety. Boostery nie wywołują ataku przeciwnika."],
 		["5. ROZWIJAJ DRUŻYNĘ", "Nagrody wydaj w osadzie i na bohaterów. Gdy kampania jest za trudna, trening daje PD bez ryzyka utraty postępu."]
 	]
+	var icon_indices := [0, 4, 2, 1, 5]
+	var icon_cell := Vector2.ZERO
+	if map_mission_icon_atlas != null:
+		icon_cell = Vector2(map_mission_icon_atlas.get_width() / 4.0, map_mission_icon_atlas.get_height() / 2.0)
 	for index in guide.size():
 		var item: Array = guide[index]
-		var y := 210.0 + index * 98.0
-		draw_circle(Vector2(panel.position.x + 42, y - 7), 17, Color("#a8782e"))
-		draw_string(font, Vector2(panel.position.x + 70, y), str(item[0]), HORIZONTAL_ALIGNMENT_LEFT, panel.size.x - 98, 16, Color("#fff0c7"))
-		draw_multiline_string(font, Vector2(panel.position.x + 70, y + 15), str(item[1]), HORIZONTAL_ALIGNMENT_LEFT, panel.size.x - 105, 13, 20, Color("#cfe1c2"))
+		var row_top := content.position.y + 66.0 + index * 104.0
+		var icon_rect := Rect2(content.position + Vector2(0, row_top - content.position.y), Vector2(72, 72))
+		if map_mission_icon_atlas != null:
+			var icon_index: int = icon_indices[index]
+			var source := Rect2(Vector2(icon_index % 4, icon_index / 4) * icon_cell, icon_cell)
+			draw_texture_rect_region(map_mission_icon_atlas, icon_rect, source)
+		else:
+			draw_circle(icon_rect.get_center(), 18, Color("#a8782e"))
+		var text_x := content.position.x + 92.0
+		var text_width := content.size.x - 102.0
+		draw_string(font, Vector2(text_x, row_top + 18), str(item[0]), HORIZONTAL_ALIGNMENT_LEFT, text_width, 15, Color("#fff0c7"))
+		draw_multiline_string(font, Vector2(text_x, row_top + 44), str(item[1]), HORIZONTAL_ALIGNMENT_LEFT, text_width, 15, 19, Color("#cfe1c2"))
 	draw_button(sound_toggle_rect(), "DŹWIĘKI: WŁĄCZONE" if sfx_enabled else "DŹWIĘKI: WYŁĄCZONE", true, 14)
 	draw_button(help_close_rect(), "ROZUMIEM", true, 16)
 
 func draw_training_overlay(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#0b1b1ae8"))
-	draw_game_logo(Vector2(screen.x / 2.0, 82), Vector2(200, 120))
-	var panel_rect := Rect2(28, 142, screen.x - 56, 660)
-	draw_style_box(make_panel(Color("#193d38"), Color("#e1bd6a")), panel_rect)
-	draw_string(font, Vector2(panel_rect.position.x, 184), "KRĄG TRENINGOWY", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x, 22, Color("#f5d998"))
-	draw_string(font, Vector2(panel_rect.position.x + 24, 208), "Ćwicz bez energii i bez ryzyka utraty postępu.", HORIZONTAL_ALIGNMENT_CENTER, panel_rect.size.x - 48, 13, Color("#c7ddba"))
-	for index in TRAINING_BATTLES.size():
-		var training: Dictionary = TRAINING_BATTLES[index]
-		var card := training_choice_rect(index)
+	if oak_borderland_background != null:
+		draw_texture_rect(oak_borderland_background, Rect2(Vector2.ZERO, screen), false, Color(0.62, 0.72, 0.68, 1.0))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511d8"))
+	var content_width := screen.x - 48.0
+	draw_string(font, Vector2(24, 92), "KRĄG TRENINGOWY", HORIZONTAL_ALIGNMENT_CENTER, content_width, 27, Color("#f5d998"))
+	draw_string(font, Vector2(36, 120), "Ćwicz bez energii i bez ryzyka utraty postępu.", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 72.0, 14, Color("#d4e2c5"))
+	for slot in TRAINING_BATTLES.size():
+		var training: Dictionary = TRAINING_BATTLES[slot]
+		var card := training_choice_rect(slot)
+		if card.end.y < 154.0 or card.position.y > 870.0:
+			continue
 		var enemy: Dictionary = training["enemies"][0]
-		draw_style_box(make_panel(Color("#285149"), Color("#719a78")), card)
-		draw_string(font, Vector2(card.position.x + 16, card.position.y + 29), str(training["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("#fff0c7"))
-		draw_string(font, Vector2(card.position.x + 16, card.position.y + 54), "Wróg: %s  •  %d zdrowia  •  atak %d" % [str(enemy["name"]), int(enemy["health"]), int(enemy["attack"])], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#c7ddba"))
+		var locked := int(training.get("required_level", 1)) > unlocked_level
+		if locked:
+			draw_string(font, Vector2(card.position.x, card.position.y + 49), "ZABLOKOWANE", HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 18, Color("#c5b991"))
+			draw_string(font, Vector2(card.position.x, card.position.y + 76), "Ukończ poziom %d" % int(training.get("required_level", 1)), HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 13, Color("#aebca8"))
+			continue
+		var portrait := boss_portrait_for(str(enemy["name"]))
+		var medal := Rect2(card.position + Vector2(8, 22), Vector2(82, 82))
+		if portrait_backdrop_oak != null:
+			draw_texture_rect(portrait_backdrop_oak, medal, false)
+		else:
+			draw_circle(medal.get_center(), 40, Color("#193c32"))
+		if portrait != null:
+			draw_texture_rect(portrait, Rect2(card.position + Vector2(15, 29), Vector2(68, 68)), false)
+		draw_string(font, Vector2(card.position.x + 92, card.position.y + 29), str(training["name"]), HORIZONTAL_ALIGNMENT_LEFT, card.size.x - 210, 17, Color("#fff0c7"))
+		draw_string(font, Vector2(card.position.x + 92, card.position.y + 52), "Wróg: %s  •  %d zdrowia  •  atak %d" % [str(enemy["name"]), int(enemy["health"]), int(enemy["attack"])], HORIZONTAL_ALIGNMENT_LEFT, card.size.x - 108, 11, Color("#d2e4cb"))
+		draw_string(font, Vector2(card.position.x + 92, card.position.y + 75), str(training.get("mechanic", "Próba bojowa")), HORIZONTAL_ALIGNMENT_LEFT, card.size.x - 108, 11, Color("#f2d48d"))
 		var reward: Dictionary = training["rewards"]
-		draw_string(font, Vector2(card.position.x + 16, card.position.y + 79), "Nagroda", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f5d998"))
-		var training_reward_x := card.position.x + 72.0
-		training_reward_x += draw_resource_amount(Vector2(training_reward_x, card.position.y + 62), "experience", int(reward["experience"]), 18.0, 11, Color("#f5d998")) + 12.0
-		draw_resource_amount(Vector2(training_reward_x, card.position.y + 62), "coins", int(reward["coins"]), 18.0, 11, Color("#f5d998"))
-		draw_button(Rect2(card.position.x + card.size.x - 112, card.position.y + 82, 96, 26), "WALCZ", true, 11)
+		draw_string(font, Vector2(card.position.x + 92, card.position.y + 106), "NAGRODA", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f5d998"))
+		var training_reward_x := card.position.x + 154.0
+		training_reward_x += draw_resource_amount(Vector2(training_reward_x, card.position.y + 90), "experience", int(reward["experience"]), 18.0, 11, Color("#f5d998")) + 10.0
+		draw_resource_amount(Vector2(training_reward_x, card.position.y + 90), "coins", int(reward["coins"]), 18.0, 11, Color("#f5d998"))
+		draw_button(Rect2(card.end.x - 112, card.position.y + 82, 96, 28), "WALCZ", true, 11)
 	draw_button(training_close_rect(), "Wróć do menu", true, 14)
 
 func load_reward_claims(data: ConfigFile) -> void:

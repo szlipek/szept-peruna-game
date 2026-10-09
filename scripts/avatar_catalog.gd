@@ -5,12 +5,15 @@ const NAMES := ["Wędrowniczka", "Kowal", "Zielarka", "Strażnik", "Wilk", "Lis"
 var portraits := {}
 var background: Texture2D
 var selected_ring: Texture2D
+var page_arrow: Texture2D
 
 func load_decoration(game) -> void:
 	if background == null:
 		background = game.load_image_texture("res://art/avatars/avatar_selection_background_v01.png")
 	if selected_ring == null:
 		selected_ring = game.load_image_texture("res://art/avatars/avatar_selected_ring_v01.png")
+	if page_arrow == null:
+		page_arrow = game.load_image_texture("res://art/avatars/avatar_page_arrow_v03.png")
 
 func portrait(game, avatar_id: String) -> Texture2D:
 	if portraits.has(avatar_id):

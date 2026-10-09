@@ -51,7 +51,7 @@ Przycisk **Osada** otwiera pierwszą wersję rozbudowy Dębowego Pogranicza. Dom
 
 Mapa Dębowego Pogranicza pokazuje dziesięć połączonych ścieżką poziomów na dwóch stronach. Dostępne są tylko poziomy odblokowane przez ukończenie poprzedniej ścieżki. Poziom 10 zawiera walkę z Wilkiem Cienia.
 
-Poziomy 6–10 wprowadzają korzenie, kamienie i klątwy. Przeszkoda potrzebuje odpowiednio jednego, dwóch lub trzech trafień kombinacją albo umiejętnością, zanim zniknie z planszy. Poziomy 11–20 dodają cele zbierania bursztynu i run oraz dwa kolejne starcia z przeciwnikami.
+Poziomy 6–10 wprowadzają korzenie, kamienie i klątwy. Przeszkoda potrzebuje odpowiednio jednego, dwóch lub trzech trafień kombinacją albo umiejętnością, zanim zniknie z planszy. Korzenie mogą podczas tury przeciwnika zarosnąć sąsiednie pole, kamienie zmniejszają obrażenia zadawane wrogom, a klątwy wzmacniają ich atak. Poziom 6 pokazuje graczowi krótkie wyjaśnienie tych zasad. Poziomy 11–20 dodają cele zbierania bursztynu i run oraz dwa kolejne starcia z przeciwnikami.
 
 ## Start Etapu 5
 
@@ -73,7 +73,7 @@ Przeprowadzić krótkie testy bez instrukcji: czas zrozumienia pierwszego ruchu 
 
 ## Krąg treningowy
 
-Menu główne udostępnia trzy powtarzalne walki treningowe: Mchy, Żar i Straż Gaju. Nie wymagają energii, złota ani odblokowania poziomu; porażka nie odbiera postępu. Wygrana daje przede wszystkim PD wyłącznie aktywnym bohaterom oraz małą nagrodę w monetach. To celowa ścieżka powrotu dla osoby, która utknie w kampanii — rozwój drużyny nie zależy od płatności ani wcześniejszego zapasu waluty.
+Menu główne udostępnia przewijany Krąg Treningowy z serią powtarzalnych prób. Pierwsze walki to Mchy, Żar, Straż Gaju, Próba kamienia, Próba klątwy i Krąg strażnika; kolejne próby pojawiają się co 10 poziomów aż do poziomu 100. Każda karta pokazuje portret przeciwnika, jego mechanikę oraz rosnącą nagrodę. Lista przewija się gestem lub kółkiem myszy, a przycisk powrotu pozostaje stale widoczny. Walki nie wymagają energii ani złota, a porażka nie odbiera postępu. Wygrana daje PD aktywnym bohaterom oraz monety i drewno. To celowa ścieżka powrotu dla osoby, która utknie w kampanii — rozwój drużyny nie zależy od płatności ani wcześniejszego zapasu waluty.
 
 Ekran porażki zawiera skrót do Kręgu treningowego, a karty drużyny pokazują poziom oraz PD wymagane do kolejnego poziomu.
 

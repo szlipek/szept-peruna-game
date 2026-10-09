@@ -1,6 +1,10 @@
 {
   "tool": "built-in image_gen",
   "date": "2026-10-08",
+  "continued_on": "2026-10-09",
+  "page_arrow_v02": "imageGen raster arrow based on the attached reference, transparent background",
+  "page_arrow_v03": "imageGen rounder raster arrow medallion with double-chevron, transparent background",
+  "runtime_portrait_limit": 512,
   "assets": [
     {
       "id": "lada",
