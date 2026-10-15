@@ -25,7 +25,7 @@ Każda ranga dodaje efekt opisany przy węźle. „Własny znak” oznacza żywi
 |---|---|---|---|---|
 | Lada | liście | Łuk Gromu | Straż Dębu | Splot Korzeni |
 | Brun | ogień | Żar Kowala | Pancerz Kuźni | Kowadło Burzy |
-| Mieta | woda | Źródło Rosy | Krąg Życia | Wodny Szept |
+| Mięta | woda | Źródło Rosy | Krąg Życia | Wodny Szept |
 | Wszebor | ogień | Ogień Straży | Żelazna Warta | Popielny Znak |
 | Boruta | ogień | Rozłupanie | Kamienna Skóra | Korzeń Skały |
 | Dobromir | liście | Pieśń Dębu | Osłona Korzeni | Zielony Chór |

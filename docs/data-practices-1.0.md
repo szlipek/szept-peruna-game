@@ -1,6 +1,6 @@
 # Szept Peruna 1.0 — praktyki danych
 
-Stan dokumentu: 25 września 2026. Dokument opisuje aktualny kod wersji 1.0 i jest materiałem dla właściciela projektu podczas wypełniania deklaracji Google Play.
+Stan dokumentu: 15 października 2026. Dokument opisuje aktualny kod projektu i jest materiałem dla właściciela projektu podczas wypełniania deklaracji Google Play.
 
 ## Co zapisuje gra
 
@@ -12,15 +12,17 @@ Gra zapisuje lokalnie na urządzeniu plik postępu Godot (`user://progress.cfg`)
 - poziomy budynków;
 - preferencję włączenia efektów dźwiękowych.
 
-## Czego wersja 1.0 nie robi
+## Integracja reklam
 
-Na podstawie przeglądu kodu projektu wersja 1.0:
+Projekt zawiera integrację Google Mobile Ads SDK przez plugin Godot AdMob. W edytorze i na platformach bez natywnego pluginu reklamy są niedostępne. Konfiguracja Androida używa identyfikatorów demonstracyjnych Google (`is_real = false`), więc nie generuje przychodu.
 
-- nie zawiera żądań sieciowych ani połączeń z serwerem;
-- nie używa analityki, reklam, identyfikatorów reklamowych ani zewnętrznych SDK;
-- nie tworzy konta gracza i nie wymaga adresu e-mail;
-- nie zbiera lokalizacji, kontaktów, zdjęć, mikrofonu ani danych wrażliwych;
-- nie przesyła lokalnego postępu poza urządzenie.
+Po dodaniu własnych identyfikatorów AdMob SDK będzie wysyłać żądania reklamowe. Google Mobile Ads może przetwarzać dane urządzenia i identyfikatory używane do emisji, pomiaru i ochrony przed nadużyciami zgodnie z ustawieniami wydawcy, zgodą użytkownika i polityką Google. Gra pyta SDK o status zgody UMP przed inicjalizacją; jeśli wymagana zgoda nie może zostać uzyskana, reklamy pozostają wyłączone w tej sesji.
+
+Nagroda z reklamy przyznawana jest wyłącznie po sygnale SDK potwierdzającym obejrzenie reklamy. Lokalny postęp nadal jest zapisywany w `user://progress.cfg`; gra nie ma własnego konta gracza ani własnego serwera.
+
+## Pozostałe dane
+
+Gra nie wymaga e-maila i nie zbiera lokalizacji, kontaktów, zdjęć ani dźwięku z mikrofonu. Nie ma własnej analityki ani logowania.
 
 ## Kontrola gracza
 
@@ -28,4 +30,4 @@ W menu głównym gracz może wybrać `RESET`, a następnie `POTWIERDŹ`. Usuwa t
 
 ## Przed publikacją
 
-Właściciel projektu powinien opublikować tę treść pod własnym adresem polityki prywatności oraz ponownie zweryfikować deklarację, jeżeli do gry zostaną dodane reklamy, analityka, logowanie, płatności lub synchronizacja chmurowa. Każda z tych funkcji zmienia zakres wymaganych deklaracji i polityki.
+Właściciel projektu powinien opublikować zaktualizowaną politykę pod własnym adresem, skonfigurować komunikaty prywatności i sprawdzić aktualne odpowiedzi Google Play Data safety dla użytej wersji SDK i regionów dystrybucji. Włączenie prawdziwych reklam (`is_real = true`) wymaga uzupełnienia identyfikatorów aplikacji i jednostek reklamowych. Integracja płatności i synchronizacji chmurowej nie jest obecnie aktywna; ich dodanie wymaga kolejnej aktualizacji polityki i deklaracji.

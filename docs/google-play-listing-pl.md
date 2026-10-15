@@ -28,7 +28,7 @@ Najważniejsze cechy:
 - lokalny zapis, tryb offline i brak wymagania konta;
 - polski interfejs oraz opcjonalne efekty dźwiękowe.
 
-Wersja 1.0 działa offline i nie zawiera reklam, logowania ani zakupów w aplikacji.
+Gra zapisuje postęp lokalnie. Wersja testowa używa wyłącznie demonstracyjnych reklam Google; dostępność reklam w wydaniu produkcyjnym zależy od konfiguracji AdMob. Gra nie wymaga konta. Zakupy w aplikacji nie są obecnie aktywne.
 
 ## Zrzuty ekranu — plan
 

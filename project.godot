@@ -16,6 +16,10 @@ config/icon="res://art/ui/app_icon_szept_peruna_v01.png"
 run/main_scene="res://scenes/puzzle_level.tscn"
 config/features=PackedStringArray("4.5")
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/AdmobPlugin/plugin.cfg")
+
 [display]
 
 window/size/viewport_width=540

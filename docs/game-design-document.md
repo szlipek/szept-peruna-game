@@ -39,7 +39,7 @@ Protokół uruchomieniowy i test z nowymi graczami znajduje się w `docs/etap-1-
 
 ## Start Etapu 2
 
-Poziom 5 jest pierwszą walką z Leszym. Kafelki ognia i run zadają obrażenia, woda leczy drużynę, a liście tworzą tarczę i ładują Strzałę Peruna. Leszy odpowiada atakiem po prawidłowym ruchu gracza. Drużyna ma trzy aktywne umiejętności: Lada niszczy kolumnę, Brun obszar 3×3 z premią do obrażeń, a Mieta zamienia wszystkie kafelki wody w leczenie.
+Poziom 5 jest pierwszą walką z Leszym. Kafelki ognia i run zadają obrażenia, woda leczy drużynę, a liście tworzą tarczę i ładują Strzałę Peruna. Leszy odpowiada atakiem po prawidłowym ruchu gracza. Drużyna ma trzy aktywne umiejętności: Lada niszczy kolumnę, Brun obszar 3×3 z premią do obrażeń, a Mięta zamienia wszystkie kafelki wody w leczenie.
 
 Każdy bohater zdobywa PD po wygranym poziomie. Przycisk **Drużyna** otwiera ekran z poziomem, postępem PD i ulepszeniem za monety. Poziom bohatera zwiększa wytrzymałość drużyny lub siłę jego umiejętności.
 
@@ -94,7 +94,7 @@ Kampania zawiera 2000 poziomów. Pierwsze 100 etapów zaprojektowano ręcznie, a
 - Gracz zaczyna z jedną bohaterką: **Ladą**. Przed poziomem wybiera od 1 do 3 posiadanych bohaterów.
 - Każdy prawidłowy ruch na planszy należy do kolejnego żywego bohatera w kolejności składu. Widoczny wskaźnik pokazuje, czyja trwa tura.
 - Każda kombinacja zadaje obrażenia. Bazowo trzy znaki zadają 10 obrażeń, a każdy kolejny znak w grupie dodaje 5.
-- Żywioł zgodny z bohaterem w turze wzmacnia obrażenia o 100%: Lada — liście, Brun — żar, Mieta — woda. Bursztyn daje +50% niezależnie od bohatera, a runa +25% oraz ładuje zdolność.
+- Żywioł zgodny z bohaterem w turze wzmacnia obrażenia o 100%: Lada — liście, Brun — żar, Mięta — woda. Bursztyn daje +50% niezależnie od bohatera, a runa +25% oraz ładuje zdolność.
 - Po ruchu i zakończeniu kaskad każdy żywy wróg atakuje drużynę. Tarcza pochłania obrażenia przed zdrowiem.
 - Wygrana następuje wyłącznie po pokonaniu wszystkich jednostek przeciwnika. Porażka następuje po spadku zdrowia drużyny do zera.
 
@@ -110,7 +110,7 @@ Kampania zawiera 2000 poziomów. Pierwsze 100 etapów zaprojektowano ręcznie, a
 |---|---|---|---|
 | Lada | start | liść | Strzała Peruna — niszczy kolumnę |
 | Brun | 1 200 monet | żar | Uderzenie Kowala — obszar 3×3 |
-| Mieta | 1 500 monet | woda | Krąg Uzdrowienia — leczenie i oczyszczenie wody |
+| Mięta | 1 500 monet | woda | Krąg Uzdrowienia — leczenie i oczyszczenie wody |
 | Żywia | 2 000 monet + drewno | bursztyn | Bursztynowa Bariera — duża tarcza drużyny |
 | Radogost | nagroda z wydarzenia / żetony | runa | Pieśń Run — wzmacnia następną kombinację |
 | Żmij | bohater legendarny | żar/runa | Płomień Żmija — obrażenia wszystkich wrogów |

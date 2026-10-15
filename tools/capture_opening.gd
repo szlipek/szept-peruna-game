@@ -3,13 +3,11 @@ extends SceneTree
 class Preview:
 	extends "res://scripts/puzzle_level.gd"
 	func _ready() -> void:
-		font = ThemeDB.fallback_font
-		var preview_font := FontFile.new()
-		if preview_font.load_dynamic_font("res://art/fonts/AlegreyaSans-Bold.ttf") == OK:
-			font = preview_font
+		font = preload("res://scripts/game_typography.gd").create_font()
+		button_oak = load_image_texture("res://art/vfx/button_oak_v01.png")
 		# Ładuj tylko portrety potrzebne do wprowadzenia, bez całej kolekcji.
 		for hero_id in ["lada", "brun", "mieta", "dobromir"]:
-			var portrait := Image.load_from_file("res://art/characters/hero_%s_portrait_v05.png" % hero_id)
+			var portrait := Image.load_from_file("res://art/characters/hero_%s_portrait_v06.png" % hero_id)
 			if portrait != null and not portrait.is_empty():
 				hero_portraits[hero_id] = ImageTexture.create_from_image(portrait)
 		set_process(false)
@@ -27,7 +25,7 @@ func capture() -> void:
 	game.set_process_unhandled_input(false)
 	# Zmieniamy tylko stan w pamięci; podgląd nie zapisuje postępu gracza.
 	game.player_opening.reset_profile()
-	for stage in ["intro", "avatar", "companion", "ready"]:
+	for stage in ["intro", "avatar", "avatar_edit", "companion", "ready"]:
 		game.player_opening.stage = stage
 		game.player_opening.selected_companion = "mieta"
 		game.player_opening.starter_companion = "mieta"

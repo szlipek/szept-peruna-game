@@ -101,7 +101,7 @@ Nowa osoba powinna w ciągu 30 sekund zrozumieć, co należy zrobić, a po kilku
 
 1. **Lada** — zwiadowczyni, wzmacnia liście i naturę.
 2. **Brun** — kowal, wzmacnia ogień i niszczenie przeszkód.
-3. **Mieta** — zielarka, leczy drużynę i wzmacnia wodę.
+3. **Mięta** — zielarka, leczy drużynę i wzmacnia wodę.
 
 ### Do zaprogramowania
 
@@ -130,7 +130,7 @@ Przykładowe umiejętności MVP:
 
 - **Lada — Strzała Peruna:** niszczy cały pionowy rząd; każdy zniszczony kafelek ognia daje dodatkowe obrażenia.
 - **Brun — Uderzenie Kowala:** niszczy wybrany kafelek i pola wokół niego; kamienie dają dodatkową energię.
-- **Mieta — Krąg Uzdrowienia:** zamienia wodne kafelki w leczenie; większa kombinacja oznacza większe leczenie.
+- **Mięta — Krąg Uzdrowienia:** zamienia wodne kafelki w leczenie; większa kombinacja oznacza większe leczenie.
 
 Docelowo można dodać:
 
@@ -310,12 +310,7 @@ Przy każdym zakupie lub pobraniu dźwięku należy zachować licencję w folder
 
 ## 10. Etap 7 — monetyzacja
 
-Najpierw należy wdrożyć wyłącznie reklamy nagradzane:
-
-- podwojenie nagrody;
-- darmowa skrzynia;
-- natychmiastowe ukończenie budynku;
-- dodatkowy booster.
+Projekt ma teraz techniczną integrację AdMob w trybie testowym. Zaprojektowana częstotliwość to dobrowolny bonus za reklamę nagradzaną po zwycięstwie oraz rzadka reklama pełnoekranowa w przerwie między poziomami. Szczegóły wdrożenia i limity opisuje `docs/monetyzacja-i-retencja.md`. Przed produkcją trzeba dodać własne identyfikatory AdMob, skonfigurować zgodę i uaktualnić deklaracje prywatności.
 
 Później można dodać:
 
@@ -325,7 +320,7 @@ Później można dodać:
 - pakiety surowców;
 - specjalne skórki bohaterów.
 
-Reklama powinna być dobrowolna i jasno opisana. Gracz nie powinien być zmuszany do oglądania reklam, aby móc normalnie grać.
+Reklama nagradzana powinna być dobrowolna i jasno opisana. Gracz nie może być zmuszany do oglądania reklam, aby normalnie przechodzić kampanię.
 
 ---
 
@@ -694,7 +689,7 @@ Reklama nie powinna być wymagana do przejścia kampanii.
 - bonus: kamienie ładują zdolność szybciej;
 - pasywna cecha: większe obrażenia przeciw przeszkodom.
 
-#### Mieta — Zielarka
+#### Mięta — Zielarka
 
 - żywioł: woda;
 - zdolność: zamienia wodne kafelki w leczenie;
@@ -722,7 +717,7 @@ Baśniowy, tajemniczy i przygodowy. Świat nie powinien być wyłącznie mroczny
 ### Główne postacie
 
 - **Jaruś** — młody strażnik osady i główny bohater;
-- **Mieta** — zielarka i przewodniczka;
+- **Mięta** — zielarka i przewodniczka;
 - **Brun** — kowal, który zna tajemnice starego oręża;
 - **Lada** — zwiadowczyni;
 - **Szepta** — bajarz prowadzący narrację;

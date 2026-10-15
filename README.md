@@ -1,61 +1,70 @@
 # Szept Peruna
 
-Rozwijana wersja 1.0 gry 2D match-3 RPG w Godot 4. Kampania zawiera 2000 poziomów: pierwsze 100 zaprojektowano ręcznie, a dalsze korzystają z rozbudowanych rozdziałów, misji i starć z bossami. Do tego dochodzą trening bohaterów, osada i walka turowa.
+Gra 2D match-3 RPG w Godot 4. Kampania prowadzi przez krainy pełne wrogów i bossów: każda wyprawa kończy się pokonaniem przeciwników albo porażką drużyny. Rozwijaj bohaterów, dobieraj skład, odkrywaj bestiariusz i rozbudowuj osadę.
 
 ## Szybkie uruchomienie
 
-- Dwuklik na `uruchom-gre.bat` uruchamia prototyp.
+- Dwuklik na `uruchom-gre.bat` uruchamia grę.
 - Dwuklik na `otworz-w-godot.bat` otwiera projekt w edytorze Godot.
 - W edytorze użyj `F5`, aby uruchomić grę, albo `F6`, aby uruchomić bieżącą scenę.
 
-Po uruchomieniu wybierz **GRAJ**, aby kontynuować od ostatnio odblokowanego poziomu, albo otwórz mapę krainy.
+Po uruchomieniu wybierz **GRAJ**, aby kontynuować od ostatniego odblokowanego poziomu, albo otwórz mapę i wybierz odblokowaną walkę.
+
+Lokalny Godot 4.5.2 znajduje się w `tools/Godot/` i działa bez instalatora.
 
 ## Początek przygody
 
-Nowy gracz zobaczy krótki, możliwy do pominięcia wstęp oraz wybór jednego z 30 awatarów. Okrągłe portrety są dostępne na trzech stronach po 10, z dużym podglądem i złotą ramką zaznaczenia. Awatar jest kosmetycznym portretem profilu; później można go zmienić, dotykając portretu w lewym górnym rogu menu.
+Nowy gracz przechodzi krótki, możliwy do pominięcia wstęp i wybiera jeden z 30 kosmetycznych awatarów. Pierwsza wyprawa rozpoczyna się z Ladą. Samouczek uczy dopasowywania znaków, atakowania, leczenia i ochrony drużyny.
 
-Pierwszą walkę rozpoczynasz z Ladą. Podświetlony ruch pomaga wykonać pierwsze dopasowanie, a kolejne podpowiedzi wyjaśniają atak, leczenie i tarczę. Tutorial kończy się po zwycięstwie, a nie po pojedynczym ruchu.
+Pierwsze pięć poziomów ma łagodniejszy wzrost zdrowia i siły wrogów. Po poziomie 1 można bezpłatnie dołączyć Bruna albo Miętę, a po poziomie 5 kolejnego towarzysza. Awatar, skład i postęp zapisują się lokalnie.
 
-Po poziomie 1 wybierasz bezpłatnie Bruna albo Mietę — wybrana postać od razu dołącza do składu. Po poziomie 5 otrzymujesz drugiego towarzysza. Talenty bohaterów rozwijasz wraz z ich poziomami w menu drużyny.
+## Walka
 
-Awatar i wybór towarzysza są zapisywane lokalnie. Przerwany wybór po pierwszym zwycięstwie wraca przy ponownym uruchomieniu. Starsze zapisy z postępem kontynuują grę bez ponownego wprowadzenia; reset uruchamia cały początek od nowa.
+Każdy poziom kampanii jest walką z wrogami. Zwyciężasz po pokonaniu wszystkich przeciwników; porażka następuje po utracie całego zdrowia drużyny. Jedna kasacja zadaje obrażenia wybranemu wrogowi, a nadmiar obrażeń nie przechodzi na kolejnego przeciwnika. Obrońcy osłaniają sojuszników, zwiadowcy atakują rannych bohaterów, a wsparcie leczy wrogów.
 
-Lokalny Godot 4.5.2 znajduje się w `tools/Godot/`. To przenośna instalacja — nie wymaga instalatora ani konta administratora.
+- Przeciągnij kafelek na sąsiednie pole **albo** wybierz dwa sąsiednie kafelki, aby połączyć co najmniej trzy takie same znaki.
+- Czwórki, piątki, kwadraty i kaskady zadają dodatkowe obrażenia.
+- **Lada** ładuje Strzałę Peruna liśćmi, **Brun** ładuje Uderzenie Kowala ogniem, a **Mięta** ładuje Krąg Uzdrowienia wodą.
+- Boostery Młot, Grom Peruna i Wiatr Gaju pomagają przełamać obronę wrogów.
+- Zwycięstwo daje trzy gwiazdki przy co najmniej 75% zdrowia drużyny, dwie przy co najmniej 40%, a jedną poniżej 40%. Najlepszy wynik pozostaje zapisany.
 
-## Sterowanie
+### Cele dodatkowe
 
-**GRAJ**, wybór poziomu na mapie i przejście do kolejnego poziomu od razu rozpoczynają rozgrywkę. Skład bohaterów zmienisz w menu **DRUŻYNA**.
+Każda walka kampanii ma jeden opcjonalny cel: utworzyć kombinację co najmniej czterech znaków, użyć zdolności lub boostera albo wygrać z co najmniej 70% zdrowia drużyny. Pierwsze zaliczenie celu na danym poziomie daje 150 monet. Cel nie zastępuje zwycięstwa nad wrogami i nie jest wymagany do przejścia poziomu.
 
-Jedna kasacja (trójka, czwórka, piątka lub kwadrat) zadaje obrażenia tylko jednemu przeciwnikowi. Nadmiar obrażeń przepada. Po opadnięciu kafelków następna kasacja może zaatakować kolejnego wroga; bonus umiejętności należy do pierwszego trafienia.
+### Synergie drużyny
 
-- przeciągnij kafelek na sąsiednie pole **albo** kliknij kafelek, a potem sąsiedni, aby utworzyć połączenie co najmniej trzech symboli;
-- **Lada**: po zebraniu ośmiu liści wybierz kolumnę do zniszczenia;
-- **Brun**: po zebraniu siedmiu ogni wybierz środek obszaru 3×3;
-- **Mieta**: po zebraniu siedmiu wód usuwa wszystkie kafelki wody i leczy drużynę;
-- **Boostery**: przycisk na dole otwiera trzy jednorazowe efekty: Młot (3×3), Grom Peruna (rząd) i Wiatr Gaju (wszystkie znaki wybranego typu).
+Niektóre pary bohaterów wzmacniają się w aktywnym składzie. Każda aktywna synergia zwiększa obrażenia o 8% oraz dodaje premię do leczenia i tarczy. Dostępne zestawienia są opisane na kartach bohaterów; liczba aktywnych synergii pojawia się w nagłówku walki.
 
-Na poziomie 5 walczysz z Leszym: ogień i runy zadają mu obrażenia, woda odnawia zdrowie drużyny, a liście wzmacniają tarczę.
+## Dziennik bestii i krain
 
-Gra ma lekkie proceduralne efekty dźwiękowe dla ruchów, kombinacji, leczenia, obrażeń i zwycięstwa. Nie korzystają one z zewnętrznych plików audio, więc działają także offline.
-W menu `?` można je wyłączyć; ustawienie zostaje zapamiętane lokalnie.
+Otwórz ikonę księgi w menu głównym, aby przeglądać wpisy dla każdej krainy. Pierwszy udany ruch w walce odnotowuje spotkanie z przeciwnikiem, a zwycięstwo zwiększa licznik pokonań. Pełne odkrycie wrogów danej krainy przyznaje jednorazowo 250 monet. Wpisy i nagrody zapisują się lokalnie.
 
-Przycisk **Osada ›** pozwala wydać monety i drewno na trwałe ulepszenia budynków.
+## Rozwój drużyny i osady
 
-W menu głównym wybierz **Krąg Treningowy**, aby rozegrać powtarzalne walki bez energii i bez ryzyka dla postępu. Kolejne próby odblokowują się wraz z kampanią, pokazują portret i mechanikę przeciwnika oraz dają coraz większe nagrody. PD trafiają wyłącznie do aktywnego składu, więc można przygotować drużynę przed trudniejszą wyprawą.
+Menu **DRUŻYNA** pozwala zmieniać aktywny skład, rozwijać bohaterów i otwierać ich drzewka talentów. Każdy poziom bohatera od 2 do 50 daje punkt umiejętności; kolejne węzły wymagają rozwinięcia poprzednich. Szczegóły 25 drzewek są w `docs/sciezki-umiejetnosci-bohaterow.md`.
 
-Na karcie posiadanego bohatera przycisk **TALENTY** otwiera drzewko trzech umiejętności. Każdy poziom od 2 do 50 daje punkt; kolejne węzły wymagają rozwinięcia poprzednich. Dotknięcie talentu pokazuje efekt i wymagania, a osobny przycisk odblokowuje go lub ulepsza. Wszystkie 300 węzłów mają własne ikony PNG i łącznie 1200 wariantów rang. Szczegóły 25 drzewek są w `docs/sciezki-umiejetnosci-bohaterow.md`.
+W **OSADZIE** wydawaj monety i drewno na trwałe ulepszenia budynków. **Krąg Treningowy** oferuje dodatkowe walki z przeciwnikami, które dają PD aktywnemu składowi.
+
+## Powroty do gry i reklamy
+
+Dzienny Dar Gaju daje regularną nagrodę bez kar za opuszczenie dnia. Dziennik, cele dodatkowe, gwiazdki, synergie i rozwój drużyny dodają opcjonalne cele między kolejnymi walkami.
+
+Reklamy są skonfigurowane testowo. Pierwsze pięć poziomów nie wyświetla reklam; później reklama pełnoekranowa może pojawić się po czterech wygranych, najwyżej dwa razy dziennie. Od poziomu 6 dostępna jest dobrowolna reklama za dodatkowe 50% monet z nagrody, maksymalnie raz dziennie. Reklamy nie są wymagane do gry. Testowe identyfikatory Google nie generują przychodu; przed wydaniem potrzebne są własne identyfikatory AdMob i konfiguracja zgody. Instrukcję i politykę danych opisują `docs/monetyzacja-i-retencja.md` oraz `docs/data-practices-1.0.md`.
+
+## Sterowanie i dźwięk
+
+Ruch wykonasz przeciągnięciem znaku albo klikając dwa sąsiednie pola. Skład zmienisz w **DRUŻYNIE**, poziom wybierzesz na **MAPIE**, a budynki ulepszysz w **OSADZIE**. Menu `?` pozwala wyłączyć proceduralne efekty dźwiękowe; wybór zostaje zapamiętany lokalnie.
 
 ## Reset lokalnego postępu
 
-W prawym górnym rogu menu głównego wybierz **RESET**, a następnie **POTWIERDŹ**. Resetuje to wyłącznie lokalny zapis: poziomy, waluty, bohaterów, budynki i gwiazdki. Nie można go cofnąć.
+W prawym górnym rogu menu głównego wybierz **RESET**, a następnie **POTWIERDŹ**. Reset usuwa poziomy, waluty, bohaterów, budynki, gwiazdki, postęp bestiariusza i nagrody za cele dodatkowe. Nie można go cofnąć.
 
-Przycisk **Mapa** na dole ekranu otwiera Dębowe Pogranicze i pozwala wybrać odblokowany poziom. Pierwsza kraina zawiera obecnie 20 poziomów na czterech stronach mapy.
+## Dokumentacja
 
-Walka trwa do pokonania przeciwników lub utraty całego zdrowia drużyny. Poziomy zadaniowe kończą się po osiągnięciu celu. Zwycięstwo daje trzy gwiazdki przy co najmniej 75% zdrowia drużyny, dwie przy co najmniej 40%, a jedną poniżej 40%. Najlepsze dotychczasowe gwiazdki pozostają w zapisie.
-
-## Testy i wydanie
-
-Scenariusze odbioru planszy: `docs/etap-1-testy.md`. Lista funkcji oraz testów wymaganych przed wydaniem: `docs/release-1.0-checklist.md`.
-Zakres lokalnego zapisu i brak funkcji sieciowych w wersji 1.0 opisuje `docs/data-practices-1.0.md`.
-Gotowa treść polskiej karty Google Play znajduje się w `docs/google-play-listing-pl.md`.
-Aktualny podział na elementy zweryfikowane i wymagające środowiska wydaniowego: `docs/release-readiness-1.0.md`.
+- Scenariusze planszy: `docs/etap-1-testy.md`.
+- Lista funkcji i wydania: `docs/release-1.0-checklist.md`.
+- Polityka danych: `docs/data-practices-1.0.md`.
+- Karta Google Play: `docs/google-play-listing-pl.md`.
+- Monetyzacja i dalszy rozwój: `docs/monetyzacja-i-retencja.md`.
+- Gotowość wydania: `docs/release-readiness-1.0.md`.
