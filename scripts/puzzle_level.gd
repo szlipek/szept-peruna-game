@@ -254,6 +254,10 @@ var current_battle: Dictionary = {}
 var reset_confirmation := false
 var daily_reward_day := ""
 var daily_reward_open_time := -1.0
+var daily_reward_popup_open := false
+var daily_reward_popup_kind := ""
+var daily_reward_popup_loot: Dictionary = {}
+var pending_daily_chest_bonus := false
 var ad_quota_day := ""
 var ad_interstitials_today := 0
 var campaign_wins_since_interstitial := 0
@@ -264,7 +268,6 @@ var ads_manager: Node
 var oak_borderland_background: Texture2D
 var board_roots_frame: Texture2D
 var tile_remove_burst: Texture2D
-var tile_remove_frames: Array[Texture2D] = []
 var village_background: Texture2D
 var village_layout: Texture2D
 var village_inspector_frame: Texture2D
@@ -365,7 +368,10 @@ var home_reward_panel: Texture2D
 var home_reward_coin_frames: Texture2D
 var home_reward_wood_frames: Texture2D
 var home_reward_xp_frames: Texture2D
+var home_reward_premium_chest: Texture2D
 var home_help_icon: Texture2D
+var bestiary_icon: Texture2D
+var bestiary_background: Texture2D
 var home_navigation_frame: Texture2D
 var home_status_header: Texture2D
 var home_party_panel: Texture2D
@@ -409,11 +415,7 @@ func _ready() -> void:
 	font = preload("res://scripts/game_typography.gd").create_font()
 	oak_borderland_background = load_image_texture("res://art/environments/environment_debowe_pogranicze_v01.png")
 	board_roots_frame = null
-	tile_remove_burst = load_image_texture("res://art/vfx/tile_remove_burst_v01.png")
-	for frame_index in range(1, 5):
-		var frame_texture := load_image_texture("res://art/vfx/tile_remove_burst_v01_f%d.png" % frame_index)
-		if frame_texture != null:
-			tile_remove_frames.append(frame_texture)
+	tile_remove_burst = load_image_texture("res://art/vfx/tile_remove_burst_v02.png")
 	village_background = load_image_texture("res://art/environments/village_debowe_pogranicze_v01.png")
 	village_layout = load_image_texture("res://art/environments/village_layout_v01.png")
 	village_inspector_frame = load_image_texture("res://art/ui/village_inspector_frame_v01.png")
@@ -531,7 +533,10 @@ func _ready() -> void:
 	home_reward_coin_frames = load_image_texture("res://art/ui/home_reward_coin_chest_frames_v03.png")
 	home_reward_wood_frames = load_image_texture("res://art/ui/home_reward_wood_chest_frames_v04.png")
 	home_reward_xp_frames = load_image_texture("res://art/ui/home_reward_xp_chest_frames_v03.png")
+	home_reward_premium_chest = load_image_texture("res://art/ui/home_reward_premium_chest_v01.png")
 	home_help_icon = load_image_texture("res://art/ui/home_help_icon_v01.png")
+	bestiary_icon = load_image_texture("res://art/ui/bestiary_icon_v01.png")
+	bestiary_background = load_image_texture("res://art/environments/bestiary_background_v01.png")
 	home_navigation_frame = load_image_texture("res://art/ui/home_navigation_backdrop_v01.png")
 	home_status_header = load_image_texture("res://art/ui/home_status_header_v02.png")
 	home_party_panel = load_image_texture("res://art/ui/home_party_panel_v01.png")
@@ -580,6 +585,7 @@ func setup_ads_manager() -> void:
 		return
 	ads_manager.interstitial_closed.connect(_on_interstitial_closed)
 	ads_manager.rewarded_ad_completed.connect(_on_rewarded_ad_completed)
+	ads_manager.rewarded_ad_closed.connect(_on_rewarded_ad_closed)
 	ads_manager.ad_availability_changed.connect(queue_redraw)
 	ads_manager.initialize(get_node_or_null("Admob"))
 
@@ -604,6 +610,24 @@ func _on_interstitial_closed() -> void:
 		start_level(next_level)
 
 func _on_rewarded_ad_completed() -> void:
+	if pending_daily_chest_bonus:
+		pending_daily_chest_bonus = false
+		if not ad_bonus_available_today():
+			queue_redraw()
+			return
+		var bonus := daily_premium_reward()
+		coins += int(bonus.get("coins", 0))
+		wood += int(bonus.get("wood", 0))
+		experience += int(bonus.get("experience", 0))
+		daily_ad_bonus_day = Time.get_date_string_from_system()
+		daily_reward_popup_open = true
+		daily_reward_popup_kind = "premium_loot"
+		daily_reward_popup_loot = bonus
+		message = "Skrzynia premium: +%d monet, +%d drewna, +%d PD." % [int(bonus["coins"]), int(bonus["wood"]), int(bonus["experience"])]
+		save_progress()
+		play_sfx(820.0, 0.18, 0.20)
+		queue_redraw()
+		return
 	if not pending_rewarded_bonus or state != "won" or not campaign_ads_unlocked() or not ad_bonus_available_today():
 		return
 	pending_rewarded_bonus = false
@@ -618,6 +642,18 @@ func _on_rewarded_ad_completed() -> void:
 	save_progress()
 	play_sfx(760.0, 0.16, 0.18)
 	queue_redraw()
+
+func _on_rewarded_ad_closed() -> void:
+	pending_daily_chest_bonus = false
+	pending_rewarded_bonus = false
+	queue_redraw()
+
+func daily_premium_reward() -> Dictionary:
+	return {
+		"coins": 300 + mini(1200, unlocked_level * 18),
+		"wood": 24 + mini(72, int(unlocked_level / 4)),
+		"experience": 120 + mini(480, unlocked_level * 7)
+	}
 
 func show_rewarded_coin_bonus() -> void:
 	if ads_manager == null or not campaign_ads_unlocked() or not ad_bonus_available_today() or not ads_manager.rewarded_ready:
@@ -956,6 +992,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if player_opening.stage != "" and event is InputEventKey:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if daily_reward_popup_open and event.keycode == KEY_ESCAPE:
+			daily_reward_popup_open = false
+			daily_reward_popup_kind = ""
+			daily_reward_popup_loot.clear()
+			queue_redraw()
+			return
 		if grove_shop.opened:
 			if event.keycode == KEY_ESCAPE:
 				if grove_shop.pending_index >= 0:
@@ -1091,6 +1133,9 @@ func handle_release(position: Vector2) -> void:
 			queue_redraw()
 			return
 	if main_menu_open:
+		if daily_reward_popup_open:
+			handle_daily_reward_popup_input(position)
+			return
 		if bestiary_open:
 			handle_bestiary_input(position)
 			return
@@ -2268,6 +2313,11 @@ func restart_current_battle() -> void:
 		start_level(level_index)
 
 func hero_experience_to_next_level(hero_id: String) -> int:
+	# The level-2 tutorial directs the player to this first, free upgrade.
+	# Its 60 XP threshold is reachable after the first two campaign victories,
+	# even though experience is split between the active heroes.
+	if hero_id == "lada" and int(hero_levels.get(hero_id, 0)) == 1:
+		return 60
 	return maxi(100, int(hero_levels[hero_id]) * 100)
 
 func get_total_hero_levels() -> int:
@@ -2537,7 +2587,7 @@ func skill_tree_back_rect() -> Rect2:
 	return Rect2(178.0, 916.0, 184.0, 40.0)
 
 func skill_tree_upgrade_rect() -> Rect2:
-	return Rect2(94.0, 868.0, 352.0, 62.0)
+	return Rect2(114.0, 848.0, 312.0, 62.0)
 
 func roster_team_toggle_rect() -> Rect2:
 	# Liściasty przycisk celowo zachodzi na dolną krawędź sylwetki bohatera.
@@ -2755,6 +2805,25 @@ func main_menu_party_rect() -> Rect2:
 func daily_reward_rect() -> Rect2:
 	return Rect2(20.0, 724.0, get_viewport_rect().size.x - 40.0, 112.0)
 
+func daily_reward_base_rect() -> Rect2:
+	var shelf := daily_reward_rect()
+	return Rect2(shelf.position, Vector2(shelf.size.x * 0.75, shelf.size.y))
+
+func daily_reward_premium_rect() -> Rect2:
+	var shelf := daily_reward_rect()
+	return Rect2(shelf.position.x + shelf.size.x * 0.75, shelf.position.y, shelf.size.x * 0.25, shelf.size.y)
+
+func daily_reward_popup_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2((screen.x - 480.0) * 0.5, 276.0, 480.0, 430.0)
+
+func daily_reward_popup_ad_rect() -> Rect2:
+	var width := get_viewport_rect().size.x - 130.0
+	return Rect2(65.0, 575.0, width, 67.0)
+
+func daily_reward_popup_close_rect() -> Rect2:
+	return Rect2(get_viewport_rect().size.x * 0.5 - 132.0, 648.0, 264.0, 48.0)
+
 func daily_reward_banner_rect() -> Rect2:
 	return Rect2(106.0, 690.0, get_viewport_rect().size.x - 212.0, 32.0)
 
@@ -2789,16 +2858,16 @@ func bestiary_close_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 115.0, 868.0, 230.0, 48.0)
 
 func bestiary_region_previous_rect() -> Rect2:
-	return Rect2(24.0, 146.0, 54.0, 42.0)
+	return Rect2(25.0, 133.0, 48.0, 40.0)
 
 func bestiary_region_next_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 78.0, 146.0, 54.0, 42.0)
+	return Rect2(get_viewport_rect().size.x - 73.0, 133.0, 48.0, 40.0)
 
 func bestiary_page_previous_rect() -> Rect2:
-	return Rect2(42.0, 754.0, 148.0, 40.0)
+	return Rect2(166.0, 754.0, 48.0, 40.0)
 
 func bestiary_page_next_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x - 190.0, 754.0, 148.0, 40.0)
+	return Rect2(get_viewport_rect().size.x - 214.0, 754.0, 48.0, 40.0)
 
 func bestiary_current_region() -> String:
 	if bestiary_regions.is_empty():
@@ -2815,7 +2884,8 @@ func sound_toggle_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 702.0, 240.0, 46.0)
 
 func training_close_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x / 2.0 - 75.0, 892.0, 150.0, 38.0)
+	# Zachowaj proporcje ozdobnej belki: +40 px szerokości skaluje też wysokość.
+	return Rect2(get_viewport_rect().size.x / 2.0 - 95.0, 887.0, 190.0, 48.0)
 
 func training_choice_rect(index: int) -> Rect2:
 	return Rect2(42.0, 158.0 + index * 118.0 - training_scroll, get_viewport_rect().size.x - 84.0, 112.0)
@@ -3220,8 +3290,11 @@ func handle_main_menu_input(position: Vector2) -> void:
 		help_open = true
 		queue_redraw()
 		return
-	if is_in_button(position, daily_reward_rect()) or is_in_button(position, daily_reward_banner_rect()):
+	if is_in_button(position, daily_reward_base_rect()) or is_in_button(position, daily_reward_banner_rect()):
 		claim_daily_reward()
+		return
+	if is_in_button(position, daily_reward_premium_rect()):
+		open_daily_premium_offer()
 		return
 	if is_in_button(position, main_menu_party_rect()):
 		main_menu_open = false
@@ -3302,6 +3375,11 @@ func reset_progress() -> void:
 	perun_sparks = 0
 	event_marks = 0
 	daily_reward_day = ""
+	daily_ad_bonus_day = ""
+	daily_reward_popup_open = false
+	daily_reward_popup_kind = ""
+	daily_reward_popup_loot.clear()
+	pending_daily_chest_bonus = false
 	claimed_boss_sparks.clear()
 	level_stars.clear()
 	bestiary_seen.clear()
@@ -3338,7 +3416,9 @@ func daily_reward_available() -> bool:
 
 func claim_daily_reward() -> void:
 	if not daily_reward_available():
-		message = "Dar Gaju został już dziś odebrany."
+		daily_reward_popup_open = true
+		daily_reward_popup_kind = "already_claimed"
+		daily_reward_popup_loot.clear()
 		queue_redraw()
 		return
 	var coin_reward := 180 + mini(820, unlocked_level * 10)
@@ -3349,10 +3429,84 @@ func claim_daily_reward() -> void:
 	experience += experience_reward
 	daily_reward_day = Time.get_date_string_from_system()
 	daily_reward_open_time = 0.0
+	daily_reward_popup_open = true
+	daily_reward_popup_kind = "daily_loot"
+	daily_reward_popup_loot = {"coins": coin_reward, "wood": wood_reward, "experience": experience_reward}
 	message = "Dar Gaju: +%d monet, +%d drewna, +%d PD." % [coin_reward, wood_reward, experience_reward]
 	save_progress()
 	play_sfx(760.0, 0.16, 0.18)
 	queue_redraw()
+
+func open_daily_premium_offer() -> void:
+	daily_reward_popup_open = true
+	daily_reward_popup_kind = "premium_offer"
+	daily_reward_popup_loot = daily_premium_reward()
+	queue_redraw()
+
+func show_daily_premium_ad() -> void:
+	if ads_manager == null or not ad_bonus_available_today() or not ads_manager.rewarded_ready:
+		return
+	pending_daily_chest_bonus = true
+	if not ads_manager.show_rewarded():
+		pending_daily_chest_bonus = false
+		queue_redraw()
+
+func handle_daily_reward_popup_input(position: Vector2) -> void:
+	if daily_reward_popup_kind in ["daily_loot", "premium_offer"] and is_in_button(position, daily_reward_popup_ad_rect()):
+		show_daily_premium_ad()
+		return
+	if is_in_button(position, daily_reward_popup_close_rect()) or not is_in_button(position, daily_reward_popup_rect()):
+		daily_reward_popup_open = false
+		daily_reward_popup_kind = ""
+		daily_reward_popup_loot.clear()
+		queue_redraw()
+
+func draw_daily_reward_values(reward: Dictionary, baseline_y: float) -> void:
+	var kinds: Array[String] = ["coins", "wood", "experience"]
+	var total_width := 0.0
+	for kind in kinds:
+		var width := resource_amount_width(int(reward.get(kind, 0)), 30.0, 15)
+		total_width += width
+	total_width += float(maxi(0, kinds.size() - 1)) * 15.0
+	var current_x := (get_viewport_rect().size.x - total_width) * 0.5
+	for index in kinds.size():
+		current_x += draw_resource_amount(Vector2(current_x, baseline_y), kinds[index], int(reward.get(kinds[index], 0)), 30.0, 15, Color("#ffe6a5")) + 15.0
+
+func draw_daily_reward_popup(screen: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#03100ed9"))
+	var panel := daily_reward_popup_rect()
+	if defeat_modal_oak != null:
+		draw_texture_rect(defeat_modal_oak, panel, false)
+	else:
+		draw_style_box(make_panel(Color("#0b241df7"), Color("#d2a350")), panel)
+	var title := "SKRZYNIA PREMIUM" if daily_reward_popup_kind == "premium_offer" else ("SKRZYNIA PREMIUM OTWARTA" if daily_reward_popup_kind == "premium_loot" else ("DAR GAJU ODEBRANY" if daily_reward_popup_kind == "daily_loot" else "DAR GAJU ODEBRANO DZIŚ"))
+	if daily_reward_popup_kind == "premium_offer":
+		if home_reward_premium_chest != null:
+			draw_texture_rect(home_reward_premium_chest, Rect2(panel.get_center().x - 45.0, panel.position.y + 95.0, 90.0, 90.0), false)
+		draw_string(font, Vector2(panel.position.x + 18.0, panel.position.y + 208.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36.0, 21, Color("#ffe5a4"))
+		draw_string(font, Vector2(panel.position.x + 28.0, panel.position.y + 225.0), "Obejrzyj krótką reklamę, aby zdobyć dodatkowe bonusy:", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 56.0, 13, Color("#e6ddc5"))
+		draw_daily_reward_values(daily_reward_popup_loot, panel.position.y + 238.0)
+		if not ad_bonus_available_today():
+			draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 289.0), "Dzisiejszy bonus został już odebrany.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#aebba9"))
+		elif ads_manager == null or not ads_manager.rewarded_ready:
+			draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 289.0), "Reklama jest teraz niedostępna. Spróbuj za chwilę.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#aebba9"))
+	else:
+		draw_string(font, Vector2(panel.position.x + 18.0, panel.position.y + 52.0), title, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36.0, 21, Color("#ffe5a4"))
+		var reward_heading := "Otrzymano dodatkowo:" if daily_reward_popup_kind == "premium_loot" else ("Dzisiejsza nagroda:" if daily_reward_popup_kind == "daily_loot" else "Kolejna skrzynia będzie dostępna jutro.")
+		draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 136.0), reward_heading, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 15, Color("#e6ddc5"))
+		if not daily_reward_popup_loot.is_empty():
+			draw_daily_reward_values(daily_reward_popup_loot, panel.position.y + 198.0)
+		if daily_reward_popup_kind == "daily_loot":
+			draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 246.0), "Otwórz skrzynię premium, aby zobaczyć bonus za reklamę.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 12, Color("#c5d3bd"))
+			if not ad_bonus_available_today():
+				draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 274.0), "Dzisiejszy bonus reklamowy został już odebrany.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 11, Color("#aebba9"))
+			elif ads_manager == null or not ads_manager.rewarded_ready:
+				draw_string(font, Vector2(panel.position.x + 25.0, panel.position.y + 274.0), "Bonus premium jest dostępny po przygotowaniu reklamy.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 50.0, 11, Color("#aebba9"))
+	if daily_reward_popup_kind in ["daily_loot", "premium_offer"]:
+		var ad_available: bool = ad_bonus_available_today() and ads_manager != null and ads_manager.rewarded_ready
+		var ad_label := "OBEJRZYJ REKLAMĘ  •  OTWÓRZ SKRZYNIĘ" if ad_available else ("BONUS ODEBRANY" if not ad_bonus_available_today() else "REKLAMA NIEDOSTĘPNA")
+		draw_button(daily_reward_popup_ad_rect(), ad_label, ad_available, 13)
+	draw_button(daily_reward_popup_close_rect(), "ZAMKNIJ", true, 15)
 
 func is_in_button(point: Vector2, rect: Rect2) -> bool:
 	return rect.has_point(point)
@@ -3385,8 +3539,10 @@ func handle_action_button(position: Vector2) -> void:
 	if is_in_button(position, restart_rect()):
 		restart_current_battle()
 	elif state == "lost" and not training_mode and is_in_button(position, defeat_training_rect()):
-		training_open = true
-		training_scroll = 0.0
+		roster_open = true
+		roster_filter = "all"
+		roster_hero_index = maxi(0, HERO_IDS.find("lada"))
+		skill_tree_open = false
 		queue_redraw()
 
 func draw_button(rect: Rect2, label: String, enabled := true, text_size := 18, text_offset_y := 0.0) -> void:
@@ -3637,14 +3793,6 @@ func _draw() -> void:
 					obstacle_icon = obstacle_curse_icon if obstacle_health >= 3 else (obstacle_curse_damaged_icon if obstacle_health == 2 else obstacle_curse_critical_icon)
 				if obstacle_icon != null:
 					draw_texture_rect(obstacle_icon, tile_rect.grow(-2), false)
-			if removal_effects.has(tile_cell):
-				var effect_progress: float = float(removal_effects[tile_cell]) / 0.34
-				var effect_center := tile_rect.get_center()
-				draw_circle(effect_center, cell * (0.16 + effect_progress * 0.32), Color(1.0, 0.86, 0.35, 1.0 - effect_progress), false, 3.0)
-				for spark in 6:
-					var angle := float(spark) * TAU / 6.0
-					var spark_pos := effect_center + Vector2(cos(angle), sin(angle)) * cell * (0.12 + effect_progress * 0.28)
-					draw_circle(spark_pos, 2.5 * (1.0 - effect_progress), Color(1.0, 0.95, 0.65, 1.0 - effect_progress))
 	if not hinted_cells.is_empty() and not animation_busy and not enemy_turn_active and not player_cascade_active:
 		var tutorial_hint: bool = player_opening.tutorial_active(self) and player_opening.tutorial_moves == 0
 		var hint_alpha := (0.9 + sin(ui_anim_time * 4.0) * 0.1) if tutorial_hint else (0.78 + sin(ui_anim_time * 3.5) * 0.18)
@@ -3672,11 +3820,9 @@ func _draw() -> void:
 	for effect_cell in removal_effects:
 		var effect_progress: float = clampf(float(removal_effects[effect_cell]) / 0.34, 0.0, 1.0)
 		var effect_center := rect.position + Vector2((effect_cell.x + 0.5) * cell, (effect_cell.y + 0.5) * cell)
-		if not tile_remove_frames.is_empty():
-			var frame_index := mini(tile_remove_frames.size() - 1, int(effect_progress * tile_remove_frames.size()))
-			draw_texture_rect(tile_remove_frames[frame_index], Rect2(effect_center - Vector2(cell * 0.55, cell * 0.55), Vector2(cell * 1.1, cell * 1.1)), false)
-		elif tile_remove_burst != null:
-			draw_texture_rect(tile_remove_burst, Rect2(effect_center - Vector2(cell * 0.55, cell * 0.55), Vector2(cell * 1.1, cell * 1.1)), false, Color(1, 1, 1, 1.0 - effect_progress))
+		if tile_remove_burst != null:
+			var burst_size := cell * (0.82 + effect_progress * 0.72)
+			draw_texture_rect(tile_remove_burst, Rect2(effect_center - Vector2.ONE * burst_size * 0.5, Vector2.ONE * burst_size), false, Color(1, 1, 1, 1.0 - effect_progress))
 		draw_circle(effect_center, cell * (0.16 + effect_progress * 0.32), Color(1.0, 0.86, 0.35, 1.0 - effect_progress), false, 3.0)
 		for spark in 6:
 			var angle := float(spark) * TAU / 6.0
@@ -3833,7 +3979,7 @@ func _draw() -> void:
 		else:
 			draw_button(restart_rect(), "SPRÓBUJ PONOWNIE", true, 16)
 			if not training_mode:
-				draw_button(defeat_training_rect(), "TRENUJ BOHATERÓW", true, 15)
+				draw_button(defeat_training_rect(), "ULEPSZ BOHATERA", true, 15)
 	if roster_open:
 		draw_roster_overlay(screen)
 		if skill_tree_open:
@@ -3862,6 +4008,8 @@ func _draw() -> void:
 		draw_training_overlay(screen)
 	if main_menu_open:
 		draw_main_menu(screen)
+	if daily_reward_popup_open:
+		draw_daily_reward_popup(screen)
 	if help_open:
 		draw_help_overlay(screen)
 	if bestiary_open:
@@ -3901,8 +4049,7 @@ func draw_roster_overlay(screen: Vector2) -> void:
 	draw_game_logo(Vector2(screen.x / 2.0, 72), Vector2(205, 110))
 	# Portfel rekrutacji jest stale widoczny w prawym górnym rogu.
 	# Pokazuje dokładnie trzy waluty używane przy zakupie bohaterów.
-	var recruitment_wallet := Rect2(screen.x - 137.0, 16.0, 125.0, 100.0)
-	draw_style_box(make_panel(Color("#071d17d9"), Color("#b98b3f")), recruitment_wallet)
+	var recruitment_wallet := Rect2(screen.x - 158.0, 12.0, 144.0, 112.0)
 	var recruitment_resources := [
 		{"kind": "coins", "amount": coins, "color": Color("#ffe5a8")},
 		{"kind": "sparks", "amount": perun_sparks, "color": Color("#8fe8df")},
@@ -3911,9 +4058,9 @@ func draw_roster_overlay(screen: Vector2) -> void:
 	for wallet_index in recruitment_resources.size():
 		var wallet_entry: Dictionary = recruitment_resources[wallet_index]
 		var wallet_amount := int(wallet_entry["amount"])
-		var wallet_width := resource_amount_width(wallet_amount, 24.0, 13)
-		var wallet_x := recruitment_wallet.end.x - wallet_width - 12.0
-		draw_resource_amount(Vector2(wallet_x, recruitment_wallet.position.y + 8.0 + wallet_index * 29.0), str(wallet_entry["kind"]), wallet_amount, 24.0, 13, wallet_entry["color"])
+		var wallet_width := resource_amount_width(wallet_amount, 30.0, 16)
+		var wallet_x := recruitment_wallet.end.x - wallet_width - 8.0
+		draw_resource_amount(Vector2(wallet_x, recruitment_wallet.position.y + 2.0 + wallet_index * 33.0), str(wallet_entry["kind"]), wallet_amount, 30.0, 16, wallet_entry["color"])
 	var panel_rect := roster_detail_rect()
 	# Karta jest otwarta: przyciemnione tło gry daje kontekst, a sama postać
 	# i informacje nie są zamykane w kolejnym zielonym panelu.
@@ -4807,12 +4954,11 @@ func draw_home_party(screen: Vector2) -> void:
 
 func draw_home_reward_shelf() -> void:
 	var chest_rect := daily_reward_rect()
-	var reward_ready := daily_reward_available()
 	var animated_chests_ready := home_reward_panel != null and home_reward_coin_frames != null and home_reward_wood_frames != null and home_reward_xp_frames != null
 	if animated_chests_ready:
 		draw_texture_rect(home_reward_panel, chest_rect, false, Color.WHITE)
 		var chest_frames: Array[Texture2D] = [home_reward_coin_frames, home_reward_wood_frames, home_reward_xp_frames]
-		var slot_width := chest_rect.size.x / 3.0
+		var slot_width := chest_rect.size.x / 4.0
 		for index in chest_frames.size():
 			var frames := chest_frames[index]
 			var frame_index := 0
@@ -4830,11 +4976,26 @@ func draw_home_reward_shelf() -> void:
 		draw_texture_rect_region(home_reward_chests, chest_rect, source, Color.WHITE)
 	else:
 		draw_style_box(make_panel(Color("#101a17e8"), Color("#967544")), chest_rect)
-	var labels := ["MONETY", "DREWNO", "PD"]
-	var slot_width := chest_rect.size.x / 3.0
+	var slot_width := chest_rect.size.x / 4.0
+	var premium_slot := daily_reward_premium_rect()
+	var premium_center := premium_slot.get_center()
+	if home_reward_premium_chest != null:
+		if ad_bonus_available_today():
+			var premium_pulse := 0.5 + sin(ui_anim_time * 1.8) * 0.5
+			draw_circle(premium_center + Vector2(0, -3), 38.0, Color(0.16, 0.76, 0.65, 0.08 + premium_pulse * 0.06))
+		var premium_tint := Color.WHITE if ad_bonus_available_today() else Color(0.58, 0.64, 0.59, 0.82)
+		draw_texture_rect(home_reward_premium_chest, Rect2(premium_center.x - 47.0, chest_rect.position.y - 4.0, 94.0, 94.0), false, premium_tint)
+	else:
+		draw_circle(premium_center + Vector2(0, -2), 32.0, Color("#163d35"))
+		draw_arc(premium_center + Vector2(0, -2), 32.0, 0.0, TAU, 40, Color("#d5aa55"), 2.0, true)
+		draw_string(font, Vector2(premium_center.x - 24, premium_center.y + 8), "✦", HORIZONTAL_ALIGNMENT_CENTER, 48, 25, Color("#75eee0"))
+	var labels := ["MONETY", "DREWNO", "PD", "PREMIUM"]
 	for index in labels.size():
 		var slot := Rect2(chest_rect.position.x + index * slot_width, chest_rect.position.y, slot_width, chest_rect.size.y)
-		draw_string(font, Vector2(slot.position.x, slot.end.y - 18.0), labels[index], HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 10, Color("#dbcba9"))
+		var label_color := Color("#8fe9df") if index == 3 and ad_bonus_available_today() else Color("#dbcba9")
+		draw_string(font, Vector2(slot.position.x, slot.end.y - (25.0 if index == 3 else 18.0)), labels[index], HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 10, label_color)
+		if index == 3:
+			draw_string(font, Vector2(slot.position.x, slot.end.y - 9.0), "REKLAMA", HORIZONTAL_ALIGNMENT_CENTER, slot.size.x, 8, label_color)
 
 func draw_main_menu(screen: Vector2) -> void:
 	draw_main_menu_background(screen)
@@ -4880,7 +5041,7 @@ func draw_main_menu(screen: Vector2) -> void:
 	draw_string(font, Vector2(region_panel.position.x + 15.0, 326.0), region_name, HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x - 30.0, 21, Color("#f0dfba"))
 	draw_string(font, Vector2(region_panel.position.x + 15.0, 338.0), "SZLAK %d  •  POZIOM %d" % [int((focus_level_id - 1) / 5) + 1, focus_level_id], HORIZONTAL_ALIGNMENT_CENTER, region_panel.size.x - 30.0, 12, Color("#c5b99e"))
 	draw_home_party(screen)
-	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 19)
+	draw_button(main_menu_play_rect(), "GRAJ  •  dalsza wyprawa", true, 19, -3.0)
 	draw_home_reward_shelf()
 	var reward_ready := daily_reward_available()
 	var reward_panel := Rect2(106.0, 662.0, screen.x - 212.0, 80.0)
@@ -4944,42 +5105,64 @@ func draw_help_overlay(screen: Vector2) -> void:
 func draw_bestiary_button() -> void:
 	var button := bestiary_button_rect()
 	var center := button.get_center()
-	draw_circle(center, 23.0, Color("#10281fef"))
-	draw_arc(center, 22.0, 0.0, TAU, 40, Color("#d5ad5c"), 2.0, true)
-	draw_string(font, Vector2(button.position.x, center.y + 8.0), "✧", HORIZONTAL_ALIGNMENT_CENTER, button.size.x, 27, Color("#ffe29a"))
+	if bestiary_icon != null:
+		var icon_bounds := Rect2(button.position + Vector2(1.0, -2.0), Vector2(button.size.x - 2.0, button.size.y - 12.0))
+		draw_texture_rect(bestiary_icon, texture_aspect_fit_rect(bestiary_icon, icon_bounds), false)
+	else:
+		draw_string(font, Vector2(button.position.x, center.y + 8.0), "✧", HORIZONTAL_ALIGNMENT_CENTER, button.size.x, 27, Color("#ffe29a"))
 	draw_string(font, Vector2(button.position.x, button.end.y - 2.0), "BESTIARIUM", HORIZONTAL_ALIGNMENT_CENTER, button.size.x, 7, Color("#fff0c7"))
 
 func draw_bestiary_overlay(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#04100eda"))
-	var panel := Rect2(16.0, 42.0, screen.x - 32.0, screen.y - 84.0)
-	if defeat_modal_oak != null:
-		draw_texture_rect(defeat_modal_oak, panel, false, Color(1.0, 1.0, 1.0, 0.96))
+	if bestiary_background != null:
+		draw_texture_rect(bestiary_background, Rect2(Vector2.ZERO, screen), false)
 	else:
-		draw_style_box(make_panel(Color("#12342bea"), Color("#d3ae62")), panel)
-	draw_string(font, Vector2(panel.position.x + 20.0, 112.0), "DZIENNIK BESTII", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 25, Color("#ffe5a2"))
+		draw_rect(Rect2(Vector2.ZERO, screen), Color("#061512"))
+	draw_rect(Rect2(Vector2.ZERO, screen), Color(0.01, 0.05, 0.04, 0.18))
+	draw_string(font, Vector2(24.0, 72.0), "DZIENNIK BESTII", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 48.0, 24, Color("#111b15"))
+	draw_string(font, Vector2(23.0, 70.0), "DZIENNIK BESTII", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 48.0, 24, Color("#ffe5a2"))
 	var region_id := bestiary_current_region()
 	var enemy_names := bestiary_enemy_names(region_id)
 	var found_count := bestiary_region_found_count(region_id)
-	var codex_reward_label := "NAGRODA ODEBRANA" if bool(claimed_bestiary_regions.get(region_id, false)) else "KOMPLET: +250 MONET"
+	var reward_claimed := bool(claimed_bestiary_regions.get(region_id, false))
 	if bestiary_regions.size() > 1:
-		draw_button(bestiary_region_previous_rect(), "‹", bestiary_region_index > 0, 24)
-		draw_button(bestiary_region_next_rect(), "›", bestiary_region_index + 1 < bestiary_regions.size(), 24)
-	draw_string(font, Vector2(78.0, 172.0), region_display_name(region_id).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x - 156.0, 17, Color("#fff0c7"))
-	draw_string(font, Vector2(78.0, 193.0), "ODKRYTO %d / %d  •  %s" % [found_count, enemy_names.size(), codex_reward_label], HORIZONTAL_ALIGNMENT_CENTER, screen.x - 156.0, 11, Color("#c6e4c2"))
+		if roster_arrow_left != null:
+			draw_texture_rect(roster_arrow_left, bestiary_region_previous_rect(), false, Color.WHITE if bestiary_region_index > 0 else Color(0.42, 0.44, 0.40, 0.75))
+		else:
+			draw_button(bestiary_region_previous_rect(), "◀", bestiary_region_index > 0, 18)
+		if roster_arrow_right != null:
+			draw_texture_rect(roster_arrow_right, bestiary_region_next_rect(), false, Color.WHITE if bestiary_region_index + 1 < bestiary_regions.size() else Color(0.42, 0.44, 0.40, 0.75))
+		else:
+			draw_button(bestiary_region_next_rect(), "▶", bestiary_region_index + 1 < bestiary_regions.size(), 18)
+	draw_string(font, Vector2(78.0, 145.0), region_display_name(region_id).to_upper(), HORIZONTAL_ALIGNMENT_CENTER, screen.x - 156.0, 17, Color("#fff0c7"))
+	var status_label := "NAGRODA ODEBRANA" if reward_claimed else "KOMPLET:"
+	var status_text := "ODKRYTO %d / %d  •  %s" % [found_count, enemy_names.size(), status_label]
+	var status_width := font.get_string_size(status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	if reward_claimed:
+		draw_string(font, Vector2((screen.x - status_width) * 0.5, 166.0), status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c6e4c2"))
+	else:
+		var coin_text_width := font.get_string_size("+250", HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+		var full_status_width := status_width + 6.0 + 15.0 + 3.0 + coin_text_width
+		var status_x := (screen.x - full_status_width) * 0.5
+		draw_string(font, Vector2(status_x, 166.0), status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c6e4c2"))
+		var coin_icon := resource_icon("coins")
+		var coin_pos := Vector2(status_x + status_width + 6.0, 153.0)
+		if coin_icon != null:
+			draw_texture_rect(coin_icon, Rect2(coin_pos, Vector2(15.0, 15.0)), false)
+		else:
+			draw_circle(coin_pos + Vector2(7.5, 7.5), 6.0, Color("#e7b74c"))
+		draw_string(font, Vector2(coin_pos.x + 18.0, 166.0), "+250", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f3d784"))
 	for row in 6:
 		var entry_index := bestiary_page * 6 + row
 		if entry_index >= enemy_names.size():
 			break
 		var enemy_name: String = enemy_names[entry_index]
 		var discovered := bool(bestiary_seen.get(enemy_name, false))
-		var entry := Rect2(34.0, 211.0 + row * 88.0, screen.x - 68.0, 80.0)
-		draw_rect(entry, Color("#071a15ce"), true)
-		draw_rect(entry, Color("#987743d0"), false, 1.0)
+		var entry := Rect2(31.0, 190.0 + row * 89.0, screen.x - 62.0, 81.0)
 		var portrait := boss_portrait_for(enemy_name)
 		if portrait != null:
-			draw_texture_rect(portrait, Rect2(entry.position + Vector2(7.0, 6.0), Vector2(68.0, 68.0)), false, Color.WHITE if discovered else Color(0.20, 0.25, 0.22, 0.92))
+			draw_texture_rect(portrait, Rect2(entry.position + Vector2(6.0, 6.0), Vector2(69.0, 69.0)), false, Color.WHITE if discovered else Color(0.34, 0.40, 0.34, 0.88))
 		else:
-			draw_circle(entry.position + Vector2(41.0, 40.0), 25.0, Color("#26332c"))
+			draw_circle(entry.position + Vector2(40.0, 40.0), 25.0, Color("#26332c"))
 		var title := enemy_name if discovered else "Nieodkryty przeciwnik"
 		draw_string(font, entry.position + Vector2(86.0, 33.0), title, HORIZONTAL_ALIGNMENT_LEFT, entry.size.x - 96.0, 13, Color("#ffe8ad") if discovered else Color("#b1b6a7"))
 		if discovered:
@@ -4988,9 +5171,15 @@ func draw_bestiary_overlay(screen: Vector2) -> void:
 			draw_string(font, entry.position + Vector2(86.0, 54.0), "%s  •  pokonano: %d" % [role, kills], HORIZONTAL_ALIGNMENT_LEFT, entry.size.x - 98.0, 10, Color("#c8dbc1"))
 	var page_count := bestiary_page_count(region_id)
 	if page_count > 1:
-		draw_button(bestiary_page_previous_rect(), "POPRZEDNIA", bestiary_page > 0, 11)
-		draw_string(font, Vector2(178.0, 781.0), "%d / %d" % [bestiary_page + 1, page_count], HORIZONTAL_ALIGNMENT_CENTER, screen.x - 356.0, 12, Color("#f5e1ae"))
-		draw_button(bestiary_page_next_rect(), "NASTĘPNA", bestiary_page + 1 < page_count, 11)
+		if roster_arrow_left != null:
+			draw_texture_rect(roster_arrow_left, bestiary_page_previous_rect(), false, Color.WHITE if bestiary_page > 0 else Color(0.42, 0.44, 0.40, 0.75))
+		else:
+			draw_button(bestiary_page_previous_rect(), "◀", bestiary_page > 0, 18)
+		draw_string(font, Vector2(214.0, 780.0), "%d / %d" % [bestiary_page + 1, page_count], HORIZONTAL_ALIGNMENT_CENTER, screen.x - 428.0, 12, Color("#f5e1ae"))
+		if roster_arrow_right != null:
+			draw_texture_rect(roster_arrow_right, bestiary_page_next_rect(), false, Color.WHITE if bestiary_page + 1 < page_count else Color(0.42, 0.44, 0.40, 0.75))
+		else:
+			draw_button(bestiary_page_next_rect(), "▶", bestiary_page + 1 < page_count, 18)
 	else:
 		draw_string(font, Vector2(24.0, 781.0), "Wpisy pokazują poznanych przeciwników i liczbę zwycięstw.", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 48.0, 11, Color("#d5ddc8"))
 	draw_button(bestiary_close_rect(), "WRÓĆ", true, 15)

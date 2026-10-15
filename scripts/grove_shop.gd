@@ -156,13 +156,16 @@ func draw(game) -> void:
 	for index in 2:
 		var target := tab_rect(game, index)
 		var selected := tab == index
+		var art_target := target
+		if selected:
+			art_target.position.y -= 2.0
 		var tab_texture: Texture2D = game.roster_tabs_active_v04 if selected else game.roster_tabs_inactive_v04
 		if tab_texture != null:
 			# Obie ramki dostają ten sam widoczny obszar i wspólną oś pionową.
-			game.draw_texture_rect_region(tab_texture, target, visible_art_bounds(tab_texture))
+			game.draw_texture_rect_region(tab_texture, art_target, visible_art_bounds(tab_texture))
 		else:
-			game.draw_style_box(game.make_panel(Color("#946025") if selected else Color("#12372a"), Color("#dbb462")), target)
-		var label_y := target.get_center().y + 5.0
+			game.draw_style_box(game.make_panel(Color("#946025") if selected else Color("#12372a"), Color("#dbb462")), art_target)
+		var label_y := target.get_center().y + 7.0
 		game.draw_string(game.font, Vector2(target.position.x, label_y), "PAKIETY PREMIUM" if index == 0 else "ZA MONETY", HORIZONTAL_ALIGNMENT_CENTER, target.size.x, 16, Color("#fff0c7") if selected else Color("#c8d2c0"))
 	var offers: Array = PREMIUM if tab == 0 else SUPPLIES
 	for index in offers.size():
@@ -194,7 +197,7 @@ func draw(game) -> void:
 			details = "%d PD drużyny\n%d Iskier Peruna" % [int(rewards["experience"]), int(rewards["sparks"])]
 		game.draw_multiline_string(game.font, Vector2(card.position.x + 18.0, card.position.y + 157.0), details, HORIZONTAL_ALIGNMENT_CENTER, card.size.x - 36.0, 14, 2, Color("#dce6c8"))
 		if tab == 0:
-			game.draw_string(game.font, Vector2(card.position.x, card.position.y + 183.0), "Planowana cena: %s" % str(offer["price"]), HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 13, Color("#dec78e"))
+			game.draw_string(game.font, Vector2(card.position.x, card.position.y + 203.0), "Planowana cena: %s" % str(offer["price"]), HORIZONTAL_ALIGNMENT_CENTER, card.size.x, 13, Color("#dec78e"))
 			game.draw_button(buy_rect(game, index), "WKRÓTCE", false, 15)
 		else:
 			var affordable: bool = game.coins >= int(offer["cost"])

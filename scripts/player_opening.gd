@@ -17,6 +17,7 @@ var selected_companion := ""
 var tutorial_moves := 0
 var tutorial_popup_open := true
 var companion_background: Texture2D
+var village_tutorial_background: Texture2D
 
 func reset_profile() -> void:
 	avatar_id = "lada"
@@ -89,7 +90,7 @@ func primary_rect(game) -> Rect2:
 		var width := minf(260.0, panel.size.x - 24.0)
 		return Rect2(panel.position + Vector2((panel.size.x - width) * 0.5, 630), Vector2(width, 84))
 	var width := minf(350.0, panel.size.x - 48.0)
-	var y := 640.0 if stage == "intro" else 560.0
+	var y := 640.0 if stage == "intro" else (600.0 if stage == "upgrade_village" else 560.0)
 	return Rect2(Vector2((game.get_viewport_rect().size.x - width) * 0.5, panel.position.y + y), Vector2(width, 102))
 
 func secondary_rect(game) -> Rect2:
@@ -201,7 +202,20 @@ func draw(game) -> void:
 	if stage in ["avatar", "avatar_edit"]:
 		draw_avatar_picker(game)
 		return
-	if stage == "companion":
+	var tutorial_background: Texture2D
+	if stage == "upgrade_village":
+		if village_tutorial_background == null:
+			village_tutorial_background = game.load_image_texture("res://art/environments/tutorial_village_background_v01.png")
+		tutorial_background = village_tutorial_background if village_tutorial_background != null else game.oak_borderland_background
+	elif stage == "upgrade_lada":
+		tutorial_background = game.oak_borderland_background
+	if stage in ["upgrade_lada", "upgrade_village"]:
+		if tutorial_background != null:
+			game.draw_texture_rect(tutorial_background, Rect2(Vector2.ZERO, screen), false)
+		else:
+			game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#091e19"))
+		game.draw_rect(Rect2(Vector2.ZERO, screen), Color(0.015, 0.025, 0.022, 0.30))
+	elif stage == "companion":
 		if companion_background == null:
 			companion_background = game.load_image_texture("res://art/ui/companion_selection_background_v01.png")
 		if companion_background != null:
@@ -213,12 +227,11 @@ func draw(game) -> void:
 		game.draw_texture_rect(game.oak_borderland_background, Rect2(Vector2.ZERO, screen), false, Color(0.68, 0.78, 0.71, 1.0))
 	else:
 		game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#091e19"))
-	game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511b8"))
+	if stage not in ["upgrade_lada", "upgrade_village"]:
+		game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511b8"))
 	var panel: Rect2 = panel_rect(game)
-	if stage not in ["intro", "companion", "ready", "third_companion"]:
+	if stage not in ["intro", "companion", "ready", "third_companion", "upgrade_lada", "upgrade_village"]:
 		game.draw_style_box(game.make_panel(Color("#18352ee8"), Color("#b38b4d")), panel)
-		if stage in ["upgrade_lada", "upgrade_village"] and game.defeat_modal_oak != null:
-			game.draw_texture_rect(game.defeat_modal_oak, panel, false)
 	if stage == "intro":
 		game.draw_game_logo(Vector2(screen.x / 2.0, 72), Vector2(210, 125))
 		line(game, "Mgła spowija Dębowe Pogranicze.", 132)
@@ -283,33 +296,22 @@ func draw(game) -> void:
 	elif stage == "upgrade_lada":
 		line(game, "CZAS ROZWIJAĆ BOHATERA", 70, 26)
 		var lada_portrait: Texture2D = game.hero_portraits.get("lada", null)
-		var lada_rect := Rect2(panel.get_center() - Vector2(104, 212), Vector2(208, 208))
-		var lada_accent: Texture2D = game.hero_accent_textures.get("lada", null)
-		if lada_accent != null:
-			game.draw_texture_rect(lada_accent, lada_rect, false)
+		var lada_rect := Rect2(Vector2(panel.get_center().x - 100.0, panel.position.y + 150.0), Vector2(200, 200))
 		if lada_portrait != null:
 			game.draw_texture_rect(lada_portrait, game.texture_aspect_fit_rect(lada_portrait, lada_rect.grow(-20.0)), false)
-		line(game, "LADA", 326, 20)
-		line(game, "Poziom 2 odblokował rozwój drużyny.", 368, 16)
-		line(game, "Wybierz Lady w menu DRUŻYNA i kliknij ulepszenie.", 408, 14)
-		line(game, "Pierwszy poziom jest bezpłatny — potrzebujesz tylko PD.", 448, 14)
+		game.draw_string(game.font, Vector2(panel.get_center().x - 90.0, lada_rect.end.y + 34.0), "LADA", HORIZONTAL_ALIGNMENT_CENTER, 180.0, 20, Color("#fff0c7"))
+		line(game, "Poziom 2 odblokował rozwój drużyny.", 430, 17)
+		line(game, "W menu DRUŻYNA wybierz Ladę i kliknij ulepszenie.", 476, 15)
+		var lada_xp := int(game.hero_experience.get("lada", 0))
+		var lada_xp_required: int = game.hero_experience_to_next_level("lada")
+		line(game, "%d / %d PD Lady • pierwsze ulepszenie jest darmowe." % [lada_xp, lada_xp_required], 522, 15)
 		game.draw_button(primary_rect(game), "ULEPSZ LADĘ", true, 18)
 	elif stage == "upgrade_village":
 		line(game, "CZAS ROZBUDOWAĆ OSADĘ", 70, 26)
-		var medallion_center := panel.get_center() + Vector2(0, -116)
-		game.draw_circle(medallion_center, 124.0, Color("#0b281fdd"))
-		game.draw_arc(medallion_center, 124.0, 0.0, TAU, 64, Color("#b88b45"), 3.0, true)
-		game.draw_arc(medallion_center, 112.0, 0.0, TAU, 64, Color("#4d7954"), 2.0, true)
-		var building_art: Texture2D = game.village_illustration("domostwa", 0)
-		if building_art == null:
-			building_art = game.domostwa_illustration
-		var building_rect := Rect2(medallion_center - Vector2(108, 95), Vector2(216, 172))
-		if building_art != null:
-			game.draw_texture_rect(building_art, game.texture_aspect_fit_rect(building_art, building_rect), false)
-		line(game, "PIERWSZA ROZBUDOWA OSADY", 326, 19)
-		line(game, "Poziom 3 odblokował rozwój Osady.", 368, 16)
-		line(game, "Wybierz budynek i kliknij przycisk ROZBUDUJ.", 408, 14)
-		line(game, "Pierwsza rozbudowa jest bezpłatna.", 448, 15)
+		line(game, "PIERWSZA ROZBUDOWA OSADY", 400, 19)
+		line(game, "Poziom 3 odblokował rozwój Osady.", 440, 17)
+		line(game, "Wybierz budynek i kliknij przycisk ROZBUDUJ.", 482, 15)
+		line(game, "Pierwsza rozbudowa jest bezpłatna.", 524, 15)
 		game.draw_button(primary_rect(game), "ULEPSZ OSADĘ", true, 18)
 	elif stage == "third_companion":
 		var joining_name := "Mięta" if starter_companion == "brun" else "Brun"
@@ -370,7 +372,7 @@ func draw_choice(game, index: int, hero_id: String, label: String, selected: boo
 	if stage == "companion":
 		var circle_rect := Rect2(rect.position, Vector2(rect.size.x, rect.size.x))
 		game.draw_circle(circle_rect.get_center(), circle_rect.size.x * 0.49, Color("#071c17cc") if not selected else Color("#4d3b19dd"))
-		avatar_catalog.draw_portrait(game, hero_id, circle_rect, selected)
+		avatar_catalog.draw_portrait(game, hero_id, circle_rect, selected, false)
 		game.draw_string(game.font, Vector2(rect.position.x - 8, rect.position.y + rect.size.x + 24), label, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x + 16, 17, Color("#fff0c7"))
 		if selected:
 			game.draw_string(game.font, Vector2(rect.position.x - 8, rect.position.y + rect.size.x + 44), "WYBRANO", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x + 16, 11, Color("#f4d477"))
@@ -407,7 +409,8 @@ func draw_tutorial(game) -> void:
 	var screen: Vector2 = game.get_viewport_rect().size
 	# Samouczek przykrywa cały górny pasek gry, tak aby nie konkurował z nim
 	# przycisk pauzy ani oznaczenie poziomu.
-	var panel := Rect2(38, 42, screen.x - 76, 150)
+	# Przesunięcie samej ozdobnej planszy zostawia więcej miejsca nad polem walki.
+	var panel := Rect2(38, 2, screen.x - 76, 190)
 	if game.tutorial_tooltip_banner != null:
 		game.draw_texture_rect(game.tutorial_tooltip_banner, panel, false)
 	elif game.turn_banner_oak != null:
@@ -415,8 +418,8 @@ func draw_tutorial(game) -> void:
 	else:
 		game.draw_style_box(game.make_panel(Color("#09251fd9"), Color("#d4ad5e")), panel)
 	var heading := "PODPOWIEDŹ • POZIOM %d" % (game.level_index + 1) if game.level_index > 0 else "SAMOUCZEK • KROK %d/4" % mini(tutorial_moves + 1, 4)
-	game.draw_string(game.font, Vector2(panel.position.x + 12, panel.position.y + 70), heading, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 64, 17, Color("#f5d998"))
-	game.draw_multiline_string(game.font, Vector2(panel.position.x + 18, panel.position.y + 103), tutorial_text(game), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36, 17, 24, Color("#ffe7a3"))
+	game.draw_string(game.font, Vector2(panel.position.x + 12, panel.position.y + 75), heading, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 64, 17, Color("#f5d998"))
+	game.draw_multiline_string(game.font, Vector2(panel.position.x + 18, panel.position.y + 108), tutorial_text(game), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36, 17, 24, Color("#ffe7a3"))
 	var close_rect := tutorial_close_rect(game)
 	if game.village_popup_close_button != null:
 		game.draw_texture_rect(game.village_popup_close_button, close_rect, false)

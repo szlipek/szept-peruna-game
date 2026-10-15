@@ -2,6 +2,7 @@ extends Node
 
 signal interstitial_closed
 signal rewarded_ad_completed
+signal rewarded_ad_closed
 signal ad_availability_changed
 
 var provider: Node
@@ -113,10 +114,12 @@ func _on_rewarded_failed_to_load(_ad_info, _error) -> void:
 func _on_rewarded_dismissed(_ad_info) -> void:
 	rewarded_ready = false
 	provider.load_rewarded_ad()
+	rewarded_ad_closed.emit()
 
 func _on_rewarded_failed_to_show(_ad_info, _error) -> void:
 	rewarded_ready = false
 	provider.load_rewarded_ad()
+	rewarded_ad_closed.emit()
 
 func _on_rewarded_earned(_ad_info, _reward_data) -> void:
 	rewarded_ad_completed.emit()

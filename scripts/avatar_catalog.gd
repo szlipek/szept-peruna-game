@@ -38,13 +38,14 @@ func portrait(game, avatar_id: String) -> Texture2D:
 	portraits[avatar_id] = circular
 	return circular
 
-func draw_portrait(game, avatar_id: String, rect: Rect2, selected: bool) -> void:
+func draw_portrait(game, avatar_id: String, rect: Rect2, selected: bool, highlight_selection := true) -> void:
 	load_decoration(game)
 	game.draw_circle(rect.get_center(), rect.size.x * 0.47, Color("#0b211c"))
 	var face := portrait(game, avatar_id)
 	if face != null:
 		game.draw_texture_rect(face, rect.grow(-rect.size.x * 0.08), false)
 	if selected_ring != null:
-		game.draw_texture_rect(selected_ring, rect, false, Color.WHITE if selected else Color(0.65, 0.75, 0.65, 0.65))
-	else:
+		var ring_tint := Color.WHITE if selected or not highlight_selection else Color(0.65, 0.75, 0.65, 0.65)
+		game.draw_texture_rect(selected_ring, rect, false, ring_tint)
+	elif highlight_selection:
 		game.draw_circle(rect.get_center(), rect.size.x * 0.45, Color("#f0c96e") if selected else Color("#716342"), false, 2.0)
