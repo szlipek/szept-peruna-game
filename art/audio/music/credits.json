@@ -1,0 +1,36 @@
+{
+  "generator": "ACE-Step 1.5 turbo",
+  "model": {
+    "repository": "ACE-Step/Ace-Step1.5",
+    "revision": "19671f406d603126926c1b7e2adc169acbcade22",
+    "license": "MIT"
+  },
+  "tracks": [
+    {
+      "name": "menu_grove_ambient",
+      "seed": 64000,
+      "duration": 64.0
+    },
+    {
+      "name": "battle_loop",
+      "seed": 64001,
+      "duration": 80.0
+    },
+    {
+      "name": "victory_sting",
+      "seed": 64002,
+      "duration": 4.0
+    },
+    {
+      "name": "defeat_sting",
+      "seed": 64003,
+      "duration": 4.0
+    },
+    {
+      "name": "village_upgrade_sting",
+      "seed": 64004,
+      "duration": 3.0
+    }
+  ],
+  "production_manifest": "art/audio/generated_complete/manifest.json"
+}

@@ -4,3 +4,20 @@
 # Lokalna, przenośna instalacja silnika oraz pobrane archiwum
 tools/Godot/
 tools/*.zip
+
+# Lokalne modele i środowisko generatorów audio (wiele GB)
+.local-audio/
+
+# Szablon eksportu Androida instalowany przez Godot i wyniki Gradle
+/android/build/
+/android/.build_version
+
+# Gotowe paczki gry
+*.apk
+*.aab
+
+# Lokalne cache, podglądy, logi i kopie postępu
+/.cache/
+/tmp/
+__pycache__/
+*.pyc

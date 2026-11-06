@@ -1,0 +1,48 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-11-06",
+  "assets": [
+    {
+      "id": "domostwa",
+      "prompt": "Use case: stylized-concept. Production building sprite atlas for Slavic woodland fantasy mobile game. Reference images are STYLE and LIGHTING references only: match their bright honey-gold oak, clean warm straw roofs, softly lit rich materials, readable friendly painterly illustration. Generate ONE horizontal row of FIVE separate evolution stages, equally spaced cells with ample transparent gutters, all buildings fully visible. Same slightly elevated three-quarter front view, identical ground baseline. True transparent background. Sunny warm daylight, softly lit shadows, brighter than dark mossy medieval buildings. No black outlines, no dark color grading, no backgrounds, no labels or text, no water. Compact small dry earth footprint, minimal grass, no large terrain islands. Progress left to right from humble starter building through larger and finer village building to ornate master building; preserve building identity and a compact single building silhouette in every stage. Subject: DOMOSTWA, a cozy Slavic oak log dwelling. Stage 1 a small straw-roof cottage, stage 2 carved wooden porch and brighter windows, stage 3 slightly larger home with shingle accents, stage 4 fine carved gable and side room, stage 5 elegant village longhouse with intricate oak details. Warm amber window light. No huge mansion or castle. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_domostwa_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/domostwa/",
+      "transparent_background": true
+    },
+    {
+      "id": "swiety_gaj",
+      "prompt": "undefinedSubject: ŚWIĘTY GAJ, a sacred oak shrine. Stage 1 small healthy oak tree with golden-green airy canopy, simple carved wooden altar and a few stones at trunk. Stage 2 larger oak with carved sun charm, stage 3 mature oak with beautiful carved miniature shrine at base and pale golden leaves, stage 4 ornate sacred oak with modest amber votive lights, stage 5 majestic but COMPACT oak sanctuary with delicate gold sun symbol and carved low altar. LIGHT bright fresh green foliage and warm honey bark with readable sunlit detail, no black dense canopy or gloomy gnarled monster tree. No people. Keep the whole canopy and roots in its own cell. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_swiety_gaj_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/swiety_gaj/",
+      "transparent_background": true
+    },
+    {
+      "id": "wieza_peruna",
+      "prompt": "undefinedSubject: WIEŻA PERUNA, a Slavic wooden watchtower shrine. FIVE distinct evolution stages from simple narrow four-post oak tower with small straw roof to finely crafted master oak watchtower with carved sun and thunder motifs and attractive golden straw/shingle roof. Sturdy warm honey oak posts, ladder and open observation platform, pale bronze details, modest warm lantern. Every stage a slender tall tower, complete roof and base visible. Bright sunlit clean wood, no moss coating, no gloomy black timber, no stone castle. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_wieza_peruna_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/wieza_peruna/",
+      "transparent_background": true
+    },
+    {
+      "id": "kuznia",
+      "prompt": "undefinedSubject: KUŹNIA, an open-front village blacksmith workshop. FIVE distinct evolution stages from modest open oak shelter with straw roof, small stone forge with gentle amber fire and anvil, through better crafted oak smithy with shingle roof and organized hand tools, to finely carved master village smithy. Light warm honey wood exterior, sunny bright stone, readable lit interior, restrained orange fire, small neat stacks of tools and wood. No people, no giant furnace, no smoke obscuring building, no gloomy black industrial shed. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_kuznia_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/kuznia/",
+      "transparent_background": true
+    },
+    {
+      "id": "chata_zielarki",
+      "prompt": "Use case: stylized-concept. Production building sprite atlas for Slavic woodland fantasy mobile game. Reference images are STYLE and LIGHTING references only: match their bright honey-gold oak, clean warm straw roofs, softly lit rich materials, readable friendly painterly illustration. Generate ONE horizontal row of FIVE separate evolution stages, equally spaced cells with ample transparent gutters, all buildings fully visible. Same slightly elevated three-quarter front view, identical ground baseline. True transparent background. Sunny warm daylight, softly lit shadows, brighter than dark mossy medieval buildings. No black outlines, no dark color grading, no backgrounds, no labels or text, no water. Compact small dry earth footprint, minimal grass, no large terrain islands. Progress left to right from humble starter building through larger and finer village building to ornate master building; preserve building identity and a compact single building silhouette in every stage. Subject: CHATA ZIELARKI, a cozy Slavic herbalist cottage. FIVE distinct evolution stages from small oak cottage with golden straw roof, sunny amber window and tiny herb baskets, through welcoming carved oak cottage with tidy herb planters, to beautifully crafted herbalist cottage with porch and delicate hanging dried herbs and a few purple flowers. Bright clean warm honey wood and golden straw, restrained fresh greenery that does not cover facade. No people, no dark swamp hut, no giant mushroom, no thick moss carpet, no vast garden. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_chata_zielarki_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/chata_zielarki/",
+      "transparent_background": true
+    },
+    {
+      "id": "spichlerz",
+      "prompt": "Use case: stylized-concept. Production building sprite atlas for Slavic woodland fantasy mobile game. Reference images are STYLE and LIGHTING references only: match their bright honey-gold oak, clean warm straw roofs, softly lit rich materials, readable friendly painterly illustration. Generate ONE horizontal row of FIVE separate evolution stages, equally spaced cells with ample transparent gutters, all buildings fully visible. Same slightly elevated three-quarter front view, identical ground baseline. True transparent background. Sunny warm daylight, softly lit shadows, brighter than dark mossy medieval buildings. No black outlines, no dark color grading, no backgrounds, no labels or text, no water. Compact small dry earth footprint, minimal grass, no large terrain islands. Progress left to right from humble starter building through larger and finer village building to ornate master building; preserve building identity and a compact single building silhouette in every stage. Subject: SPICHLERZ, a raised Slavic oak granary. FIVE distinct evolution stages from small honey oak storehouse on short wooden stilts with straw roof and a few grain sacks, through more substantial granary with small access steps, to elegantly carved master granary with double storage doors and golden straw and wooden shingle roof. Bright golden clean oak, sunlit honey roof, readable warm wood grain. Keep compact building proportions, no tall tower or windmill, no wheel, no people, no river. Size landscape 2560x1024.",
+      "output": "art/environments/level_sources/building_spichlerz_bright_sheet_v01.png",
+      "variants": "art/environments/building_levels_bright/spichlerz/",
+      "transparent_background": true
+    }
+  ]
+}

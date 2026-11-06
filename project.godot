@@ -12,13 +12,14 @@ config_version=5
 
 config/name="Szept Peruna"
 config/version="1.0.0"
-config/icon="res://art/ui/app_icon_szept_peruna_v01.png"
 run/main_scene="res://scenes/puzzle_level.tscn"
 config/features=PackedStringArray("4.5")
+config/icon="res://art/ui/app_icon_szept_peruna_v01.png"
 
-[editor_plugins]
+[boot_splash]
 
-enabled=PackedStringArray("res://addons/AdmobPlugin/plugin.cfg")
+bg_color=Color(0.027451, 0.0980392, 0.0862745, 1)
+show_image=false
 
 [display]
 
@@ -27,15 +28,15 @@ window/size/viewport_height=960
 window/size/window_width_override=540
 window/size/window_height_override=960
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep_height"
 window/handheld/orientation=1
 
-[boot_splash]
+[editor_plugins]
 
-bg_color=Color(0.027451, 0.0980392, 0.0862745, 1)
-show_image=false
+enabled=PackedStringArray("res://addons/AdmobPlugin/plugin.cfg")
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

@@ -1,0 +1,41 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-11-06",
+  "assets": [
+    {
+      "output": "art/environments/expeditions/expedition_polana_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: square location illustration for a Slavic woodland fantasy mobile game expedition card. Bright polished hand-painted storybook game art, detailed warm honey-gold oak wood, lush natural forest greens, soft atmospheric light, beautiful cohesive materials. Close composition readable at 110x110 pixels, single strong focal point with simple scene. Edge to edge square illustration, NO UI, NO frame, NO typography, NO text, NO words, NO map, NO inset. No characters. Location: a magical sunlit forest clearing, warm shaft of golden sunlight on a small grassy clearing, a few thick curling oak roots rising in foreground, old oak branches and delicate white woodland flowers, welcoming fresh spring greenery. Peaceful but adventurous.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/environments/expeditions/expedition_obrona_v01.png",
+      "prompt": "undefinedLocation: a cozy oak timber sawyer workshop with sunny golden straw roof among forest trees, hand-operated frame saw with a log on trestles, neat warm cut boards and stacked logs at the entrance, amber afternoon light. Dry ground. NO water or water wheel. Workshop fills most of square.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/environments/expeditions/expedition_karawana_v01.png",
+      "prompt": "undefinedLocation: an old wooden lumber cart carrying fresh oak logs on an inviting winding forest path, simple carved sun trail marker beside the cart, pale amber sunlight through tall oak trees, a small luminous blue carved rune stone in the foreground. Cart and logs fill most of square, warm forest adventure mood.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/environments/expeditions/expedition_korzenie_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: square location illustration for a Slavic woodland fantasy mobile game expedition card. Bright polished hand-painted storybook game art, detailed warm honey-gold oak wood, lush natural forest greens, soft atmospheric light, beautiful cohesive materials. Close composition readable at 110x110 pixels, single strong focal point with simple scene. Edge to edge square illustration, NO UI, NO frame, NO typography, NO text, NO words, NO map, NO inset. No characters. Location: a beautiful mysterious thicket with massive twisting oak roots crossing an old forest path like natural arches, mossy pale rocks and tiny amber fireflies, violet woodland flowers, filtered teal and golden light in the depths. Dense enchanted forest, root arch is the strong central focal point, no buildings.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/environments/expeditions/expedition_straz_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: square location illustration for a Slavic woodland fantasy mobile game expedition card. Bright polished hand-painted storybook game art, detailed warm honey-gold oak wood, lush natural forest greens, soft atmospheric light, beautiful cohesive materials. Close composition readable at 110x110 pixels, single strong focal point with simple scene. Edge to edge square illustration, NO UI, NO frame, NO typography, NO text, NO words, NO map, NO inset. No characters. Location: ancient sacred forest oak with a beautiful carved wooden guardian totem and small golden sun amulet beside the trunk, bronze lantern glowing softly at the altar, emerald canopy and shafts of warm gold sunlight, deep old forest atmosphere. Totem shrine is strong central focal point, no people.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/environments/expeditions/expedition_noc_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: square location illustration for a Slavic woodland fantasy mobile game expedition card. Bright polished hand-painted storybook game art, detailed warm honey-gold oak wood, lush natural forest greens, soft atmospheric light, beautiful cohesive materials. Close composition readable at 110x110 pixels, single strong focal point with simple scene. Edge to edge square illustration, NO UI, NO frame, NO typography, NO text, NO words, NO map, NO inset. No characters. Location: a small handsome Slavic carved oak watchtower with golden thatch roof and one warm glowing amber lantern at dusk in an enchanted blue-green night forest. Luminous pale moon behind the canopy and a few tiny fireflies. Tower fills most of square. Night scene still clearly readable, inviting beautiful twilight rather than pitch dark.",
+      "transparent_background": false
+    },
+    {
+      "output": "art/ui/expedition_card_frame_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: one reusable illustrated horizontal expedition card frame for a Slavic oak forest fantasy game UI. TRUE transparent alpha background. Canvas wide landscape1536x512; ONE single long physical carved dark oak panel centered across canvas, roughly1450 wide x350 high, ample transparent margin above and below. Left quarter a large EMPTY blackish-green square recessed picture window to insert a location illustration later. Right three quarters one broad EMPTY smooth dark walnut oak writing surface, subtle grain, almost uniform deep warm brown, excellent readability for cream overlay text. Beautiful delicate carved honey oak border around entire card with small bronze corner fittings and restrained tiny oak leaf sprigs only on outside corners. Elegant tactile illustrated game art, warm golden daylight, matches cozy Slavic wooden settlement. The writing surface is blank, absolutely NO TEXT NO NUMBERS NO ICONS NO SYMBOLS NO PLACEHOLDER LETTERS. No scene or scenery. No buttons, no headings, no titles. Straight frontal view, no perspective. Clean simple low profile frame, detailed woodwork, not a huge ornamental baroque frame. Outer silhouette and corners genuinely transparent.",
+      "transparent_background": true
+    }
+  ]
+}

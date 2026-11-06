@@ -1,0 +1,149 @@
+{
+  "music": {
+    "menu": "res://art/audio/music/menu_grove_acestep_v01.ogg",
+    "battle": "res://art/audio/music/battle_acestep_v01.ogg"
+  },
+  "stings": {
+    "victory_sting": "res://art/audio/music/victory_sting.ogg",
+    "defeat_sting": "res://art/audio/music/defeat_sting.ogg",
+    "village_upgrade_sting": "res://art/audio/music/village_upgrade_sting.ogg"
+  },
+  "effect_groups": {
+    "ui_click": [
+      "ui_click_01",
+      "ui_click_02",
+      "ui_click_03"
+    ],
+    "ui_confirm": [
+      "ui_confirm"
+    ],
+    "ui_back": [
+      "ui_back"
+    ],
+    "resource_coin": [
+      "resource_coin"
+    ],
+    "resource_wood": [
+      "resource_wood"
+    ],
+    "resource_perun": [
+      "resource_perun"
+    ],
+    "chest_open": [
+      "chest_open"
+    ],
+    "reward_reveal": [
+      "reward_reveal_common",
+      "reward_reveal_rare"
+    ],
+    "level_unlock": [
+      "level_unlock"
+    ],
+    "tile_select": [
+      "tile_select_01",
+      "tile_select_02",
+      "tile_select_03"
+    ],
+    "tile_swap": [
+      "tile_swap"
+    ],
+    "match_3": [
+      "match_3"
+    ],
+    "match_4_5": [
+      "match_4_5"
+    ],
+    "tile_cascade": [
+      "tile_cascade_01",
+      "tile_cascade_02",
+      "tile_cascade_03",
+      "tile_cascade_04"
+    ],
+    "hero_attack": [
+      "hero_attack_bow",
+      "hero_attack_hammer",
+      "hero_attack_sword",
+      "hero_attack_magic"
+    ],
+    "enemy_attack": [
+      "enemy_attack_claw",
+      "enemy_attack_beast",
+      "enemy_attack_spirit"
+    ],
+    "hit_impact": [
+      "hit_impact_body",
+      "hit_impact_armor",
+      "hit_impact_shield"
+    ],
+    "hero_hurt": [
+      "hero_hurt"
+    ],
+    "heal": [
+      "heal"
+    ],
+    "skill_activate": [
+      "skill_activate_thunder",
+      "skill_activate_roots",
+      "skill_activate_wind",
+      "skill_activate_water",
+      "skill_activate_fire",
+      "skill_activate_runes",
+      "skill_activate_amber"
+    ],
+    "enemy_defeated": [
+      "enemy_defeated_organic",
+      "enemy_defeated_spirit",
+      "enemy_defeated_stone"
+    ],
+    "turn_start": [
+      "turn_start"
+    ]
+  },
+  "effect_files": {
+    "ui_click_01": "res://art/audio/generated_complete/sfx-preview/ui_click_01.wav",
+    "ui_click_02": "res://art/audio/generated_complete/sfx-preview/ui_click_02.wav",
+    "ui_click_03": "res://art/audio/generated_complete/sfx-preview/ui_click_03.wav",
+    "ui_confirm": "res://art/audio/generated_complete/sfx-preview/ui_confirm.wav",
+    "ui_back": "res://art/audio/generated_complete/sfx-preview/ui_back.wav",
+    "resource_coin": "res://art/audio/generated_complete/sfx-preview/resource_coin.wav",
+    "resource_wood": "res://art/audio/generated_complete/sfx-preview/resource_wood.wav",
+    "resource_perun": "res://art/audio/generated_complete/sfx-preview/resource_perun.wav",
+    "chest_open": "res://art/audio/generated_complete/sfx-preview/chest_open.wav",
+    "reward_reveal_common": "res://art/audio/generated_complete/sfx-preview/reward_reveal_common.wav",
+    "reward_reveal_rare": "res://art/audio/generated_complete/sfx-preview/reward_reveal_rare.wav",
+    "level_unlock": "res://art/audio/generated_complete/sfx-preview/level_unlock.wav",
+    "tile_select_01": "res://art/audio/generated_complete/sfx-preview/tile_select_01.wav",
+    "tile_select_02": "res://art/audio/generated_complete/sfx-preview/tile_select_02.wav",
+    "tile_select_03": "res://art/audio/generated_complete/sfx-preview/tile_select_03.wav",
+    "tile_swap": "res://art/audio/generated_complete/sfx-preview/tile_swap.wav",
+    "match_3": "res://art/audio/generated_complete/sfx-preview/match_3.wav",
+    "match_4_5": "res://art/audio/generated_complete/sfx-preview/match_4_5.wav",
+    "tile_cascade_01": "res://art/audio/generated_complete/sfx-preview/tile_cascade_01.wav",
+    "tile_cascade_02": "res://art/audio/generated_complete/sfx-preview/tile_cascade_02.wav",
+    "tile_cascade_03": "res://art/audio/generated_complete/sfx-preview/tile_cascade_03.wav",
+    "tile_cascade_04": "res://art/audio/generated_complete/sfx-preview/tile_cascade_04.wav",
+    "hero_attack_bow": "res://art/audio/generated_complete/sfx-preview/hero_attack_bow.wav",
+    "hero_attack_hammer": "res://art/audio/generated_complete/sfx-preview/hero_attack_hammer.wav",
+    "hero_attack_sword": "res://art/audio/generated_complete/sfx-preview/hero_attack_sword.wav",
+    "hero_attack_magic": "res://art/audio/generated_complete/sfx-preview/hero_attack_magic.wav",
+    "enemy_attack_claw": "res://art/audio/generated_complete/sfx-preview/enemy_attack_claw.wav",
+    "enemy_attack_beast": "res://art/audio/generated_complete/sfx-preview/enemy_attack_beast.wav",
+    "enemy_attack_spirit": "res://art/audio/generated_complete/sfx-preview/enemy_attack_spirit.wav",
+    "hit_impact_body": "res://art/audio/generated_complete/sfx-preview/hit_impact_body.wav",
+    "hit_impact_armor": "res://art/audio/generated_complete/sfx-preview/hit_impact_armor.wav",
+    "hit_impact_shield": "res://art/audio/generated_complete/sfx-preview/hit_impact_shield.wav",
+    "hero_hurt": "res://art/audio/generated_complete/sfx-preview/hero_hurt.wav",
+    "heal": "res://art/audio/generated_complete/sfx-preview/heal.wav",
+    "skill_activate_thunder": "res://art/audio/generated_complete/sfx-preview/skill_activate_thunder.wav",
+    "skill_activate_roots": "res://art/audio/generated_complete/sfx-preview/skill_activate_roots.wav",
+    "skill_activate_wind": "res://art/audio/generated_complete/sfx-preview/skill_activate_wind.wav",
+    "skill_activate_water": "res://art/audio/generated_complete/sfx-preview/skill_activate_water.wav",
+    "skill_activate_fire": "res://art/audio/generated_complete/sfx-preview/skill_activate_fire.wav",
+    "skill_activate_runes": "res://art/audio/generated_complete/sfx-preview/skill_activate_runes.wav",
+    "skill_activate_amber": "res://art/audio/generated_complete/sfx-preview/skill_activate_amber.wav",
+    "enemy_defeated_organic": "res://art/audio/generated_complete/sfx-preview/enemy_defeated_organic.wav",
+    "enemy_defeated_spirit": "res://art/audio/generated_complete/sfx-preview/enemy_defeated_spirit.wav",
+    "enemy_defeated_stone": "res://art/audio/generated_complete/sfx-preview/enemy_defeated_stone.wav",
+    "turn_start": "res://art/audio/generated_complete/sfx-preview/turn_start.wav"
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "swiety_gaj",
+    "prompt": "Edit target: this five-tree progression picture. Extract ONLY the five individual sacred oak trees with their small altars as FIVE clean isolated game sprites on TRUE TRANSPARENT ALPHA BACKGROUND. REMOVE ALL background sky, landscape, distant forest, meadow, frames, dividers, ornate header, descriptions, all labels, letters, numbers, signs. Keep the five tree shapes, green-gold foliage, warm bark and little altars unchanged. Completely transparent gaps THROUGH and BETWEEN tree branches and leaves. Each tree with altar on its own tiny ground footprint, no scene behind. Layout one horizontal row, five separate sprites, generous transparent gutters, complete tree crowns and bases within image, never touch each other. NO TEXT ANYWHERE. Do not add anything. No border. Production transparent PNG asset, not a presentation."
+  },
+  {
+    "id": "wieza_peruna",
+    "prompt": "Edit target: this five-tower progression picture. Extract ONLY the FIVE individual wooden towers as clean isolated game sprites on TRUE TRANSPARENT ALPHA BACKGROUND. REMOVE ALL sky, landscape, trees, hills, meadow, ornate header, descriptions, labels, lettering, arrows, numbers, ground scenery. Keep the five actual towers, their roofs, oak posts, ladders, railings, lanterns, little banners, sun ornaments unchanged. All holes BETWEEN posts and ladder rungs MUST BE TRANSPARENT, no scene behind them. Each tower on its own tiny base footprint. Layout one horizontal row, FIVE SEPARATE sprites, generous transparent gutters, complete roof and base visible, never touch each other. NO TEXT ANYWHERE. No frame or border. Production transparent PNG sprites, NOT a presentation or infographic."
+  },
+  {
+    "id": "kuznia",
+    "prompt": "Edit target: this five-blacksmith progression picture. Extract ONLY the FIVE individual foreground blacksmith buildings as clean isolated game sprites on TRUE TRANSPARENT ALPHA BACKGROUND. REMOVE ALL sky, landscape, distant houses, fences, trees, meadow, header sign, descriptions, all labels, lettering, numbers and scenery. Keep the five actual workshops, their golden roofs, honey oak posts, forge fire, anvils and small tools unchanged. Open air gaps BETWEEN posts MUST BE TRANSPARENT where there is no workshop wall behind. Each workshop with only tiny dry earth base footprint. Layout one horizontal row, FIVE SEPARATE sprites with generous transparent gutters, complete roof and bases visible, never touch. NO TEXT ANYWHERE. No border. Production transparent PNG asset, NOT a presentation or infographic."
+  }
+]

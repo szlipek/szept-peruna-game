@@ -1,0 +1,167 @@
+{
+  "combat_balance_2026_11_06": {
+    "status": "implemented",
+    "scope": "Wszystkie 25 postaci, również przyszłe rekrutacje. Premie budynków nie wymagają konkretnej postaci w składzie.",
+    "hero_hp": "90 + 18 * (poziom - 1) + 8 * Domostwa + 4 * Chata Zielarki + talenty HP",
+    "herbalist": "+2% każdego leczenia za poziom; zaokrąglanie raz na leczonego bohatera, bez wskrzeszania.",
+    "forge": "+1% obrażeń kombinacji i umiejętności za poziom.",
+    "tower": "+2% obrażeń aktywnych umiejętności wszystkich bohaterów za poziom; dodawane do premii Kuźni.",
+    "enemy_attack": "Najsilniejszy atak w pełni, suma pozostałych x 0.35. Szał uwzględniany w sile atakującego. Klątwy, tarcza i osłabienie zachowują działanie.",
+    "enemy_five_match": "Premia +60 wyłącznie za ciągłą linię co najmniej 5 jednakowych znaków; dwie osobne trójki nie wystarczą.",
+    "early_campaign": "Płynne przejście między etapami 5 i 20 zamiast progu minimum 135 HP na etapie 6.",
+    "pacing_proposal_not_implemented": {
+      "normal_battle": "Cel: 5-8 ruchów gracza; boss: 10-15, poza samouczkiem i starciami ze znacznie słabszym wrogiem.",
+      "first_ability": "Cel: po 2-3 ruchach gracza; rozważyć 2 energii startowej i 1 energii dla każdego żywego bohatera po pełnym ruchu gracza, raz na ruch, niezależnie od kaskad.",
+      "damage": "Rozważyć ograniczenie mnożnika obrażeń kaskady do x2, zachowując dalsze kasacje, energię i punkty. Wzrost HP wrogów dopiero po pomiarach, oddzielnie dla rozdziałów i bossów.",
+      "validation": "Porównać medianę liczby ruchów i użyć umiejętności dla kilku składów i poziomów rozwoju. Podane cele nie są gwarantowaną długością walk."
+    }
+  },
+  "implemented_points": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "hall": {
+    "max_level": 50,
+    "initial_building_cap": 1,
+    "requirements": "Dwie wybrane inwestycje z poprzedniego poziomu; pary rotują. Pierwszy Dwór wymaga Domostw I i Tartaku I.",
+    "legacy_save": "Brak klucza Dworu: poziom równy najwyższemu istniejącemu budynkowi, bez odejmowania zasobów i poziomów."
+  },
+  "milestones": {
+    "first_build": {
+      "kuznia": 5,
+      "chata_zielarki": 10,
+      "swiety_gaj": 20,
+      "wieza_peruna": 20
+    },
+    "hall_upgrades": {
+      "10_to_11": 20,
+      "20_to_21": 50,
+      "30_to_31": 100,
+      "40_to_41": 250
+    }
+  },
+  "economy": {
+    "upgrade_multiplier": "1 + 0.25 * current_level + 0.008 * current_level^2",
+    "sawmill_wood_per_hour_per_level": 20,
+    "offline_cap_hours": 24,
+    "campaign_wood": 0,
+    "training_wood": 0,
+    "daily_chest_wood": 0,
+    "ad_chest_wood": 0,
+    "shop_wood": false,
+    "rebuilding_grants": {
+      "3": 40,
+      "5": 40,
+      "10": 60,
+      "20": 60,
+      "50": 60,
+      "100": 60
+    },
+    "expeditions": "Sześć powtarzalnych wypraw, bez energii. Pierwsze zwycięstwo w każdej wyprawie danego dnia: drewno x2. Kolejne zwycięstwa zachowują bazową nagrodę.",
+    "tradeoff": "Monety są wspólne dla rozwoju bohaterów, talentów, zakupów PD i osady; drewno inwestuje się w wydajność tartaku albo premie bojowe."
+  },
+  "mastery": {
+    "campaign_gate": "Jedna gwiazdka za zwycięstwo wystarczy do dalszej kampanii.",
+    "three_stars": "Od etapu 3: cały skład żyje, co najmniej 70% zdrowia drużyny i spełniony cel dodatkowy.",
+    "one_time_reward": {
+      "coins": 100,
+      "event_marks": 1
+    },
+    "cosmetics": {
+      "5": "Wieniec Dębu",
+      "20": "Sztandar Gaju",
+      "50": "Pieczęć Peruna"
+    }
+  },
+  "next_goal": "Dotykalna karta celu prowadzi do wymaganego budynku lub mapy. Pokazuje brakujące monety/drewno. Przycisk wypraw dostępny w osadzie.",
+  "local_balance_stats": {
+    "storage": "Sekcja balance/stats w lokalnym progress.cfg; brak wysyłki sieciowej.",
+    "fields": [
+      "active_seconds",
+      "building_upgrades",
+      "last_upgrade_active_seconds",
+      "campaign_attempts",
+      "campaign_wins",
+      "expedition_attempts",
+      "expedition_wins",
+      "expedition_losses",
+      "training_attempts",
+      "last_battle_seconds",
+      "wood_sawmill",
+      "wood_expeditions",
+      "wood_buildings",
+      "coins_buildings"
+    ],
+    "limitations": "Czas aktywny to przybliżenie czasu okna na pierwszym planie. Nie zastępuje testów sesji z graczem."
+  },
+  "balance_status": "Wstępne strojenie. Testy sprawdzają osiągalność, wypłaty i działanie mechanik, nie docelowy czas przejścia gry.",
+  "assets": {
+    "background": "art/environments/village_layout_v05.png",
+    "unbuilt": "art/environments/building_dwor_wiecowy_v00.png",
+    "hall_levels": [
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_01.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_02.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_03.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_04.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_05.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_06.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_07.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_08.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_09.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_10.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_11.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_12.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_13.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_14.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_15.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_16.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_17.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_18.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_19.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_20.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_21.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_22.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_23.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_24.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_25.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_26.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_27.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_28.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_29.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_30.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_31.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_32.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_33.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_34.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_35.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_36.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_37.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_38.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_39.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_40.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_41.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_42.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_43.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_44.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_45.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_46.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_47.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_48.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_49.png",
+      "art/environments/building_levels/dwor_wiecowy/building_dwor_wiecowy_level_50.png"
+    ],
+    "mastery_badges": "art/environments/village_mastery_badges_v01.png",
+    "source_atlases": [
+      "art/environments/level_sources/building_dwor_wiecowy_levels_01_10_v01.png",
+      "art/environments/level_sources/building_dwor_wiecowy_levels_11_20_v01.png",
+      "art/environments/level_sources/building_dwor_wiecowy_levels_21_30_v01.png",
+      "art/environments/level_sources/building_dwor_wiecowy_levels_31_40_v01.png",
+      "art/environments/level_sources/building_dwor_wiecowy_levels_41_50_v01.png"
+    ]
+  }
+}

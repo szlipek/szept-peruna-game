@@ -12,6 +12,8 @@ Po uruchomieniu wybierz **GRAJ**, aby kontynuować od ostatniego odblokowanego p
 
 Lokalny Godot 4.5.2 znajduje się w `tools/Godot/` i działa bez instalatora.
 
+Eksport Androida wymaga szablonów eksportu zgodnych z wersją Godota oraz szablonu Gradle instalowanego przez **Projekt → Zainstaluj szablon kompilacji Androida**. Katalog `android/build/` (w tym biblioteki silnika `.aar`), wyniki kompilacji i paczki APK/AAB są lokalne i pomijane w Git.
+
 ## Początek przygody
 
 Nowy gracz przechodzi krótki, możliwy do pominięcia wstęp i wybiera jeden z 30 kosmetycznych awatarów. Pierwsza wyprawa rozpoczyna się z Ladą. Samouczek uczy dopasowywania znaków, atakowania, leczenia i ochrony drużyny.

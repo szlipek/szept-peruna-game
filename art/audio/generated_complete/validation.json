@@ -1,0 +1,762 @@
+{
+  "categories": 27,
+  "files": 50,
+  "coverage": {
+    "battle_loop": [
+      "battle_loop"
+    ],
+    "chest_open": [
+      "chest_open"
+    ],
+    "defeat_sting": [
+      "defeat_sting"
+    ],
+    "enemy_attack": [
+      "enemy_attack_claw",
+      "enemy_attack_beast",
+      "enemy_attack_spirit"
+    ],
+    "enemy_defeated": [
+      "enemy_defeated_organic",
+      "enemy_defeated_spirit",
+      "enemy_defeated_stone"
+    ],
+    "heal": [
+      "heal"
+    ],
+    "hero_attack": [
+      "hero_attack_bow",
+      "hero_attack_hammer",
+      "hero_attack_sword",
+      "hero_attack_magic"
+    ],
+    "hero_hurt": [
+      "hero_hurt"
+    ],
+    "hit_impact": [
+      "hit_impact_body",
+      "hit_impact_armor",
+      "hit_impact_shield"
+    ],
+    "level_unlock": [
+      "level_unlock"
+    ],
+    "match_3": [
+      "match_3"
+    ],
+    "match_4_5": [
+      "match_4_5"
+    ],
+    "menu_grove_ambient": [
+      "menu_grove_ambient"
+    ],
+    "resource_coin": [
+      "resource_coin"
+    ],
+    "resource_perun": [
+      "resource_perun"
+    ],
+    "resource_wood": [
+      "resource_wood"
+    ],
+    "reward_reveal": [
+      "reward_reveal_common",
+      "reward_reveal_rare"
+    ],
+    "skill_activate": [
+      "skill_activate_thunder",
+      "skill_activate_roots",
+      "skill_activate_wind",
+      "skill_activate_water",
+      "skill_activate_fire",
+      "skill_activate_runes",
+      "skill_activate_amber"
+    ],
+    "tile_cascade": [
+      "tile_cascade_01",
+      "tile_cascade_02",
+      "tile_cascade_03",
+      "tile_cascade_04"
+    ],
+    "tile_select": [
+      "tile_select_01",
+      "tile_select_02",
+      "tile_select_03"
+    ],
+    "tile_swap": [
+      "tile_swap"
+    ],
+    "turn_start": [
+      "turn_start"
+    ],
+    "ui_back": [
+      "ui_back"
+    ],
+    "ui_click": [
+      "ui_click_01",
+      "ui_click_02",
+      "ui_click_03"
+    ],
+    "ui_confirm": [
+      "ui_confirm"
+    ],
+    "victory_sting": [
+      "victory_sting"
+    ],
+    "village_upgrade_sting": [
+      "village_upgrade_sting"
+    ]
+  },
+  "checks": [
+    {
+      "name": "battle_loop",
+      "group": "battle_loop",
+      "duration": 80.0,
+      "allowed_duration": [
+        75.0,
+        120.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.87799072265625,
+      "valid": true
+    },
+    {
+      "name": "defeat_sting",
+      "group": "defeat_sting",
+      "duration": 4.0,
+      "allowed_duration": [
+        3.0,
+        5.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.891265869140625,
+      "valid": true
+    },
+    {
+      "name": "menu_grove_ambient",
+      "group": "menu_grove_ambient",
+      "duration": 64.0,
+      "allowed_duration": [
+        60.0,
+        90.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.89117431640625,
+      "valid": true
+    },
+    {
+      "name": "victory_sting",
+      "group": "victory_sting",
+      "duration": 4.0,
+      "allowed_duration": [
+        3.0,
+        5.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.888671875,
+      "valid": true
+    },
+    {
+      "name": "village_upgrade_sting",
+      "group": "village_upgrade_sting",
+      "duration": 3.0,
+      "allowed_duration": [
+        2.0,
+        4.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.89154052734375,
+      "valid": true
+    },
+    {
+      "name": "chest_open",
+      "group": "chest_open",
+      "duration": 1.25,
+      "allowed_duration": [
+        0.8,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "enemy_attack_beast",
+      "group": "enemy_attack",
+      "duration": 0.85,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "enemy_attack_claw",
+      "group": "enemy_attack",
+      "duration": 0.85,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "enemy_attack_spirit",
+      "group": "enemy_attack",
+      "duration": 0.85,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "enemy_defeated_organic",
+      "group": "enemy_defeated",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "enemy_defeated_spirit",
+      "group": "enemy_defeated",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "enemy_defeated_stone",
+      "group": "enemy_defeated",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "heal",
+      "group": "heal",
+      "duration": 0.9,
+      "allowed_duration": [
+        0.5,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hero_attack_bow",
+      "group": "hero_attack",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hero_attack_hammer",
+      "group": "hero_attack",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hero_attack_magic",
+      "group": "hero_attack",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hero_attack_sword",
+      "group": "hero_attack",
+      "duration": 0.8,
+      "allowed_duration": [
+        0.4,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hero_hurt",
+      "group": "hero_hurt",
+      "duration": 0.4,
+      "allowed_duration": [
+        0.25,
+        0.6
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hit_impact_armor",
+      "group": "hit_impact",
+      "duration": 0.32,
+      "allowed_duration": [
+        0.15,
+        0.45
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "hit_impact_body",
+      "group": "hit_impact",
+      "duration": 0.32,
+      "allowed_duration": [
+        0.15,
+        0.45
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "hit_impact_shield",
+      "group": "hit_impact",
+      "duration": 0.32,
+      "allowed_duration": [
+        0.15,
+        0.45
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "level_unlock",
+      "group": "level_unlock",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.8,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "match_3",
+      "group": "match_3",
+      "duration": 0.6,
+      "allowed_duration": [
+        0.35,
+        0.7
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "match_4_5",
+      "group": "match_4_5",
+      "duration": 0.85,
+      "allowed_duration": [
+        0.5,
+        1.0
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "resource_coin",
+      "group": "resource_coin",
+      "duration": 0.65,
+      "allowed_duration": [
+        0.4,
+        0.8
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "resource_perun",
+      "group": "resource_perun",
+      "duration": 0.7,
+      "allowed_duration": [
+        0.4,
+        0.9
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "resource_wood",
+      "group": "resource_wood",
+      "duration": 0.5,
+      "allowed_duration": [
+        0.3,
+        0.7
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "reward_reveal_common",
+      "group": "reward_reveal",
+      "duration": 0.75,
+      "allowed_duration": [
+        0.5,
+        1.2
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "reward_reveal_rare",
+      "group": "reward_reveal",
+      "duration": 1.05,
+      "allowed_duration": [
+        0.5,
+        1.2
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_amber",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_fire",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_roots",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_runes",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_thunder",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_water",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "skill_activate_wind",
+      "group": "skill_activate",
+      "duration": 1.15,
+      "allowed_duration": [
+        0.6,
+        1.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_cascade_01",
+      "group": "tile_cascade",
+      "duration": 0.19,
+      "allowed_duration": [
+        0.15,
+        0.4
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_cascade_02",
+      "group": "tile_cascade",
+      "duration": 0.2299546485260771,
+      "allowed_duration": [
+        0.15,
+        0.4
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_cascade_03",
+      "group": "tile_cascade",
+      "duration": 0.27,
+      "allowed_duration": [
+        0.15,
+        0.4
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_cascade_04",
+      "group": "tile_cascade",
+      "duration": 0.31,
+      "allowed_duration": [
+        0.15,
+        0.4
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "tile_select_01",
+      "group": "tile_select",
+      "duration": 0.11,
+      "allowed_duration": [
+        0.08,
+        0.18
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_select_02",
+      "group": "tile_select",
+      "duration": 0.13,
+      "allowed_duration": [
+        0.08,
+        0.18
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "tile_select_03",
+      "group": "tile_select",
+      "duration": 0.15,
+      "allowed_duration": [
+        0.08,
+        0.18
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "tile_swap",
+      "group": "tile_swap",
+      "duration": 0.28,
+      "allowed_duration": [
+        0.15,
+        0.35
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "turn_start",
+      "group": "turn_start",
+      "duration": 0.3,
+      "allowed_duration": [
+        0.2,
+        0.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "ui_back",
+      "group": "ui_back",
+      "duration": 0.35,
+      "allowed_duration": [
+        0.2,
+        0.5
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "ui_click_01",
+      "group": "ui_click",
+      "duration": 0.13995464852607709,
+      "allowed_duration": [
+        0.08,
+        0.2
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "ui_click_02",
+      "group": "ui_click",
+      "duration": 0.16,
+      "allowed_duration": [
+        0.08,
+        0.2
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    },
+    {
+      "name": "ui_click_03",
+      "group": "ui_click",
+      "duration": 0.18,
+      "allowed_duration": [
+        0.08,
+        0.2
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.50115966796875,
+      "valid": true
+    },
+    {
+      "name": "ui_confirm",
+      "group": "ui_confirm",
+      "duration": 0.55,
+      "allowed_duration": [
+        0.3,
+        0.7
+      ],
+      "sample_rate": 44100,
+      "format": "PCM_16",
+      "peak": 0.501190185546875,
+      "valid": true
+    }
+  ]
+}

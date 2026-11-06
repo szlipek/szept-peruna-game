@@ -1,0 +1,6 @@
+{
+  "mode": "built-in image_gen",
+  "output": "art/ui/expedition_lock_icon_v01.png",
+  "prompt": "Use case: stylized-concept. Create ONE beautiful small locked padlock inventory icon for a Slavic woodland fantasy game, isolated centered on genuinely transparent alpha background. Hand-painted premium game art, matching delicate oak twig and antique gold forest interface. Compact CLOSED antique bronze and warm gold padlock, gently rounded shield-shaped lock body, small carved oak leaf relief on front, dark simple keyhole, thick bronze shackle. A tiny emerald enamel detail and two restrained oak leaves at lower corners, clean strong silhouette readable at 28 pixels. Frontal view, soft warm upper-left light, rich tactile metal, elegant not cartoon, not photoreal. Icon fills 80 percent of square canvas with transparent padding, NO frame or circle behind it, no environment, no text, no lettering, no numbers. True transparent background.",
+  "transparent_background": true
+}

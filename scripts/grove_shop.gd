@@ -3,15 +3,13 @@ extends RefCounted
 # Oferty premium są katalogiem do podłączenia do płatności platformy.
 # Ten widok nigdy nie przyznaje płatnych pakietów bez potwierdzonego zakupu.
 const PREMIUM := [
-	{"id": "first_journey", "title": "PIERWSZA WYPRAWA", "description": "Dobry początek przygody", "price": "9,99 zł", "art": "chest", "rewards": {"coins": 1500, "wood": 150, "experience": 300}},
-	{"id": "amber_treasure", "title": "SKARB BURSZTYNU", "description": "Zapas na rozwój osady", "price": "19,99 zł", "art": "coins", "rewards": {"coins": 5000, "wood": 400}},
+	{"id": "first_journey", "title": "PIERWSZA WYPRAWA", "description": "Dobry początek przygody", "price": "9,99 zł", "art": "chest", "rewards": {"coins": 1500, "experience": 300}},
+	{"id": "amber_treasure", "title": "SKARB BURSZTYNU", "description": "Zapas na rozwój osady", "price": "19,99 zł", "art": "coins", "rewards": {"coins": 5000}},
 	{"id": "perun_power", "title": "MOC PERUNA", "description": "Iskry i doświadczenie", "price": "24,99 zł", "art": "sparks", "rewards": {"sparks": 8, "experience": 600}},
 	{"id": "remove_ads", "title": "SPOKÓJ GAJU", "description": "Wyłączenie reklam przerywających grę", "price": "19,99 zł", "art": "leaf", "rewards": {}, "entitlement": "remove_ads"}
 ]
 const SUPPLIES := [
-	{"id": "wood_small", "title": "WIĄZKA DREWNA", "description": "Materiały do rozbudowy", "cost": 200, "art": "wood", "rewards": {"wood": 80}},
 	{"id": "experience_small", "title": "NAUKA PRZODKÓW", "description": "PD dla wybranej drużyny", "cost": 250, "art": "experience", "rewards": {"experience": 100}},
-	{"id": "wood_large", "title": "ZAPASY OSADY", "description": "Duży zapas materiałów", "cost": 550, "art": "wood", "rewards": {"wood": 250}},
 	{"id": "experience_large", "title": "MĄDROŚĆ GAJU", "description": "PD dla wybranej drużyny", "cost": 800, "art": "experience", "rewards": {"experience": 400}}
 ]
 var opened := false
@@ -138,6 +136,7 @@ func draw(game) -> void:
 	var screen: Vector2 = game.get_viewport_rect().size
 	game.draw_main_menu_background(screen)
 	game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511b8"))
+	game.draw_menu_fireflies(screen)
 	if icon != null:
 		game.draw_texture_rect(icon, Rect2(20.0, 14.0, 105.0, 105.0), false)
 	var subtitle := "Zaopatrz drużynę przed kolejną wyprawą"
@@ -192,7 +191,7 @@ func draw(game) -> void:
 		if rewards.has("sparks"): reward_labels.append("%d Iskier Peruna" % int(rewards["sparks"]))
 		var details := " • ".join(reward_labels) if not reward_labels.is_empty() else str(offer["description"])
 		if str(offer["id"]) == "first_journey":
-			details = "%d monet • %d drewna\n%d PD drużyny" % [int(rewards["coins"]), int(rewards["wood"]), int(rewards["experience"])]
+			details = "%d monet\n%d PD drużyny" % [int(rewards["coins"]), int(rewards["experience"])]
 		if str(offer["id"]) == "perun_power":
 			details = "%d PD drużyny\n%d Iskier Peruna" % [int(rewards["experience"]), int(rewards["sparks"])]
 		game.draw_multiline_string(game.font, Vector2(card.position.x + 18.0, card.position.y + 157.0), details, HORIZONTAL_ALIGNMENT_CENTER, card.size.x - 36.0, 14, 2, Color("#dce6c8"))

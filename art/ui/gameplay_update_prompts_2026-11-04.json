@@ -1,0 +1,42 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-11-04",
+  "assets": [
+    {
+      "path": "art/ui/mission_counter_badge_v01.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Create ONE small notification counter badge sprite for a Slavic woodland fantasy mobile game navigation icon. A compact circular antique golden medallion, finely carved oak rim, two small oak leaves hugging lower left and lower right, restrained amber highlights. Large plain opaque deep forest green circular center, reserved for a white number rendered by code. Very readable at 34 pixels tall, strong clean silhouette, simple broad bevels, premium hand painted game UI, warm gold and dark green matching fantasy oak menus. Front-facing symmetric circular shape, centered in a square canvas, occupies about 90% of canvas, true transparent background outside. NO text, NO numerals, NO symbols in the middle, NO extra objects, NO white backdrop, NO large outer shadows. This is a blank decorative number badge, not a navigation icon."
+    },
+    {
+      "path": "art/environments/village_layout_v04.png",
+      "references": ["art/environments/village_layout_v03.png"],
+      "transparent_background": false,
+      "prompt": "Use case: precise-object-edit. Edit target is the existing portrait village terrain game background. Produce one full portrait 9:16 background for a Slavic fantasy mobile village, same rich hand-painted stylized rendering, warm golden upper-left light, forest, paths, fences, distant lake, seven empty construction clearings. Preserve the current positions and sizes of ALL six other clearings, central round tree emblem plaza, lower bridge and river. Main change: redesign the LOWER LEFT sawmill clearing at approximately x=36.7% y=65% as a generous EMPTY compacted earth construction pad for a separate watermill sawmill sprite. Move its little stream to hug the LEFT edge of the pad, make an obvious shallow millrace inlet and outlet joining the lower river, place small piles of timber at the far back edge only. Clear away bushes, fences and loose objects from the middle of this sawmill pad, leave open ground wide enough for a building. The sawmill will be added by the game; DO NOT paint any buildings, machinery, water wheels or people into the background. The nearby bottom-right clearing remains empty too. Keep coherent elevated three-quarter camera, detailed mossy stones, muted earth and golden grass, blue water. No UI, no labels, no lettering, no borders. Return the complete revised background."
+    },
+    {
+      "path": "art/environments/building_tartak_v02.png",
+      "references": ["art/environments/building_levels/kuznia/building_kuznia_level_01.png", "art/environments/building_tartak_v01.png"],
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Create a replacement standalone SAWMILL building game sprite with genuine transparent background. Image 1 is the exact style reference: match its elevated three-quarter/isometric camera, painterly fantasy mobile game rendering, warm golden light from upper left, restrained detail at small size, muted thatch, dark rough timber, mossy rocky ground. Image 2 is subject reference ONLY; simplify its oversized glossy high contrast look to match image 1. One humble compact early Slavic water-powered sawmill, straw roof, open timber work shelter, a clearly readable small wooden waterwheel on LEFT side at ground level, a log on a simple saw bench and modest stack of planks on right. No giant circular industrial steel saw blade. Building occupies center 70% of square canvas with transparent margins comparable to image 1, small irregular soft earth base, no background scenery, no text, no UI, no people. Natural shadow beneath feet, coherent architecture, game-ready transparent cutout, not a flat icon."
+    },
+    {
+      "path": "art/ui/mission_progress_frame_v02.png",
+      "references": ["art/ui/mission_progress_frame_v01.png"],
+      "transparent_background": true,
+      "visible_source_rect": [12, 260, 2149, 212],
+      "prompt": "Use case: precise-object-edit. Create a new game UI horizontal progress bar frame matching this Slavic woodland fantasy oak and antique gold style. A single long slender frame, approximately 8:1 aspect ratio for the visible object; genuine transparency outside AND inside the long EMPTY center opening. Simplify the heavy ornaments to compact oak-leaf endcaps confined to outermost 10% of width. Thin neatly carved wood and gold top and bottom rails, straight horizontal inner edges, a large clean rectangular/rounded inner aperture spanning x=12% to88% of visible object width and y=32% to68% of visible object height. No prefilled progress, no glow outside, no text, no background panel, no numbers, no extra assets. Perfectly front-facing, symmetric, crisp game HUD sprite. Frame fills the width of a wide landscape canvas with minimal transparent margins."
+    },
+    {
+      "path": "art/ui/mission_claim_button_v01.png",
+      "transparent_background": true,
+      "visible_source_rect": [0, 0, 2172, 685],
+      "prompt": "Use case: stylized-concept. One game UI reward CLAIM button, no text. Slavic woodland fantasy mobile RPG, polished hand-painted game art, rich forest emerald enamel inset and antique golden oak-carved rim, two modest symmetrical oak leaves at sides, warm highlights, a large clean dark green readable center reserved for the word ODBIERZ added in code. Visible button aspect ratio 3:1, front view, generously rounded rectangular silhouette, thin rim, premium satisfying tactile bevel. True transparent background outside, no drop shadow extending far, no lettering, no runes, no numbers, no icons, no additional assets. Center object fills canvas with minimal transparent margin. Match warm wood, gold and green Slavic fantasy game HUD."
+    },
+    {
+      "path": "art/ui/mission_counter_plaque_v01.png",
+      "transparent_background": true,
+      "visible_source_rect": [15, 91, 2142, 534],
+      "prompt": "Use case: stylized-concept. One small horizontal game UI number plaque for a Slavic woodland fantasy RPG quest progress counter, visible aspect ratio 4:1. Real carved dark walnut wood inset with smooth dark readable center, thin antique bronze bevel, tiny understated oak-leaf carved corners, warm golden highlights. Front-facing symmetric clean rounded rectangle, hand-painted high-quality game art, entire large center empty for numbers such as 900 / 2700 rendered by code. True transparent background outside, opaque dark wood center. No text, no numbers, no icons, no runes, no additional assets. Compact slender number plate filling canvas with minimal transparent margins. Harmonize with oak-gold-green fantasy HUD."
+    }
+  ]
+}

@@ -9,30 +9,38 @@ var avatar_catalog = AvatarCatalog.new()
 var avatar_page := 0
 var avatar_id := "lada"
 var pending_avatar := "lada"
+var player_name := "Wędrowiec"
+var name_input: LineEdit
 var intro_completed := false
 var companion_claimed := false
 var starter_companion := ""
 var stage := ""
 var selected_companion := ""
+var home_tutorial_step := ""
 var tutorial_moves := 0
 var tutorial_popup_open := true
 var companion_background: Texture2D
 var village_tutorial_background: Texture2D
 
 func reset_profile() -> void:
+	if name_input != null:
+		name_input.visible = false
 	avatar_id = "lada"
 	pending_avatar = "lada"
+	player_name = "Wędrowiec"
 	avatar_page = 0
 	intro_completed = false
 	companion_claimed = false
 	starter_companion = ""
 	selected_companion = ""
+	home_tutorial_step = ""
 	tutorial_moves = 0
 	tutorial_popup_open = true
 	stage = "intro"
 
 func load_profile(data: ConfigFile, game) -> void:
 	avatar_id = str(data.get_value("profile", "avatar", "lada"))
+	player_name = sanitize_player_name(str(data.get_value("profile", "player_name", "Wędrowiec")))
 	if not AVATARS.has(avatar_id):
 		avatar_id = "lada"
 	pending_avatar = avatar_id
@@ -41,44 +49,119 @@ func load_profile(data: ConfigFile, game) -> void:
 	intro_completed = bool(data.get_value("profile", "intro_completed", game.tutorial_completed or game.unlocked_level > 1))
 	companion_claimed = bool(data.get_value("profile", "companion_claimed", game.unlocked_level > 1))
 	starter_companion = str(data.get_value("profile", "starter_companion", ""))
+	home_tutorial_step = str(data.get_value("profile", "home_tutorial_step", ""))
 	if starter_companion not in ["brun", "mieta"]:
 		starter_companion = ""
-	stage = "intro" if not intro_completed else ("companion" if game.unlocked_level > 1 and not companion_claimed else "")
+	var migrated_profile := false
+	if game.unlocked_level > 1 and not companion_claimed:
+		grant_hero(game, "brun")
+		starter_companion = "brun"
+		companion_claimed = true
+		migrated_profile = true
+	if game.unlocked_level == 2 and int(game.hero_levels.get("lada", 1)) == 1 and int(game.level_stars.get(1, 0)) > 0:
+		var missing_xp := maxi(0, game.hero_experience_to_next_level("lada") - int(game.hero_experience.get("lada", 0)))
+		if missing_xp > 0:
+			game.hero_experience["lada"] = int(game.hero_experience.get("lada", 0)) + missing_xp
+			game.experience += missing_xp
+		migrated_profile = true
+		if home_tutorial_step == "":
+			home_tutorial_step = "upgrade_lada"
+	stage = "intro" if not intro_completed else ""
+	if migrated_profile:
+		game.save_progress()
 
 func save_profile(data: ConfigFile) -> void:
 	data.set_value("profile", "avatar", avatar_id)
+	data.set_value("profile", "player_name", player_name)
 	data.set_value("profile", "intro_completed", intro_completed)
 	data.set_value("profile", "companion_claimed", companion_claimed)
 	data.set_value("profile", "starter_companion", starter_companion)
+	data.set_value("profile", "home_tutorial_step", home_tutorial_step)
 
-func edit_avatar() -> void:
+func edit_avatar(game) -> void:
 	pending_avatar = avatar_id
 	avatar_page = int(AVATARS.find(avatar_id) / AVATARS_PER_PAGE)
 	stage = "avatar_edit"
+	ensure_name_input(game)
+	name_input.text = player_name
+	name_input.deselect()
+	name_input.caret_column = name_input.text.length()
+	name_input.visible = true
+
+func sanitize_player_name(value: String) -> String:
+	var cleaned := value.replace("\n", " ").replace("\r", " ").replace("\t", " ").strip_edges()
+	cleaned = cleaned.substr(0, 18)
+	return cleaned if cleaned != "" else "Wędrowiec"
+
+func name_input_rect(game) -> Rect2:
+	var panel: Rect2 = panel_rect(game)
+	return Rect2(panel.position + Vector2(40.0, 288.0), Vector2(panel.size.x - 80.0, 42.0))
+
+func ensure_name_input(game) -> void:
+	if name_input != null:
+		name_input.position = name_input_rect(game).position
+		name_input.size = name_input_rect(game).size
+		return
+	name_input = LineEdit.new()
+	name_input.name = "PlayerNameInput"
+	name_input.position = name_input_rect(game).position
+	name_input.size = name_input_rect(game).size
+	name_input.max_length = 18
+	name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_input.placeholder_text = "Wpisz swoją nazwę"
+	name_input.virtual_keyboard_enabled = true
+	name_input.add_theme_font_size_override("font_size", 19)
+	name_input.add_theme_color_override("font_color", Color("#fff0c7"))
+	name_input.add_theme_color_override("font_placeholder_color", Color("#9eae9d"))
+	name_input.add_theme_color_override("caret_color", Color("#f0c96e"))
+	var field_style := StyleBoxFlat.new()
+	field_style.bg_color = Color("#09241fee")
+	field_style.border_color = Color("#d9b66c")
+	field_style.set_border_width_all(2)
+	field_style.set_corner_radius_all(13)
+	field_style.shadow_color = Color(0.0, 0.0, 0.0, 0.48)
+	field_style.shadow_size = 5
+	field_style.shadow_offset = Vector2(0.0, 3.0)
+	field_style.content_margin_left = 14.0
+	field_style.content_margin_right = 14.0
+	name_input.add_theme_stylebox_override("normal", field_style)
+	var focus_style := field_style.duplicate() as StyleBoxFlat
+	focus_style.border_color = Color("#f0c96e")
+	focus_style.shadow_color = Color(0.85, 0.58, 0.16, 0.32)
+	focus_style.shadow_size = 7
+	name_input.add_theme_stylebox_override("focus", focus_style)
+	name_input.text = player_name
+	name_input.visible = false
+	game.add_child(name_input)
 
 func grant_hero(game, hero_id: String) -> void:
 	game.owned_heroes[hero_id] = true
 	game.hero_levels[hero_id] = maxi(1, int(game.hero_levels.get(hero_id, 0)))
 	if not game.active_heroes.has(hero_id) and game.active_heroes.size() < 3:
 		game.active_heroes.append(hero_id)
+	game.sync_party_battle_health()
 
-func on_victory(game, level_id: int) -> void:
+func on_victory(game, level_id: int, first_clear := true) -> void:
 	if level_id == 1:
 		game.tutorial_completed = true
 		if not companion_claimed:
-			selected_companion = ""
-			stage = "companion"
-	elif level_id == 2:
-		stage = "upgrade_lada"
-	elif level_id == 3:
-		stage = "upgrade_village"
-	# Wybór pierwszego towarzysza nie blokuje zdobycia drugiego.
-	if level_id == 5 and starter_companion != "":
+			# Pierwsze zwycięstwo od razu odblokowuje Bruna. Mięta dołączy
+			# później, dzięki czemu drużyna rośnie razem z kampanią.
+			grant_hero(game, "brun")
+			starter_companion = "brun"
+			companion_claimed = true
+		if first_clear:
+			home_tutorial_step = "upgrade_lada"
+	elif level_id == 2 and first_clear:
+		home_tutorial_step = "village_unlocked"
+	# Towarzysze i nowe tryby pojawiają się w miarę postępu, bez przerywania
+	# powrotu do głównego ekranu po ukończonej walce.
+	if level_id == 5 and first_clear and starter_companion != "":
 		var joining_hero := "mieta" if starter_companion == "brun" else "brun"
 		var newly_joined := not bool(game.owned_heroes.get(joining_hero, false))
 		grant_hero(game, joining_hero)
 		if newly_joined:
-			stage = "third_companion"
+			home_tutorial_step = "third_companion_unlocked"
 
 func panel_rect(game) -> Rect2:
 	var screen: Vector2 = game.get_viewport_rect().size
@@ -107,8 +190,8 @@ func choice_rect(game, index: int) -> Rect2:
 	if stage in ["avatar", "avatar_edit"]:
 		var slot := index % AVATARS_PER_PAGE
 		var spacing := (panel.size.x - 48) / 3.0
-		var diameter := minf(104.0, spacing - 10.0)
-		var center := panel.position + Vector2(24 + spacing * (slot % 3 + 0.5), 338 + int(slot / 3) * 148)
+		var diameter := minf(88.0, spacing - 10.0)
+		var center := panel.position + Vector2(24 + spacing * (slot % 3 + 0.5), 382 + int(slot / 3) * 130)
 		return Rect2(center - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter)
 	if stage == "companion":
 		var diameter := minf(176.0, (panel.size.x - 88.0) * 0.5)
@@ -127,6 +210,11 @@ func handle_input(game, position: Vector2) -> void:
 	if stage == "intro":
 		if primary_rect(game).has_point(position) or secondary_rect(game).has_point(position):
 			stage = "avatar"
+			ensure_name_input(game)
+			name_input.text = player_name
+			name_input.deselect()
+			name_input.caret_column = name_input.text.length()
+			name_input.visible = true
 	elif stage in ["avatar", "avatar_edit"]:
 		for direction in [-1, 1]:
 			if avatar_page_rect(game, direction).has_point(position):
@@ -140,14 +228,19 @@ func handle_input(game, position: Vector2) -> void:
 		if primary_rect(game).has_point(position):
 			var begin_game := stage == "avatar"
 			avatar_id = pending_avatar
+			player_name = sanitize_player_name(name_input.text) if name_input != null else player_name
 			intro_completed = true
 			stage = ""
+			if name_input != null:
+				name_input.visible = false
 			game.save_progress()
 			if begin_game:
 				game.main_menu_open = false
 				game.start_level(0)
 		elif stage == "avatar_edit" and secondary_rect(game).has_point(position):
 			stage = ""
+			if name_input != null:
+				name_input.visible = false
 	elif stage == "companion":
 		for index in 2:
 			if choice_rect(game, index).has_point(position):
@@ -232,6 +325,12 @@ func draw(game) -> void:
 	var panel: Rect2 = panel_rect(game)
 	if stage not in ["intro", "companion", "ready", "third_companion", "upgrade_lada", "upgrade_village"]:
 		game.draw_style_box(game.make_panel(Color("#18352ee8"), Color("#b38b4d")), panel)
+	# Teksty i portrety zajmują środek; światło pozostaje na obrzeżach sceny.
+	draw_background_fireflies(game, screen, [
+		Rect2(Vector2(64, panel.position.y), Vector2(screen.x - 128, panel.size.y)),
+		Rect2(Vector2(screen.x * 0.5 - 110, 10), Vector2(220, 125)),
+		primary_rect(game), secondary_rect(game),
+	])
 	if stage == "intro":
 		game.draw_game_logo(Vector2(screen.x / 2.0, 72), Vector2(210, 125))
 		line(game, "Mgła spowija Dębowe Pogranicze.", 132)
@@ -242,7 +341,7 @@ func draw(game) -> void:
 		if portrait != null:
 			var portrait_slot := Rect2(panel.position + Vector2(panel.size.x / 2 - 158, 380), Vector2(316, 316))
 			game.draw_texture_rect(portrait, game.texture_aspect_fit_rect(portrait, portrait_slot), false)
-		game.draw_button(primary_rect(game), "ROZPOCZNIJ PRZYGODĘ", true, 18, -2.0)
+		game.draw_button(primary_rect(game), "DALEJ", true, 18, -2.0)
 		game.draw_button(secondary_rect(game), "POMIŃ WSTĘP", true, 14)
 	elif stage == "companion":
 		line_spaced(game, "PIERWSZE ZWYCIĘSTWO!", 54, 28)
@@ -333,6 +432,53 @@ func draw(game) -> void:
 		line(game, "Następny szlak: poziom 6.", 522, 16)
 		game.draw_button(primary_rect(game), "GRAJ • POZIOM 6", true)
 
+func draw_avatar_fireflies(game, screen: Vector2, panel: Rect2) -> void:
+	# Rysowane po tle, przed całym interfejsem. Margines wygasza również
+	# poświatę przy portretach i kontrolkach, zamiast ucinać ją na krawędzi.
+	var protected: Array[Rect2] = [
+		Rect2(panel.position + Vector2(panel.size.x * 0.5 - 76, 69), Vector2(152, 152)),
+		name_input_rect(game), primary_rect(game),
+		avatar_page_rect(game, -1), avatar_page_rect(game, 1),
+		Rect2(panel.position + Vector2(0, 0), Vector2(panel.size.x, 68)),
+		Rect2(panel.position + Vector2(0, 220), Vector2(panel.size.x, 42)),
+		Rect2(panel.position + Vector2(0, 571), Vector2(panel.size.x, 24)),
+		Rect2(panel.position + Vector2(panel.size.x * 0.5 - 28, 609), Vector2(56, 25)),
+	]
+	for index in range(avatar_page * AVATARS_PER_PAGE, (avatar_page + 1) * AVATARS_PER_PAGE):
+		var portrait_rect := choice_rect(game, index)
+		protected.append(Rect2(portrait_rect.position, portrait_rect.size + Vector2(0, 20)))
+	if stage == "avatar_edit":
+		protected.append(secondary_rect(game))
+	draw_background_fireflies(game, screen, protected)
+
+func draw_background_fireflies(game, screen: Vector2, protected: Array[Rect2] = [], opacity := 1.0) -> void:
+	# Wspólna animacja dla spokojnych ekranów; wywoływana przed treścią UI.
+	var time: float = game.ui_anim_time
+	for index in 60:
+		# Stałe fazy nie korzystają z losowości rozgrywki i nie przeskakują po kliknięciu.
+		var seed_value := float(index)
+		var phase := seed_value * 2.399963
+		var speed := 3.0 + fposmod(seed_value * 1.73, 4.0)
+		var position := Vector2(
+			screen.x * (0.07 + fposmod(seed_value * 0.618034, 0.86)) + sin(time * 0.24 + phase) * 14.0,
+			fposmod(screen.y * fposmod(seed_value * 0.381966, 1.0) - time * speed, screen.y)
+		)
+		position.y += sin(time * 0.37 + phase) * 6.0
+		var visibility := 1.0
+		for rect in protected:
+			var nearest := position.clamp(rect.position, rect.end)
+			visibility = minf(visibility, smoothstep(5.0, 20.0, position.distance_to(nearest)))
+		visibility *= smoothstep(0.0, 28.0, minf(position.y, screen.y - position.y))
+		if visibility <= 0.001:
+			continue
+		var pulse := 0.25 + 0.75 * pow((sin(time * 0.8 + phase) + 1.0) * 0.5, 2.0)
+		var alpha := visibility * pulse * opacity
+		var radius := 0.7 + fposmod(seed_value * 0.37, 0.65)
+		game.draw_circle(position, radius * 5.0, Color(1.0, 0.64, 0.18, alpha * 0.025), true, -1.0, true)
+		game.draw_circle(position, radius * 3.0, Color(1.0, 0.74, 0.27, alpha * 0.07), true, -1.0, true)
+		game.draw_circle(position, radius * 1.7, Color(1.0, 0.84, 0.42, alpha * 0.18), true, -1.0, true)
+		game.draw_circle(position, radius, Color(1.0, 0.93, 0.65, alpha * 0.7), true, -1.0, true)
+
 func draw_avatar_picker(game) -> void:
 	var screen: Vector2 = game.get_viewport_rect().size
 	var panel: Rect2 = panel_rect(game)
@@ -340,11 +486,13 @@ func draw_avatar_picker(game) -> void:
 	game.draw_rect(Rect2(Vector2.ZERO, screen), Color("#091e19"))
 	if avatar_catalog.background != null:
 		game.draw_texture_rect(avatar_catalog.background, Rect2(Vector2.ZERO, screen), false)
-	line(game, "TWÓJ AWATAR", 42, 28)
-	line(game, "Wybierz jeden z 30 portretów", 76, 17)
-	var preview := Rect2(panel.position + Vector2(panel.size.x * 0.5 - 76, 94), Vector2(152, 152))
+	draw_avatar_fireflies(game, screen, panel)
+	line(game, "TWÓJ AWATAR", 28, 28)
+	line(game, "Wybierz jeden z 30 portretów", 62, 17)
+	var preview := Rect2(panel.position + Vector2(panel.size.x * 0.5 - 76, 69), Vector2(152, 152))
 	avatar_catalog.draw_portrait(game, pending_avatar, preview, true)
-	line(game, AVATAR_NAMES[AVATARS.find(pending_avatar)], 263, 20)
+	line(game, AVATAR_NAMES[AVATARS.find(pending_avatar)], 238, 20)
+	line(game, "NAZWA GRACZA", 255, 13)
 	for index in range(avatar_page * AVATARS_PER_PAGE, (avatar_page + 1) * AVATARS_PER_PAGE):
 		var rect := choice_rect(game, index)
 		var selected: bool = pending_avatar == AVATARS[index]
@@ -362,7 +510,7 @@ func draw_avatar_picker(game) -> void:
 			else:
 				game.draw_texture_rect(avatar_catalog.page_arrow, arrow_rect, false)
 	line(game, "%d / 5" % (avatar_page + 1), 630, 16)
-	line(game, "Portret możesz później zmienić w menu.", 588, 13)
+	line(game, "Nazwę i portret później zmienisz w menu.", 588, 13)
 	game.draw_button(primary_rect(game), "WYRUSZ W PRZYGODĘ" if stage == "avatar" else "ZAPISZ AWATAR", true, 16)
 	if stage == "avatar_edit":
 		game.draw_button(secondary_rect(game), "ANULUJ", true, 14)
@@ -394,9 +542,11 @@ func tutorial_active(game) -> bool:
 
 func tutorial_text(game) -> String:
 	if game.level_index == 1:
-		return "Połącz 4 lub 5 znaków albo ułóż kwadrat, aby zadać przeciwnikowi więcej obrażeń."
+		if tutorial_moves == 0:
+			return "W 7. rzędzie od góry przeciągnij 3. kafelek o jedno pole w górę. Połączenie 4 tworzy wybuchowy znak: kliknij go, by uderzyć w pole 5×5 za 1,2× punktów. Połączenie 5 tworzy znak globalny: usuwa wszystkie znaki tego rodzaju za 2× punktów. Oba połączenia dają dodatkowy ruch."
+		return "Świetnie! Powstał kafelek wybuchowy. Kliknij go, by zniszczyć znaki w promieniu 2 pól (obszar 5×5). Połączenie 5 znaków tworzy kafelek globalny, który usuwa wszystkie znaki jego rodzaju i daje 2× punktów. Oba połączenia dają dodatkowy ruch."
 	if tutorial_moves == 0:
-		return "Zamień podświetlone znaki, aby połączyć co najmniej 3."
+		return "Przeciągnij zielony liść do góry na złote pole. Jasne kafelki utworzą trójkę; reszta planszy jest zablokowana. Liście wzmacniają atak Lady."
 	if tutorial_moves == 1:
 		return "Ogień i runy atakują. Pokonaj Cień mchu, aby wygrać."
 	if tutorial_moves == 2:
@@ -410,16 +560,20 @@ func draw_tutorial(game) -> void:
 	# Samouczek przykrywa cały górny pasek gry, tak aby nie konkurował z nim
 	# przycisk pauzy ani oznaczenie poziomu.
 	# Przesunięcie samej ozdobnej planszy zostawia więcej miejsca nad polem walki.
-	var panel := Rect2(38, 2, screen.x - 76, 190)
+	var panel_height := 282.0 if game.level_index == 1 else 190.0
+	var panel := Rect2(38, 2, screen.x - 76, panel_height)
+	var panel_background := panel
+	panel_background.position.y += 10.0
 	if game.tutorial_tooltip_banner != null:
-		game.draw_texture_rect(game.tutorial_tooltip_banner, panel, false)
+		game.draw_texture_rect(game.tutorial_tooltip_banner, panel_background, false)
 	elif game.turn_banner_oak != null:
-		game.draw_texture_rect(game.turn_banner_oak, panel, false, Color(0.92, 0.98, 0.9, 1.0))
+		game.draw_texture_rect(game.turn_banner_oak, panel_background, false, Color(0.92, 0.98, 0.9, 1.0))
 	else:
-		game.draw_style_box(game.make_panel(Color("#09251fd9"), Color("#d4ad5e")), panel)
-	var heading := "PODPOWIEDŹ • POZIOM %d" % (game.level_index + 1) if game.level_index > 0 else "SAMOUCZEK • KROK %d/4" % mini(tutorial_moves + 1, 4)
-	game.draw_string(game.font, Vector2(panel.position.x + 12, panel.position.y + 75), heading, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 64, 17, Color("#f5d998"))
-	game.draw_multiline_string(game.font, Vector2(panel.position.x + 18, panel.position.y + 108), tutorial_text(game), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36, 17, 24, Color("#ffe7a3"))
+		game.draw_style_box(game.make_panel(Color("#09251fd9"), Color("#d4ad5e")), panel_background)
+	var heading := "SAMOUCZEK • POZIOM 2" if game.level_index == 1 else ("PODPOWIEDŹ • POZIOM %d" % (game.level_index + 1) if game.level_index > 0 else "SAMOUCZEK • KROK %d/4" % mini(tutorial_moves + 1, 4))
+	var text_offset_y := 20.0 if game.level_index == 1 else 0.0
+	game.draw_string(game.font, Vector2(panel.position.x + 12, panel.position.y + 78 + text_offset_y), heading, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 64, 17, Color("#f5d998"))
+	game.draw_multiline_string(game.font, Vector2(panel.position.x + 18, panel.position.y + 108 + text_offset_y), tutorial_text(game), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 36, 17, 24, Color("#ffe7a3"))
 	var close_rect := tutorial_close_rect(game)
 	if game.village_popup_close_button != null:
 		game.draw_texture_rect(game.village_popup_close_button, close_rect, false)

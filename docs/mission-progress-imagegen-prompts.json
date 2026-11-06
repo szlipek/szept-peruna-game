@@ -1,0 +1,17 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "source": "art/ui/mission_progress_amber_source_v01.png",
+      "output": "art/ui/mission_progress_amber_fill_v01.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset: ONLY a fantasy game progress bar FILL texture, no surrounding UI. True transparent alpha background. Landscape canvas1536x512. One extremely long thin horizontal pill-shaped STRIP centered in canvas, approximately1400px wide and120px high. Material: luminous warm honey AMBER resin, dark bronze amber depth toward lower edge, bright golden honey upper highlight, irregular subtle flowing woodgrain-like filaments and tiny embedded golden flecks. Very small delicate oak leaf silhouettes embedded INSIDE the amber material, sparse. Rich painterly jewel-like layered texture, polished soft bevel highlight along upper edge and deeper warm shading below, restrained magical inner light. Suitable for Slavic woodland fantasy game golden vine frame. All details stay INSIDE the pill silhouette, generously padded transparent canvas. Consistent material across whole length, no extra frame, no borders or rails, no ornaments outside strip, no text, no numbers, no UI controls, no background scenery. Long strip readable as textured material at only10pixels tall, strong vertical highlight but variation along length. Capsule ends rounded. No giant sparkling stars."
+    },
+    {
+      "source": "art/ui/mission_progress_emerald_source_v01.png",
+      "output": "art/ui/mission_progress_emerald_fill_v01.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset: ONLY a fantasy game progress bar FILL texture, no surrounding UI. True transparent alpha background. Landscape canvas1536x512. One extremely long thin horizontal pill-shaped STRIP centered in canvas, approximately1400px wide and120px high. Material: luminous rich jade EMERALD green with fine intertwined pale gold-green oak leaf veins and a very subtle organic mossy marbled surface. Small delicate oak leaf shapes embedded INSIDE the green material, not outside. Polished jewel-like layered texture, brighter sage and mint-green highlight along upper edge, deeper emerald and dark forest-green shading below, restrained warm golden tiny glints. Rich hand-painted Slavic woodland fantasy game art that pairs with antique gold vine borders. All details stay INSIDE pill silhouette, generously padded transparent canvas. Consistent material across whole length, no extra frame, no borders or rails, no ornaments outside strip, no text, no numbers, no UI controls, no scenery. Long strip readable as textured material at only10pixels tall, strong vertical highlight but variation along length. Capsule ends rounded. Not a flat solid green, no giant sparkling stars."
+    }
+  ]
+}
