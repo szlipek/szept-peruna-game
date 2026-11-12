@@ -1,0 +1,27 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-11-09",
+  "assets": [
+    {
+      "source": "art/ui/settings_icon_source_v01.png",
+      "prompt": "Use case: stylized-concept. Create ONE SETTINGS button icon for this Slavic woodland fantasy game. Reference image is style reference: match its circular dark emerald textured center, antique golden rim, little oak leaves at four points and warm amber jewel detail. Replace the question mark with a single prominent beautifully crafted golden COG / GEAR, readable at 62px. Same round silhouette and balanced ornate leaf border as reference. Frontal view, rich hand-painted polished gold, subdued deep forest green, warm highlights, clean sharp icon silhouette, no modern plastic. TRUE transparent alpha background outside round icon. No words, no text, no letters, no extra objects, no rectangular frame. Square output, medallion fills nearly entire canvas with narrow transparent padding.",
+      "transparent_background": true
+    },
+    {
+      "source": "art/ui/settings_panel_source_v01.png",
+      "prompt": "Use case: stylized-concept. Asset: ONE portrait modal panel background for settings in a Slavic woodland fantasy game. TRUE transparent alpha background OUTSIDE the panel. Portrait canvas1024x1536. One large elegant physical frame taking90percent of canvas width and height, gently rounded corners. Refined flowing ANTIQUE GOLD OAK TWIGS and subtle carved dark oak edging, small groups of golden and muted green oak leaves at corners, a small amber acorn jewel centered at bottom. Border restrained and slim, like organic forest vines rather than baroque furniture. CENTER SURFACE is an uninterrupted very dark rich FOREST EMERALD textured material, subtle velvet stone and leaf-vein texture, opaque low contrast for cream overlay text. Center80percent EMPTY. A small restrained golden oak-leaf crest at the very top frame edge. No separate compartments, NO rows, NO buttons, NO words, NO text, NO symbols, NO icons, no scenery, no scroll parchment. Front view, warm jewel-like painterly game art, beautiful careful craftsmanship, coherent gold and deep emerald palette, not flat CSS rectangles. Fully visible panel, narrow transparent margin, no glow or shadow outside frame.",
+      "transparent_background": true
+    },
+    {
+      "source": "art/ui/settings_toggles_source_v01.png",
+      "prompt": "Use case: stylized-concept. Production UI SPRITE ATLAS with TWO matching horizontal toggle switches for a Slavic woodland fantasy game. TRUE TRANSPARENT alpha background. One switch centered in LEFT HALF cell, one in RIGHT HALF cell of a wide landscape canvas1536x768. Exactly two equal sized pill-shaped switches, each complete and separate, generous transparent gutters. Antique gold rim with tiny restrained oak twig accents, rich dark emerald enamel groove, round warm bronze-gold THUMB / KNOB with a small carved oak leaf relief. LEFT switch ON STATE: thumb on RIGHT end, emerald groove glowing gently jade green. RIGHT switch OFF STATE: thumb on LEFT end, groove dim smoky dark green, slightly muted metal. Both same design and dimensions, frontal view, hand-painted polished fantasy game art, very readable at90x40px, solid three-dimensional material. No letters, no words, no numbers, no labels, no text, no other UI or scenery. No rectangular frames behind switches, only isolated physical toggle objects.",
+      "transparent_background": true
+    }
+  ],
+  "outputs": [
+    "art/ui/home_settings_icon_v01.png",
+    "art/ui/settings_panel_v01.png",
+    "art/ui/settings_toggle_on_v01.png",
+    "art/ui/settings_toggle_off_v01.png"
+  ]
+}

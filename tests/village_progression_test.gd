@@ -117,7 +117,7 @@ func run_tests() -> void:
 	game.mastery_claims.clear()
 	game.event_marks = 0
 	game.finish_level("Test mistrzostwa")
-	assert(game.mastery_claims.has("6") and game.event_marks == 1)
+	assert(game.mastery_claims.has("6") and game.event_marks == 0)
 	var marks_before := game.event_marks
 	var wood_before := game.wood
 	game.state = "playing"

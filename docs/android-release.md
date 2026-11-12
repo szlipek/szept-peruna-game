@@ -34,3 +34,15 @@ Do Google Play preferowany jest pakiet AAB. Jeśli wybrany workflow tego wymaga,
 - zapis postępu po zamknięciu aplikacji;
 - poprawna nazwa, wersja i orientacja;
 - test podpisanego artefaktu w Google Play Console.
+
+## Rozmiar i kontrola zasobów
+
+Preset Android wyklucza materiały robocze, arkusze źródłowe i starsze warianty zasobów. Sześć zestawów starszych grafik budynków zastępują kompletne zestawy w `art/environments/building_levels_bright`; komplet należy zachować przy ich aktualizacji. Ustawienia importu portretów bohaterów, awatarów oraz teł drzewek używają kompresji stratnej z jakością 0,9. Oryginalne pliki PNG pozostają bez zmian.
+
+Po eksporcie sprawdź rzeczywistą paczkę APK:
+
+```powershell
+.\tools\verify_android_package.ps1 -ApkPath 'ścieżka\do\gry.apk'
+```
+
+Skrypt sprawdza zasoby odwoływane w kodzie, główne zasoby ładowane dynamicznie, muzykę, dane kampanii i biblioteki obu architektur. Nie zastępuje instalacji i testu na urządzeniu. Testową kompresję 81 tekstur można sprawdzić przez `tests/compact_textures_test.gd`; porównuje próbki z plikami źródłowymi.

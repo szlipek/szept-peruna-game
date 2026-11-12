@@ -70,10 +70,11 @@ const DEFAULT_LEVELS := [
 ]
 const TILE_COLORS := [Color("#c4523b"), Color("#4a92bd"), Color("#5f9c56"), Color("#d49a34"), Color("#8b61a8")]
 const TILE_SIGNS := ["✦", "≈", "♣", "◆", "ᚱ"]
-const HERO_RECRUIT_COSTS := {"brun": 1200, "mieta": 1500, "wszebor": 2200, "boruta": 2600, "dobromir": 3000, "milena": 3400, "radomir": 3800, "witosz": 4300, "jagna": 4800, "rada": 12, "welesa": 16, "zorya": 20, "jaromir": 24, "msciwoj": 28, "dobrawa": 32, "perunika": 36, "czernik": 40, "mirka": 44, "wlodzimierz": 48, "zywia": 4, "mokosza": 5, "stribog": 6, "swarog": 7, "weles": 8}
+const HERO_RECRUIT_COSTS := {"brun": 1200, "mieta": 1500, "wszebor": 2200, "boruta": 2600, "dobromir": 3000, "milena": 3400, "radomir": 3800, "witosz": 4300, "jagna": 4800, "rada": 12, "welesa": 16, "zorya": 20, "jaromir": 24, "msciwoj": 28, "dobrawa": 32, "perunika": 36, "czernik": 40, "mirka": 44, "wlodzimierz": 48, "zywia": 12, "mokosza": 16, "stribog": 20, "swarog": 24, "weles": 28}
 const HERO_SYNERGIES := {"lada": "Najlepiej z Dobromirem i Mokoszą", "brun": "Najlepiej z Borutą i Swarogiem", "mieta": "Najlepiej z Mileną i Mirką", "wszebor": "Najlepiej z Brunem i Mściwojem", "boruta": "Najlepiej z Brunem i Włodzimierzem", "dobromir": "Najlepiej z Ladą i Jagną", "milena": "Najlepiej z Mietą i Mokoszą", "radomir": "Najlepiej z Radą i Swarogiem", "witosz": "Najlepiej z Peruniką i Stribogiem", "jagna": "Najlepiej z Ladą i Dobromirem", "rada": "Najlepiej z Radomirem i Swarogiem", "welesa": "Najlepiej z Czernikiem i Welesem", "zorya": "Najlepiej z Peruniką i Ladą", "jaromir": "Najlepiej z Brunem i Dobrawą", "msciwoj": "Najlepiej z Wszeborem i Brunem", "dobrawa": "Najlepiej z Żywią i Jaromirem", "perunika": "Najlepiej z Witoszem i Zoryą", "czernik": "Najlepiej z Welesą i Welesem", "mirka": "Najlepiej z Mietą i Mileną", "wlodzimierz": "Najlepiej z Borutą i Brunem", "zywia": "Najlepiej z Dobrawą i Welesem", "mokosza": "Najlepiej z Mietą i Dobromirem", "stribog": "Najlepiej z Witoszem i Peruniką", "swarog": "Najlepiej z Brunem i Radomirem", "weles": "Najlepiej z Welesą i Żywią"}
 const HERO_SYNERGY_PAIRS := [["lada", "dobromir"], ["lada", "mokosza"], ["lada", "zorya"], ["brun", "boruta"], ["brun", "swarog"], ["brun", "wszebor"], ["brun", "jaromir"], ["brun", "msciwoj"], ["brun", "wlodzimierz"], ["mieta", "milena"], ["mieta", "mirka"], ["mieta", "mokosza"], ["dobromir", "jagna"], ["radomir", "rada"], ["radomir", "swarog"], ["witosz", "perunika"], ["witosz", "stribog"], ["perunika", "zorya"], ["jaromir", "dobrawa"], ["dobrawa", "zywia"], ["welesa", "czernik"], ["welesa", "weles"], ["czernik", "weles"], ["zywia", "weles"]]
 const LEGENDARY_EVENT_MARK_COST := 4
+const LEGENDARY_SPARK_MILESTONES := {25: 12, 175: 16, 325: 20, 475: 24, 625: 28}
 const ENEMY_ROLES := {
 	"Cień mchu": "scout", "Kruczy posłaniec": "scout", "Popielny chochlik": "scout", "Bursztynowy chrząszcz": "scout", "Zimny chochlik": "scout", "Mroczna ćma": "scout", "Duch jaru": "scout",
 	"Korzeniowy strażnik": "defender", "Ropuch kurhanów": "defender", "Kamienny gąsienicznik": "defender", "Dąbrowy drwal widmo": "defender", "Gliniany sługa": "defender", "Strażnik totemu": "defender", "Kościany kurhanek": "defender", "Korzeń Leszego": "defender", "Korzeń gniewu": "defender",
@@ -390,6 +391,29 @@ var village_upgrade_time := 0.0
 const VILLAGE_UPGRADE_DURATION := 1.0
 var map_open := false
 var map_page := 0
+var map_shrine_open := false
+var map_shrine_claimed := false
+var weekly_challenge_claimed := ""
+var endless_stage := 0
+var endless_choice_open := false
+var achievements_open := false
+var achievements_page := 0
+var achievement_icons := {}
+const ACHIEVEMENT_ICONS := [
+	"brun_moc_2", "dobromir_opieka_1", "witosz_splot_1", "lada_splot_0",
+	"lada_moc_0", "zorya_splot_1", "perunika_master_0", "dobromir_splot_0",
+	"brun_opieka_1", "wszebor_moc_1", "stribog_splot_2", "weles_splot_2",
+	"lada_opieka_0", "lada_moc_1", "lada_master_0", "brun_master_1",
+	"mieta_opieka_2", "weles_master_2", "milena_splot_0", "mokosza_master_1",
+	"jagna_moc_0", "radomir_splot_1", "czernik_master_2", "zorya_moc_1",
+	"zorya_master_0", "perunika_moc_2", "boruta_master_0", "jaromir_opieka_2",
+	"stribog_master_0", "weles_moc_2", "brun_master_2", "swarog_master_0",
+	"mokosza_opieka_2", "mirka_splot_0", "welesa_master_0", "rada_splot_1",
+	"dobrawa_splot_2", "wszebor_master_2"
+]
+var cascade_cosmetic := false
+var seen_boss_tutorials := {}
+var active_boss_tutorial_id := 0
 var map_transition_from_page := 0
 var map_transition_time := 0.4
 var map_transition_direction := 1.0
@@ -424,6 +448,8 @@ var weekly_missions: Array = []
 var daily_mission_history: Array = []
 var weekly_mission_history: Array = []
 var battle_combo_count := 0
+var battle_obstacles_cleared := 0
+var battle_booster_used := false
 var bestiary_region_index := 0
 var bestiary_page := 0
 var bestiary_region_catalog := {}
@@ -455,6 +481,7 @@ var ad_interstitials_today := 0
 var campaign_wins_since_interstitial := 0
 var daily_ad_bonus_day := ""
 var pending_ad_resume_level := -1
+var pending_victory_interstitial := false
 var pending_rewarded_bonus := false
 var ads_manager: Node
 var oak_borderland_background: Texture2D
@@ -472,6 +499,7 @@ var village_popup_close_button: Texture2D
 var village_upgrade_vfx_frames: Texture2D
 var village_upgrade_alert_icon: Texture2D
 var village_starting_illustrations := {}
+var village_unbuilt_plot: Texture2D
 var village_upgraded_illustrations := {}
 var village_level_illustrations := {}
 var leszy_portrait: Texture2D
@@ -574,6 +602,10 @@ var home_reward_wood_frames: Texture2D
 var home_reward_xp_frames: Texture2D
 var home_reward_premium_chest: Texture2D
 var home_help_icon: Texture2D
+var home_settings_icon: Texture2D
+var settings_panel_art: Texture2D
+var settings_toggle_on_art: Texture2D
+var settings_toggle_off_art: Texture2D
 var bestiary_icon: Texture2D
 var bestiary_background: Texture2D
 var home_navigation_frame: Texture2D
@@ -608,6 +640,14 @@ var damage_popup_value := 0
 var enemy_damage_popup_time := 0.0
 var enemy_damage_popup_value := 0
 var enemy_damage_popup_index := -1
+var player_action_damage_dealt := 0
+var wolf_charge := 0
+var wolf_warded := false
+var baba_curse_pending := false
+var baba_curse_warded := false
+var battle_best_cascade := 0
+var cascade_display_count := 0
+var cascade_display_time := 0.0
 var enemy_action_cells: Array[Vector2i] = []
 var enemy_action_phase := 0
 var board_shuffle_time := 0.0
@@ -646,6 +686,7 @@ func _ready() -> void:
 	for stage in 3:
 		village_sawmill_stages.append(load_image_texture("res://art/environments/building_tartak_dry_stage_%02d.png" % (stage + 1)))
 	village_inspector_frame = load_image_texture("res://art/ui/village_inspector_frame_v01.png")
+	village_unbuilt_plot = load_image_texture("res://art/environments/village_unbuilt_plot_v01.png")
 	village_popup_close_button = load_image_texture("res://art/ui/village_popup_close_button_v01.png")
 	village_upgrade_vfx_frames = load_image_texture("res://art/vfx/village_upgrade_vfx_frames_v01.png")
 	village_upgrade_alert_icon = load_image_texture("res://art/ui/village_upgrade_alert_icon_v01.png")
@@ -787,6 +828,10 @@ func _ready() -> void:
 	home_reward_xp_frames = load_image_texture("res://art/ui/home_reward_xp_chest_frames_v03.png")
 	home_reward_premium_chest = load_image_texture("res://art/ui/home_reward_premium_chest_v01.png")
 	home_help_icon = load_image_texture("res://art/ui/home_help_icon_v01.png")
+	home_settings_icon = load_image_texture("res://art/ui/home_settings_icon_v01.png")
+	settings_panel_art = load_image_texture("res://art/ui/settings_panel_v01.png")
+	settings_toggle_on_art = load_image_texture("res://art/ui/settings_toggle_on_v01.png")
+	settings_toggle_off_art = load_image_texture("res://art/ui/settings_toggle_off_v01.png")
 	bestiary_icon = load_image_texture("res://art/ui/bestiary_icon_v01.png")
 	bestiary_background = load_image_texture("res://art/environments/bestiary_background_v01.png")
 	home_navigation_frame = load_image_texture("res://art/ui/home_navigation_backdrop_v01.png")
@@ -867,6 +912,7 @@ func setup_ads_manager() -> void:
 	if ads_manager == null:
 		return
 	ads_manager.interstitial_closed.connect(_on_interstitial_closed)
+	ads_manager.interstitial_shown.connect(_on_interstitial_shown)
 	ads_manager.rewarded_ad_completed.connect(_on_rewarded_ad_completed)
 	ads_manager.rewarded_ad_closed.connect(_on_rewarded_ad_closed)
 	ads_manager.ad_availability_changed.connect(queue_redraw)
@@ -885,12 +931,22 @@ func campaign_ads_unlocked() -> bool:
 	return not training_mode and int(levels[level_index].get("id", level_index + 1)) > 5
 
 func _on_interstitial_closed() -> void:
+	pending_victory_interstitial = false
 	if pending_ad_resume_level < 0:
 		return
 	var next_level := pending_ad_resume_level
 	pending_ad_resume_level = -1
 	if state == "won" and next_level < levels.size():
 		start_level(next_level)
+
+func _on_interstitial_shown() -> void:
+	if not pending_victory_interstitial:
+		return
+	pending_victory_interstitial = false
+	refresh_ad_day()
+	ad_interstitials_today += 1
+	campaign_wins_since_interstitial = 0
+	save_progress()
 
 func _on_rewarded_ad_completed() -> void:
 	if pending_daily_chest_bonus:
@@ -980,6 +1036,9 @@ func _process(delta: float) -> void:
 		damage_popup_time = maxf(0.0, damage_popup_time - delta)
 	if enemy_damage_popup_time > 0.0:
 		enemy_damage_popup_time = maxf(0.0, enemy_damage_popup_time - delta)
+	if cascade_display_time > 0.0:
+		cascade_display_time = maxf(0.0, cascade_display_time - delta)
+		queue_redraw()
 	if enemy_attack_anim > 0.0:
 		enemy_attack_anim = maxf(0.0, enemy_attack_anim - delta)
 		queue_redraw()
@@ -1154,11 +1213,20 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	var level: Dictionary = level_override if not level_override.is_empty() else levels[level_index]
 	current_battle = level.duplicate(true)
 	battle_moves = 0
+	wolf_charge = 0
+	wolf_warded = false
+	baba_curse_pending = false
+	baba_curse_warded = false
+	battle_best_cascade = 0
+	cascade_display_count = 0
+	cascade_display_time = 0.0
 	battle_started_ms = Time.get_ticks_msec()
 	var attempt_key := "expedition_attempts" if bool(level.get("expedition", false)) else ("training_attempts" if training_mode else "campaign_attempts")
 	balance_stats[attempt_key] = int(balance_stats.get(attempt_key, 0)) + 1
 	score = 0
 	battle_combo_count = 0
+	battle_obstacles_cleared = 0
+	battle_booster_used = false
 	bonus_moves_pending = 0
 	state = "playing"
 	lada_charge = 0
@@ -1237,7 +1305,23 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 			active_region_intro = REGION_CHAPTERS[chapter_key]
 			active_region_intro_key = "chapter_%s" % chapter_key
 			region_intro_open = true
+	active_boss_tutorial_id = 0
+	var boss_lesson := boss_tutorial_text(intro_level_id) if not training_mode else ""
+	if boss_lesson != "" and not bool(seen_boss_tutorials.get(str(intro_level_id), false)):
+		active_boss_tutorial_id = intro_level_id
+		if active_story_dialogue.is_empty():
+			active_region_intro_key = "boss_%d" % intro_level_id
+		active_story_dialogue.append({"speaker": "Lada", "portrait": "lada", "text": boss_lesson})
+		region_intro_open = true
 	queue_redraw()
+
+func boss_tutorial_text(level_id: int) -> String:
+	match level_id:
+		5: return "Leszy przywołuje korzenie. Łącz znaki na nich, aby je usuwać."
+		10: return "Wilk szykuje silny atak co trzy tury. Połącz trzy liście, aby rozproszyć jego cień."
+		30: return "Rusałka przemienia znaki w wodę. Łącz wodę, aby leczyć aktywnego bohatera."
+		65: return "Baba Jaga zapowiada klątwę. Połącz trzy runy przed jej atakiem, aby ją odeprzeć."
+	return ""
 
 func load_image_texture(file_path: String) -> Texture2D:
 	# Opcjonalne portrety i efekty mogą pojawiać się etapami rozwoju gry.
@@ -1614,14 +1698,25 @@ func handle_release(position: Vector2) -> void:
 	if player_cascade_active:
 		touch_start = Vector2i(-1, -1)
 		return
+	if endless_choice_open:
+		handle_endless_choice(position)
+		return
 	if victory_screen_open:
+		if pending_rewarded_bonus:
+			return
+		if victory_reward_available() and victory_reward_rect().has_point(position):
+			show_rewarded_coin_bonus()
+			return
 		if victory_continue_rect().has_point(position):
 			victory_screen_open = false
+			var show_campaign_ad := campaign_ads_unlocked() and not bool(current_battle.get("expedition", false))
 			training_mode = false
 			if bool(current_battle.get("expedition", false)):
 				open_forest_expeditions()
 			else:
 				main_menu_open = true
+			if show_campaign_ad:
+				show_victory_interstitial()
 			queue_redraw()
 		return
 	if player_opening.stage != "":
@@ -1790,6 +1885,9 @@ func advance_story_dialogue(skip_scene: bool) -> void:
 		queue_redraw()
 		return
 	region_intro_open = false
+	if active_boss_tutorial_id > 0:
+		seen_boss_tutorials[str(active_boss_tutorial_id)] = true
+		active_boss_tutorial_id = 0
 	var scene_id := int(active_region_intro_key.trim_prefix("story_")) if active_region_intro_key.begins_with("story_") else -1
 	if scene_id >= 0:
 		seen_campaign_scenes[scene_id] = true
@@ -1819,7 +1917,7 @@ func handle_tile_click(cell: Vector2i) -> void:
 	if selected_cell.x < 0:
 		selected_cell = cell
 		message = ""
-		clear_move_preview()
+		refresh_move_preview()
 	elif selected_cell == cell:
 		selected_cell = Vector2i(-1, -1)
 		clear_move_preview()
@@ -1832,7 +1930,7 @@ func handle_tile_click(cell: Vector2i) -> void:
 	else:
 		selected_cell = cell
 		message = ""
-		clear_move_preview()
+		refresh_move_preview()
 	queue_redraw()
 
 func activate_special_tile(cell: Vector2i) -> void:
@@ -1875,6 +1973,9 @@ func try_swap(a: Vector2i, b: Vector2i) -> void:
 		return
 	selected_cell = Vector2i(-1, -1)
 	clear_move_preview()
+	if int(special_tiles[a.y][a.x]) > 0 and int(special_tiles[b.y][b.x]) > 0:
+		await activate_special_pair(a, b)
+		return
 	swap_tiles(a, b)
 	var matches := find_matches()
 	if matches.is_empty():
@@ -1925,6 +2026,34 @@ func try_swap(a: Vector2i, b: Vector2i) -> void:
 				return
 		if not message.contains("KOMBO") and not message.contains("ULTRA"):
 			message = last_enemy_attack_text if last_enemy_attack_text != "" else "Dobra kombinacja!"
+	queue_redraw()
+
+func special_pair_cells(a: Vector2i, b: Vector2i) -> Dictionary:
+	var result := {}
+	for origin in [a, b]:
+		var kind := int(special_tiles[origin.y][origin.x])
+		var element := int(board[origin.y][origin.x])
+		for row in BOARD_SIZE:
+			for col in BOARD_SIZE:
+				if int(board[row][col]) < 0:
+					continue
+				if (kind == 1 and absi(col - origin.x) <= 2 and absi(row - origin.y) <= 2) or (kind == 2 and int(board[row][col]) == element):
+					result[Vector2i(col, row)] = true
+	return result
+
+func activate_special_pair(a: Vector2i, b: Vector2i) -> void:
+	var struck := special_pair_cells(a, b)
+	for key in struck:
+		var cell: Vector2i = key
+		special_tiles[cell.y][cell.x] = 0
+	battle_moves += 1
+	side_objective_met = side_objective_met or (side_objective_level_id >= 0 and side_objective_kind(side_objective_level_id) == "ability")
+	play_audio_event("match_4_5", 1050.0, 0.22, 0.24)
+	await resolve_matches(struck, 0, false, [], false, 1.5)
+	if is_level_complete():
+		finish_level("Połączenie specjalnych znaków rozstrzygnęło starcie.")
+	else:
+		await finish_special_turn("Połączenie specjalnych znaków uwalnia ich wspólną moc!")
 	queue_redraw()
 
 func animate_swap(a: Vector2i, b: Vector2i) -> void:
@@ -2015,6 +2144,7 @@ func activate_hero_branch_skill(branch: int) -> void:
 		message = "%s potrzebuje jeszcze %d energii żywiołu." % [skill_name, cost - charge]
 		queue_redraw()
 		return
+	player_action_damage_dealt = 0
 	side_objective_met = side_objective_met or side_objective_kind(side_objective_level_id) == "ability"
 	hero_active_charge[hero_id] = charge - cost
 	play_audio_event(hero_skill_audio_event(hero_id), 740.0, 0.18, 0.18)
@@ -2091,6 +2221,7 @@ func refresh_survival_wave() -> void:
 func activate_hammer(target: Vector2i) -> void:
 	hammer_targeting = false
 	hammer_count -= 1
+	battle_booster_used = true
 	side_objective_met = side_objective_met or side_objective_kind(side_objective_level_id) == "ability"
 	var struck := {}
 	for row in range(maxi(0, target.y - 1), mini(BOARD_SIZE, target.y + 2)):
@@ -2107,6 +2238,7 @@ func activate_bolt(target: Vector2i) -> void:
 	play_audio_event("skill_activate_thunder", 740.0, 0.18, 0.18)
 	bolt_targeting = false
 	bolt_count -= 1
+	battle_booster_used = true
 	side_objective_met = side_objective_met or side_objective_kind(side_objective_level_id) == "ability"
 	var struck := {}
 	for col in BOARD_SIZE:
@@ -2122,6 +2254,7 @@ func activate_gale(target: Vector2i) -> void:
 	play_audio_event("skill_activate_wind", 640.0, 0.18, 0.18)
 	gale_targeting = false
 	gale_count -= 1
+	battle_booster_used = true
 	side_objective_met = side_objective_met or side_objective_kind(side_objective_level_id) == "ability"
 	var selected_type: int = board[target.y][target.x]
 	var struck := {}
@@ -2137,59 +2270,61 @@ func activate_gale(target: Vector2i) -> void:
 	queue_redraw()
 
 func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_special := false, preferred_cells: Array = [], grant_bonus_move := false, special_multiplier := 1.0) -> void:
+	# Limit obrażeń dotyczy każdej fali osobno, także kolejnych kaskad.
+	player_action_damage_dealt = 0
 	player_cascade_active = true
 	hinted_cells.clear()
 	idle_hint_time = 0.0
 	var chain := 1
 	var cascade_steps := 0
 	while not matches.is_empty() and cascade_steps < MAX_CASCADE_STEPS:
-		var has_five := false
-		var has_four := false
+		player_action_damage_dealt = 0
+		var line_five := {}
+		var line_four := {}
 		var has_square := false
+		var cross_centers := {}
 		if is_equal_approx(special_multiplier, 1.0):
-			for key in matches:
-				var match_cell: Vector2i = key
-				for length in [5, 4]:
-					if match_cell.x + length <= BOARD_SIZE:
-						var horizontal_ok := true
-						for step in length:
-							if not matches.has(Vector2i(match_cell.x + step, match_cell.y)):
-								horizontal_ok = false
-						if horizontal_ok:
-							has_five = has_five or length == 5
-							has_four = has_four or length == 4
-					if match_cell.y + length <= BOARD_SIZE:
-						var vertical_ok := true
-						for step in length:
-							if not matches.has(Vector2i(match_cell.x, match_cell.y + step)):
-								vertical_ok = false
-						if vertical_ok:
-							has_five = has_five or length == 5
-							has_four = has_four or length == 4
-				if matches.has(Vector2i(match_cell.x + 1, match_cell.y)) and matches.has(Vector2i(match_cell.x, match_cell.y + 1)) and matches.has(Vector2i(match_cell.x + 1, match_cell.y + 1)):
-					has_square = true
-		if has_four or has_five or has_square:
+			line_five = matched_line_cells(matches, 5)
+			line_four = matched_line_cells(matches, 4)
+			has_square = matched_square_exists(matches)
+			if can_create_special:
+				cross_centers = matched_cross_centers(matches)
+		for center in cross_centers:
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var affected: Vector2i = center + Vector2i(dx, dy)
+					if affected.x >= 0 and affected.y >= 0 and affected.x < BOARD_SIZE and affected.y < BOARD_SIZE and int(board[affected.y][affected.x]) >= 0:
+						matches[affected] = true
+		var has_five := not line_five.is_empty()
+		var has_four := not line_four.is_empty()
+		var has_cross := not cross_centers.is_empty()
+		if has_four or has_five or has_square or has_cross:
 			play_audio_event("match_4_5", 920.0, 0.18, 0.20)
 		elif cascade_steps == 0:
 			play_audio_event("match_3", 720.0, 0.12, 0.20)
 		if cascade_steps > 0:
+			cascade_display_count = chain
+			cascade_display_time = 1.2
 			play_audio_event("tile_cascade", 650.0, 0.08, 0.10)
 		var special_kind_to_create := 2 if can_create_special and has_five else (1 if can_create_special and has_four else 0)
-		var special_cell_to_create := choose_special_creation_cell(matches, preferred_cells) if special_kind_to_create > 0 else Vector2i(-1, -1)
+		var special_line := line_five if special_kind_to_create == 2 else line_four
+		var special_cell_to_create := choose_special_creation_cell(special_line, preferred_cells) if special_kind_to_create > 0 else Vector2i(-1, -1)
 		if special_kind_to_create > 0 and special_cell_to_create.x < 0:
 			special_kind_to_create = 0
 		if grant_bonus_move and (has_four or has_five):
 			bonus_moves_pending += 1
-		if side_objective_level_id >= 0 and side_objective_kind(side_objective_level_id) == "combo" and (has_four or has_five or has_square):
+		if side_objective_level_id >= 0 and side_objective_kind(side_objective_level_id) == "combo" and (has_four or has_five or has_square or has_cross):
 			side_objective_met = true
-		if has_four or has_five or has_square:
+		if has_four or has_five or has_square or has_cross:
 			battle_combo_count += 1
-		if has_five:
-			message = "KAFEL GLOBALNY! Dotknij go, by usunąć wszystkie znaki tego żywiołu."
+		if has_cross:
+			message = "KOMBO T/L — fala usuwa otaczające znaki!"
+		elif has_five:
+			message = "KAFEL GLOBALNY! Dotknij go, by usunąć wszystkie znaki tego żywiołu." if special_kind_to_create == 2 else "PIĄTKA — dodatkowe obrażenia!"
 		elif has_square:
-			message = "KOMBO KWADRAT — fala uderzeniowa niszczy otoczenie!"
+			message = "KOMBO KWADRAT — dodatkowe obrażenia!"
 		elif has_four:
-			message = "KAFEL WYBUCHOWY! Dotknij go, by uderzyć w obszarze 5×5."
+			message = "KAFEL WYBUCHOWY! Dotknij go, by uderzyć w obszarze 5×5." if special_kind_to_create == 1 else "CZWÓRKA — dodatkowe obrażenia!"
 		var gained := matches.size() * 25 * chain
 		if matches.size() >= 4:
 			gained += 50 * chain
@@ -2225,6 +2360,7 @@ func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_
 			else:
 				if obstacle_health > 0:
 					obstacles[cell.y][cell.x] = 0
+					battle_obstacles_cleared += 1
 					if goal_type == "clear_obstacles":
 						goal_progress += 1
 			if cell == special_cell_to_create:
@@ -2233,6 +2369,10 @@ func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_
 				removal_effects[cell] = 0.0
 				board[cell.y][cell.x] = -1
 				special_tiles[cell.y][cell.x] = 0
+		if leaf_count >= 3 and living_named_boss("Wilk cienia"):
+			wolf_warded = true
+		if rune_count >= 3 and baba_curse_pending and living_named_boss("Baba Jaga z Żelaznego Boru"):
+			baba_curse_warded = true
 		lada_charge = mini(LADA_MAX_CHARGE, lada_charge + leaf_count)
 		brun_charge = mini(BRUN_MAX_CHARGE, brun_charge + fire_count)
 		mieta_charge = mini(MIETA_MAX_CHARGE, mieta_charge + water_count)
@@ -2244,6 +2384,10 @@ func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_
 		var hero_extra_shield := 0
 		var talent_damage := 0
 		var element_counts := [fire_count, water_count, leaf_count, amber_count, rune_count]
+		if active_heroes.has("lada") and active_heroes.has("brun") and leaf_count > 0 and fire_count > 0:
+			hero_bonus_damage += 10
+		if active_heroes.has("mieta") and active_heroes.has("zywia") and leaf_count > 0 and water_count > 0:
+			hero_extra_shield += 4
 		for skill_hero_id in active_heroes:
 			var skill_tree: Dictionary = hero_trees.get(skill_hero_id, {})
 			var favored_count: int = element_counts[SkillTree.element(skill_hero_id)]
@@ -2343,6 +2487,13 @@ func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_
 					party_shield += leaf_count * 2
 					region_bonus_damage += rune_count * 3
 					region_effect_text = "Korona Drzewa Świata jednoczy liście i runy."
+		var weekly_modifier := str(current_battle.get("weekly_modifier", ""))
+		if weekly_modifier == "water":
+			water_healing *= 2
+		elif weekly_modifier == "leaf":
+			hero_extra_shield += leaf_count * 2
+		elif weekly_modifier == "rune":
+			region_bonus_damage += rune_count * 3
 		heal_hero(current_turn_hero(), water_healing)
 		party_shield += leaf_count * (2 + int(building_levels["swiety_gaj"])) + hero_extra_shield + synergy_count
 		if region_effect_text != "" and chain == 1:
@@ -2388,6 +2539,7 @@ func resolve_matches(matches: Dictionary, initial_bonus_damage := 0, can_create_
 		matches = find_matches()
 		chain += 1
 		cascade_steps += 1
+	battle_best_cascade = maxi(battle_best_cascade, cascade_steps)
 	# Długa kaskada nie jest powodem do przetasowania. Po zwiększeniu limitu
 	# pozostawiamy planszę w jej rzeczywistym stanie, zamiast wyglądać jak reset.
 	if not board_has_legal_move():
@@ -2414,7 +2566,7 @@ func choose_special_creation_cell(matches: Dictionary, preferred_cells: Array) -
 func enemy_match_value(matches: Dictionary) -> int:
 	# Ta sama wartość, która jest później naliczana przez wrogą kaskadę.
 	var value := matches.size() * 5
-	if matches.size() >= 5:
+	if matched_line_exists(matches, 5):
 		value += 60
 	return value
 
@@ -2512,15 +2664,26 @@ func finish_level(success_message: String) -> void:
 	state = "won"
 	play_audio_event("victory_sting", 880.0, 0.32, 0.24)
 	last_stars = calculate_stars()
+	balance_stats["best_cascade"] = maxi(int(balance_stats.get("best_cascade", 0)), battle_best_cascade)
+	if bool(current_battle.get("endless", false)):
+		balance_stats["endless_best"] = maxi(int(balance_stats.get("endless_best", 0)), endless_stage)
+		endless_choice_open = true
+		queue_redraw()
+		return
 	if training_mode:
 		grant_training_reward()
 		save_progress()
-		message = "%s %s" % [success_message, "Drewno dostarczono do osady. Wyprawę można powtarzać bez limitu." if bool(current_battle.get("expedition", false)) else "Aktywny skład otrzymuje PD — trening można powtarzać bez ograniczeń."]
+		var training_message := "Drewno dostarczono do osady. Wyprawę można powtarzać bez limitu." if bool(current_battle.get("expedition", false)) else "Aktywny skład otrzymuje PD — trening można powtarzać bez ograniczeń."
+		if bool(current_battle.get("weekly_challenge", false)):
+			training_message = "Nagrodę za to wyzwanie można odebrać raz w tygodniu."
+		message = "%s %s" % [success_message, training_message]
 		main_menu_open = true
 		victory_screen_open = true
 		victory_open_time = ui_anim_time
 		return
 	var level_id := int(levels[level_index].get("id", level_index + 1))
+	if not battle_booster_used:
+		balance_stats["wins_no_booster"] = int(balance_stats.get("wins_no_booster", 0)) + 1
 	var first_campaign_clear := int(level_stars.get(level_id, 0)) == 0
 	level_stars[level_id] = maxi(int(level_stars.get(level_id, 0)), last_stars)
 	var previously_unlocked := unlocked_level
@@ -2537,7 +2700,6 @@ func finish_level(success_message: String) -> void:
 		last_reward["wood"] = rebuilding_wood
 	if last_stars == 3 and not bool(mastery_claims.get(str(level_id), false)):
 		mastery_claims[str(level_id)] = true
-		event_marks += 1
 		coins += 100
 		last_reward["coins"] = int(last_reward.get("coins", 0)) + 100
 		last_reward["mastery"] = true
@@ -2561,10 +2723,12 @@ func finish_level(success_message: String) -> void:
 	extra_coins += regional_codex_coins
 	coins += extra_coins
 	last_reward["coins"] = int(last_reward.get("coins", 0)) + extra_coins
-	var gained_spark := grant_boss_spark()
+	var gained_sparks := grant_boss_spark()
 	var gained_event_mark := grant_event_mark()
-	last_reward["sparks"] = 1 if gained_spark else 0
-	last_reward["event_marks"] = (1 if gained_event_mark else 0) + (1 if bool(last_reward.get("mastery", false)) else 0)
+	var premium_spark := 1 if first_campaign_clear and is_boss_level(levels[level_index]) else 0
+	perun_sparks += premium_spark
+	last_reward["sparks"] = premium_spark
+	last_reward["event_marks"] = gained_sparks + (1 if gained_event_mark else 0)
 	var mission_rewards := advance_missions()
 	coins += int(mission_rewards.get("coins", 0))
 	last_reward["coins"] = int(last_reward.get("coins", 0)) + int(mission_rewards.get("coins", 0))
@@ -2572,7 +2736,7 @@ func finish_level(success_message: String) -> void:
 	save_progress()
 	message = success_message
 	if bool(last_reward.get("mastery", false)):
-		message += " Mistrzostwo: +100 monet i Znak Wyprawy!"
+		message += " Mistrzostwo: +100 monet!"
 	if side_goal_complete:
 		message += " Cel dodatkowy ukończony%s." % (" — +150 monet" if side_goal_reward_granted else " ponownie!")
 	if int(mission_rewards.get("coins", 0)) > 0:
@@ -2605,6 +2769,16 @@ func enemy_take_turn() -> void:
 	enemy_turn_active = true
 	animation_busy = true
 	var obstacle_effect_text := apply_obstacle_powers()
+	if living_named_boss("Leszy") and obstacle_count(1) < 4:
+		var free_cells: Array[Vector2i] = []
+		for row in BOARD_SIZE:
+			for col in BOARD_SIZE:
+				if int(obstacles[row][col]) == 0 and int(board[row][col]) >= 0:
+					free_cells.append(Vector2i(col, row))
+		if not free_cells.is_empty():
+			var new_root: Vector2i = free_cells.pick_random()
+			obstacles[new_root.y][new_root.x] = 1
+			obstacle_effect_text = "Leszy przywołał korzeń — usuń go połączeniem."
 	var attacks: Array[int] = []
 	var enrage_text := ""
 	for enemy in enemies:
@@ -2618,6 +2792,25 @@ func enemy_take_turn() -> void:
 				enemy_attack_value += maxi(3, int(enemy_attack_value / 2))
 			attacks.append(enemy_attack_value)
 	var total_attack := combined_enemy_attack(attacks)
+	if living_named_boss("Wilk cienia"):
+		if wolf_warded:
+			wolf_charge = 0
+			obstacle_effect_text = "Liście rozproszyły cień Wilka!"
+		else:
+			wolf_charge += 1
+			if wolf_charge >= 3:
+				total_attack += 12
+				wolf_charge = 0
+				obstacle_effect_text = "Wilk uderza z cienia!"
+		wolf_warded = false
+	if living_named_boss("Baba Jaga z Żelaznego Boru"):
+		var curse_damage := advance_baba_curse()
+		if curse_damage > 0:
+			total_attack += curse_damage
+			obstacle_effect_text = "Klątwa Baby Jagi wzmacnia atak!"
+		elif baba_curse_warded:
+			obstacle_effect_text = "Runy odparły klątwę Baby Jagi!"
+		baba_curse_warded = false
 	var curse_count := obstacle_count(3)
 	if curse_count > 0:
 		total_attack += curse_count * 2
@@ -2653,9 +2846,14 @@ func enemy_take_turn() -> void:
 		await wait_for_board_to_settle()
 	enemy_action_cells.clear()
 	enemy_action_phase = 0
+	if rusalka_water_spell() > 0:
+		obstacle_effect_text = "Rusałka przemienia znaki w wodę — wykorzystaj ją do leczenia."
 	# Kombinacja przeciwnika ma realnie zagrażać drużynie, ale pozostawiać czas
 	# na reakcję i leczenie. Runy nadal mogą osłabić ten atak.
 	var total_damage := maxi(0, total_attack + int(round(float(combo_damage) * 0.35)) - enemy_attack_weakened)
+	# Nawet wyjątkowo długa kaskada wroga musi zostawić czas na reakcję.
+	# Tarcza pochłania obrażenia już po zastosowaniu ograniczenia.
+	total_damage = mini(total_damage, maxi(1, int(round(float(hero_max_health.get(target_hero, 1)) * 0.35))))
 	enemy_attack_weakened = 0
 	var absorbed := mini(party_shield, total_damage)
 	party_shield -= absorbed
@@ -2683,6 +2881,40 @@ func refresh_party_health() -> void:
 		party_health += int(hero_health[hero_id])
 		party_max_health += int(hero_max_health[hero_id])
 
+func living_named_boss(boss_name: String) -> bool:
+	for enemy in enemies:
+		if str(enemy.get("name", "")) == boss_name and int(enemy.get("health", 0)) > 0:
+			return true
+	return false
+
+func advance_baba_curse() -> int:
+	# Po pierwszym ataku zapowiada klątwę na następną turę. Runy chronią
+	# całą drużynę, także gdy gracz zyskuje dodatkowe ruchy.
+	var damage := 12 if baba_curse_pending and not baba_curse_warded else 0
+	baba_curse_pending = true
+	return damage
+
+func rusalka_water_spell() -> int:
+	if not living_named_boss("Rusałka z Czarnego Stawu"):
+		return 0
+	var candidates: Array[Vector2i] = []
+	for row in BOARD_SIZE:
+		for col in BOARD_SIZE:
+			if int(board[row][col]) >= 0 and int(board[row][col]) != 1 and int(special_tiles[row][col]) == 0:
+				candidates.append(Vector2i(col, row))
+	candidates.shuffle()
+	var changed := 0
+	for cell in candidates:
+		var old_tile: int = board[cell.y][cell.x]
+		board[cell.y][cell.x] = 1
+		if not find_matches().is_empty() or not board_has_legal_move():
+			board[cell.y][cell.x] = old_tile
+		else:
+			changed += 1
+			if changed >= 2:
+				break
+	return changed
+
 func hero_health_limit(hero_id: String) -> int:
 	var tree: Dictionary = hero_trees.get(hero_id, {})
 	return 90 + 18 * (maxi(1, int(hero_levels.get(hero_id, 1))) - 1) + 8 * int(building_levels["domostwa"]) + 4 * int(building_levels["chata_zielarki"]) + SkillTree.ranks(tree, 1, 2) * 3
@@ -2706,17 +2938,61 @@ func combined_enemy_attack(attacks: Array[int]) -> int:
 	return strongest + int(round((total - strongest) * 0.35))
 
 func matched_line_exists(matches: Dictionary, length: int) -> bool:
+	return not matched_line_cells(matches, length).is_empty()
+
+func matched_cross_centers(matches: Dictionary) -> Dictionary:
+	var centers := {}
 	for key in matches:
 		var cell: Vector2i = key
+		if cell.x < 0 or cell.y < 0 or cell.x >= BOARD_SIZE or cell.y >= BOARD_SIZE or int(board[cell.y][cell.x]) < 0:
+			continue
+		var tile := int(board[cell.y][cell.x])
+		var horizontal := 1
+		var vertical := 1
+		for direction in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var next: Vector2i = cell + direction
+			while next.x >= 0 and next.y >= 0 and next.x < BOARD_SIZE and next.y < BOARD_SIZE and matches.has(next) and int(board[next.y][next.x]) == tile:
+				if direction.x != 0: horizontal += 1
+				else: vertical += 1
+				next += direction
+		if horizontal >= 3 and vertical >= 3:
+			centers[cell] = true
+	return centers
+
+func matched_line_cells(matches: Dictionary, length: int) -> Dictionary:
+	var result := {}
+	for key in matches:
+		var cell: Vector2i = key
+		if cell.x < 0 or cell.y < 0 or cell.x >= BOARD_SIZE or cell.y >= BOARD_SIZE or int(board[cell.y][cell.x]) < 0:
+			continue
 		for direction in [Vector2i.RIGHT, Vector2i.DOWN]:
 			var complete := true
 			for step in length:
 				var next: Vector2i = cell + direction * step
-				if not matches.has(next) or board[next.y][next.x] < 0 or board[next.y][next.x] != board[cell.y][cell.x]:
+				if next.x >= BOARD_SIZE or next.y >= BOARD_SIZE or not matches.has(next) or board[next.y][next.x] != board[cell.y][cell.x]:
 					complete = false
 					break
 			if complete:
-				return true
+				for step in length:
+					result[cell + direction * step] = true
+	return result
+
+func matched_square_exists(matches: Dictionary) -> bool:
+	for key in matches:
+		var cell: Vector2i = key
+		if cell.x < 0 or cell.y < 0 or cell.x + 1 >= BOARD_SIZE or cell.y + 1 >= BOARD_SIZE:
+			continue
+		var tile := int(board[cell.y][cell.x])
+		if tile < 0:
+			continue
+		var square := [cell + Vector2i.RIGHT, cell + Vector2i.DOWN, cell + Vector2i.ONE]
+		var complete := true
+		for next in square:
+			if not matches.has(next) or int(board[next.y][next.x]) != tile:
+				complete = false
+				break
+		if complete:
+			return true
 	return false
 
 func sync_party_battle_health() -> void:
@@ -2825,6 +3101,11 @@ func deal_damage_to_enemies(amount: int, defender_damage_multiplier := 1.0) -> v
 	if damaged_index < 0:
 		return
 	var target: Dictionary = enemies[damaged_index]
+	var action_limit := maxi(1, int(round(float(target.get("max_health", target.get("health", 1))) * player_damage_fraction())))
+	var remaining_action_damage := action_limit - player_action_damage_dealt
+	if remaining_action_damage <= 0:
+		return
+	amount = mini(amount, remaining_action_damage)
 	var actual_damage := amount
 	var stone_count := obstacle_count(2)
 	if stone_count > 0:
@@ -2835,7 +3116,9 @@ func deal_damage_to_enemies(amount: int, defender_damage_multiplier := 1.0) -> v
 	if str(target.get("role", "attacker")) != "defender" and has_living_defender():
 		actual_damage = maxi(1, int(round(float(amount) * 0.55)))
 		target["guarded"] = true
+	actual_damage = mini(actual_damage, remaining_action_damage)
 	enemies[damaged_index]["health"] = maxi(0, int(enemies[damaged_index].get("health", 0)) - actual_damage)
+	player_action_damage_dealt += actual_damage
 	enemy_damage_popup_index = damaged_index
 	enemy_damage_popup_value = actual_damage
 	enemy_damage_popup_time = 0.9
@@ -2852,6 +3135,17 @@ func deal_damage_to_enemies(amount: int, defender_damage_multiplier := 1.0) -> v
 			target_enemy_index = next_index
 			target_transition = 1.0
 	sync_primary_enemy()
+
+func player_damage_fraction() -> float:
+	var level_sum := 0.0
+	var hero_count := 0
+	for hero_id in active_heroes:
+		level_sum += float(maxi(1, int(hero_levels.get(hero_id, 1))))
+		hero_count += 1
+	var average_level := level_sum / float(maxi(1, hero_count))
+	# Start: około cztery udane akcje na pokonanie celu. Wyszkolona drużyna
+	# odzyskuje tempo stopniowo, ale nawet wtedy nie dostaje pełnego one-shota.
+	return 0.28 + minf(maxf(0.0, average_level - 1.0) * 0.012, 0.30)
 
 func has_living_defender() -> bool:
 	for enemy in enemies:
@@ -2983,6 +3277,11 @@ func hero_selection_mark(hero_id: String) -> String:
 	return "•"
 
 func enemy_tactical_hint(enemy: Dictionary) -> String:
+	match str(enemy.get("name", "")):
+		"Leszy": return "Przywołuje korzenie. Łącz znaki na nich, aby je usunąć."
+		"Wilk cienia": return "Co 3 tury szykuje mocny atak. Połącz 3 liście, by go powstrzymać."
+		"Rusałka z Czarnego Stawu": return "Zamienia znaki w wodę. Łącz ją, aby leczyć bohatera."
+		"Baba Jaga z Żelaznego Boru": return "Zapowiada klątwę przed atakiem. Połącz 3 runy, by ją odeprzeć."
 	var attack := int(enemy.get("attack", 0))
 	var health := int(enemy.get("max_health", enemy.get("health", 0)))
 	var role := str(enemy.get("role", "attacker"))
@@ -2993,6 +3292,19 @@ func enemy_tactical_hint(enemy: Dictionary) -> String:
 	if role == "scout":
 		return "Zwiadowca: atak %d, wybiera najbardziej rannego bohatera." % attack
 	return "Napastnik: atak %d. Priorytetowy cel." % attack
+
+func boss_turn_hint() -> String:
+	if living_named_boss("Wilk cienia"):
+		return "CIEŃ ROZPROSZONY!" if wolf_warded else "CIEŃ %d/3 — POŁĄCZ LIŚCIE" % wolf_charge
+	if living_named_boss("Leszy"):
+		return "LESZY PRZYWOŁUJE KORZENIE"
+	if living_named_boss("Rusałka z Czarnego Stawu"):
+		return "RUSAŁKA PRZYWOŁUJE WODĘ"
+	if living_named_boss("Baba Jaga z Żelaznego Boru"):
+		if baba_curse_warded:
+			return "RUNY ODPĘDZAJĄ KLĄTWĘ"
+		return "KLĄTWA — POŁĄCZ 3 RUNY" if baba_curse_pending else "BABA JAGA SZYKUJE KLĄTWĘ"
+	return ""
 
 func campaign_reward(level: Dictionary) -> Dictionary:
 	var reward: Dictionary = level.get("rewards", {})
@@ -3066,6 +3378,11 @@ func claim_completed_bestiary_regions() -> int:
 	return reward_coins
 
 func side_objective_kind(level_id: int) -> String:
+	if level_id > 20:
+		match posmod(level_id, 6):
+			3: return "no_booster"
+			4: return "cascade"
+			5: return "obstacles"
 	match posmod(level_id, 3):
 		0: return "combo"
 		1: return "ability"
@@ -3075,19 +3392,28 @@ func side_objective_description(level_id: int) -> String:
 	match side_objective_kind(level_id):
 		"combo": return "Utwórz kombinację 4+"
 		"ability": return "Użyj umiejętności lub boostera"
+		"no_booster": return "Wygraj bez boostera"
+		"cascade": return "Wykonaj kaskadę 2×"
+		"obstacles": return "Oczyść 3 przeszkody"
 		_: return "Zakończ z 70% zdrowia drużyny"
 
 func side_objective_succeeded() -> bool:
 	if side_objective_level_id < 0:
 		return false
-	if side_objective_kind(side_objective_level_id) == "healthy":
-		return party_health * 10 >= party_max_health * 7
+	match side_objective_kind(side_objective_level_id):
+		"healthy": return party_health * 10 >= party_max_health * 7
+		"no_booster": return not battle_booster_used
+		"cascade": return battle_best_cascade >= 2
+		"obstacles": return battle_obstacles_cleared >= 3
 	return side_objective_met
 
 func side_objective_progress_text() -> String:
 	match side_objective_kind(side_objective_level_id):
 		"combo": return "%d / 1" % mini(1, battle_combo_count)
 		"ability": return "%d / 1" % (1 if side_objective_met else 0)
+		"no_booster": return "UŻYTO BOOSTERA" if battle_booster_used else "BEZ BOOSTERA"
+		"cascade": return "%d / 2" % mini(2, battle_best_cascade)
+		"obstacles": return "%d / 3" % mini(3, battle_obstacles_cleared)
 		"healthy":
 			var health_percent := int(round(float(party_health) * 100.0 / float(maxi(1, party_max_health))))
 			return "%d%% / 70%%" % health_percent
@@ -3215,6 +3541,11 @@ func draw_missions_overlay(screen: Vector2) -> void:
 		draw_texture_rect(home_missions_icon, Rect2(24.0, 20.0, 78.0, 78.0), false)
 	draw_string(font, Vector2(108.0, 59.0), "ZADANIA GAJU", HORIZONTAL_ALIGNMENT_LEFT, screen.x - 124.0, 23 if screen.x < 430.0 else 27, Color("#ffe5a4"))
 	draw_string(font, Vector2(108.0, 86.0), "Cele i nagrody za aktywną grę", HORIZONTAL_ALIGNMENT_LEFT, screen.x - 124.0, 12 if screen.x < 430.0 else 14, Color("#d7e4c8"))
+	draw_button(achievements_tab_rect(), "ZADANIA" if achievements_open else "OSIĄGNIĘCIA", true, 11)
+	if achievements_open:
+		draw_achievements(screen)
+		draw_button(missions_close_rect(), "POWRÓT", true, 16)
+		return
 	var wallet_kinds := ["coins", "wood", "experience", "sparks"]
 	var wallet_values := [coins, wood, experience, perun_sparks]
 	var wallet_width := 0.0
@@ -3239,6 +3570,164 @@ func draw_missions_overlay(screen: Vector2) -> void:
 		draw_mission_row(mission, y, true)
 		y += mission_row_stride()
 	draw_button(missions_close_rect(), "POWRÓT", true, 16)
+
+func achievements_tab_rect() -> Rect2:
+	return Rect2(get_viewport_rect().size.x - 152.0, 94.0, 138.0, 29.0)
+
+func achievements_cosmetic_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x * 0.5 - 145.0, screen.y - 142.0, 290.0, 42.0)
+
+func achievements_page_rect(direction: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x * 0.5 + (18.0 if direction > 0 else -130.0), screen.y - 205.0, 112.0, 42.0)
+
+func achievement_rows() -> Array:
+	var bosses := 0
+	var stars := 0
+	var cleared := 0
+	var perfect := 0
+	for level in levels:
+		var earned := int(level_stars.get(int(level.get("id", 0)), 0))
+		stars += earned
+		cleared += 1 if earned > 0 else 0
+		perfect += 1 if earned >= 3 else 0
+		if is_boss_level(level) and earned > 0:
+			bosses += 1
+	var heroes := 0
+	var best_hero := 0
+	var max_heroes := 0
+	var best_branch := 0
+	var complete_trees := 0
+	for hero_id in HERO_IDS:
+		if bool(owned_heroes.get(hero_id, false)):
+			heroes += 1
+			var hero_level := int(hero_levels.get(hero_id, 0))
+			best_hero = maxi(best_hero, hero_level)
+			if hero_level >= MAX_HERO_LEVEL:
+				max_heroes += 1
+			var tree: Dictionary = hero_trees.get(hero_id, {})
+			var completed_branches := 0
+			for branch in 3:
+				var ranks := SkillTree.branch_total(tree, branch)
+				best_branch = maxi(best_branch, ranks)
+				if ranks >= 16:
+					completed_branches += 1
+			if completed_branches == 3:
+				complete_trees += 1
+	var best_building := 0
+	var developed_buildings := 0
+	for building_id in building_levels:
+		var building_level := int(building_levels[building_id])
+		best_building = maxi(best_building, building_level)
+		if building_level >= 10:
+			developed_buildings += 1
+	var discovered := 0
+	for enemy_name in bestiary_seen:
+		if bool(bestiary_seen[enemy_name]):
+			discovered += 1
+	var side_goals := 0
+	for level_id in claimed_side_objectives:
+		if bool(claimed_side_objectives[level_id]):
+			side_goals += 1
+	return [
+		{"name": "Pogromca bossów", "description": "Pokonaj 10 różnych bossów", "value": bosses, "target": 10},
+		{"name": "Bez wspomagaczy", "description": "Wygraj 10 walk bez boostera", "value": int(balance_stats.get("wins_no_booster", 0)), "target": 10},
+		{"name": "Mistrz kaskad", "description": "Wykonaj kaskadę 3 fal", "value": int(balance_stats.get("best_cascade", 0)), "target": 3},
+		{"name": "Wędrowiec gaju", "description": "Pokonaj 5. falę wyprawy", "value": int(balance_stats.get("endless_best", 0)), "target": 5},
+		{"name": "Pierwsze szlaki", "description": "Ukończ 10 poziomów kampanii", "value": cleared, "target": 10},
+		{"name": "Pod gwiazdami", "description": "Zdobądź 50 gwiazdek", "value": stars, "target": 50},
+		{"name": "Doskonała wyprawa", "description": "Zdobądź 3 gwiazdki na 10 poziomach", "value": perfect, "target": 10},
+		{"name": "Drużyna gaju", "description": "Zwerbuj 5 bohaterów", "value": heroes, "target": 5},
+		{"name": "Budowniczy osady", "description": "Ulepsz budynki 10 razy", "value": int(balance_stats.get("building_upgrades", 0)), "target": 10},
+		{"name": "Strażnik puszczy", "description": "Wygraj 50 walk kampanii", "value": int(balance_stats.get("campaign_wins", 0)), "target": 50},
+		{"name": "Władca kaskad", "description": "Wykonaj kaskadę 6 fal", "value": int(balance_stats.get("best_cascade", 0)), "target": 6},
+		{"name": "W głąb puszczy", "description": "Pokonaj 15. falę wyprawy", "value": int(balance_stats.get("endless_best", 0)), "target": 15},
+		{"name": "Droga bohatera", "description": "Rozwiń bohatera do poziomu 10", "value": best_hero, "target": 10},
+		{"name": "Wybraniec gaju", "description": "Rozwiń bohatera do poziomu 25", "value": best_hero, "target": 25},
+		{"name": "Legenda Peruna", "description": "Osiągnij 50. poziom dowolnym bohaterem", "value": best_hero, "target": MAX_HERO_LEVEL},
+		{"name": "Drużyna legend", "description": "Rozwiń 3 bohaterów do poziomu 50", "value": max_heroes, "target": 3},
+		{"name": "Mistrzowska ścieżka", "description": "Wymaksuj gałąź talentów bohatera", "value": best_branch, "target": 16},
+		{"name": "Pełnia mocy", "description": "Wymaksuj całe drzewko jednego bohatera", "value": complete_trees, "target": 1},
+		{"name": "Wierni towarzysze", "description": "Zwerbuj 10 bohaterów", "value": heroes, "target": 10},
+		{"name": "Rada bohaterów", "description": "Zwerbuj wszystkich 25 bohaterów", "value": heroes, "target": HERO_IDS.size()},
+		{"name": "Długi szlak", "description": "Ukończ 100 poziomów kampanii", "value": cleared, "target": 100},
+		{"name": "Przez krainy", "description": "Ukończ 500 poziomów kampanii", "value": cleared, "target": 500},
+		{"name": "Legenda szlaków", "description": "Ukończ 1000 poziomów kampanii", "value": cleared, "target": 1000},
+		{"name": "Gwiaździsty szlak", "description": "Zdobądź 500 gwiazdek", "value": stars, "target": 500},
+		{"name": "Niebo przodków", "description": "Zdobądź 1500 gwiazdek", "value": stars, "target": 1500},
+		{"name": "Mistrz wypraw", "description": "Zdobądź 3 gwiazdki na 100 poziomach", "value": perfect, "target": 100},
+		{"name": "Pogromca legend", "description": "Pokonaj 50 różnych bossów", "value": bosses, "target": 50},
+		{"name": "Bez skazy", "description": "Wygraj 100 walk bez boostera", "value": int(balance_stats.get("wins_no_booster", 0)), "target": 100},
+		{"name": "Szept burzy", "description": "Wykonaj kaskadę 10 fal", "value": int(balance_stats.get("best_cascade", 0)), "target": 10},
+		{"name": "Wyprawa bez kresu", "description": "Pokonaj 30. falę wyprawy", "value": int(balance_stats.get("endless_best", 0)), "target": 30},
+		{"name": "Mistrz budowniczy", "description": "Ulepsz budynki 100 razy", "value": int(balance_stats.get("building_upgrades", 0)), "target": 100},
+		{"name": "Serce osady", "description": "Rozwiń budynek do poziomu 50", "value": best_building, "target": MAX_BUILDING_LEVEL},
+		{"name": "Kwitnąca osada", "description": "Rozwiń 8 budynków do poziomu 10", "value": developed_buildings, "target": 8},
+		{"name": "Znawca bestii", "description": "Odkryj 25 różnych przeciwników", "value": discovered, "target": 25},
+		{"name": "Kronikarz puszczy", "description": "Odkryj 50 różnych przeciwników", "value": discovered, "target": 50},
+		{"name": "Na pomoc Gajowi", "description": "Ukończ 25 celów dodatkowych", "value": side_goals, "target": 25},
+		{"name": "Strażnik przysiąg", "description": "Ukończ 100 celów dodatkowych", "value": side_goals, "target": 100},
+		{"name": "Obrońca krain", "description": "Wygraj 500 walk kampanii", "value": int(balance_stats.get("campaign_wins", 0)), "target": 500}
+	]
+
+func draw_achievements(screen: Vector2) -> void:
+	var rows := achievement_rows()
+	var earned := 0
+	for achievement in rows:
+		if int(achievement.value) >= int(achievement.target):
+			earned += 1
+	draw_string(font, Vector2(25.0, 157.0), "KRONIKA OSIĄGNIĘĆ", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 50.0, 22, Color("#ffe5a4"))
+	draw_string(font, Vector2(25.0, 181.0), "Zdobyte %d / %d  •  Twoja historia w Gaju" % [earned, rows.size()], HORIZONTAL_ALIGNMENT_CENTER, screen.x - 50.0, 13, Color("#c7dfbd"))
+	draw_mission_divider(193.0, false, screen.x)
+	var row_height := clampf((screen.y - 445.0) / 4.0, 78.0, 108.0)
+	for slot in 4:
+		var index := achievements_page * 4 + slot
+		if index >= rows.size():
+			break
+		var achievement: Dictionary = rows[index]
+		var top := 203.0 + float(slot) * (row_height + 9.0)
+		var done := int(achievement.value) >= int(achievement.target)
+		var row := Rect2(28.0, top, screen.x - 56.0, row_height)
+		var badge := Rect2(row.position + Vector2(0.0, (row_height - 62.0) * 0.5), Vector2(62.0, 62.0))
+		if portrait_backdrop_oak != null:
+			draw_texture_rect(portrait_backdrop_oak, badge, false, Color.WHITE if done else Color(0.55, 0.67, 0.56, 0.85))
+		else:
+			draw_circle(badge.get_center(), 27.0, Color("#4a5b35"))
+		var icon_key: String = ACHIEVEMENT_ICONS[index] if index < ACHIEVEMENT_ICONS.size() else ""
+		if not achievement_icons.has(icon_key):
+			achievement_icons[icon_key] = load_image_texture("res://art/skills/skill_%s.png" % icon_key) if icon_key != "" else null
+		var achievement_icon: Texture2D = achievement_icons[icon_key]
+		if achievement_icon != null:
+			draw_texture_rect(achievement_icon, Rect2(badge.get_center() - Vector2(22.0, 22.0), Vector2(44.0, 44.0)), false, Color.WHITE if done else Color(0.68, 0.73, 0.64, 0.9))
+		else:
+			draw_string(font, badge.position + Vector2(10.0, 39.0), "★", HORIZONTAL_ALIGNMENT_CENTER, 42.0, 22, Color("#ffe19a" if done else "#849c86"))
+		var text_x := row.position.x + 72.0
+		var text_width := row.size.x - 72.0
+		draw_string(font, Vector2(text_x, top + 23.0), str(achievement.name), HORIZONTAL_ALIGNMENT_LEFT, text_width, 16, Color("#ffe5a4"))
+		draw_string(font, Vector2(text_x, top + 43.0), str(achievement.description), HORIZONTAL_ALIGNMENT_LEFT, text_width, 12, Color("#c6d9c1"))
+		var bar := Rect2(text_x - 4.0, top + row_height - 35.0, text_width - 65.0, 25.0)
+		var track := mission_progress_inner_rect(bar)
+		draw_rect(track, Color("#071b16"))
+		var ratio := clampf(float(achievement.value) / float(maxi(1, int(achievement.target))), 0.0, 1.0)
+		if ratio > 0.0:
+			var fill := Rect2(track.position, Vector2(track.size.x * ratio, track.size.y))
+			var fill_art := mission_progress_amber if done else mission_progress_emerald
+			if fill_art != null:
+				draw_mission_progress_fill(fill_art, fill)
+			else:
+				draw_rect(fill, Color("#e4c46b" if done else "#82bf8a"))
+		if mission_progress_frame != null:
+			draw_mission_ui_art(mission_progress_frame, bar)
+		draw_string(font, Vector2(bar.end.x + 2.0, bar.get_center().y + 4.0), "%d / %d" % [mini(int(achievement.value), int(achievement.target)), int(achievement.target)], HORIZONTAL_ALIGNMENT_RIGHT, 62.0, 11, Color("#f4e4b7"))
+		draw_mission_divider(row.end.y + 3.0, done, screen.x)
+	var page_count := ceili(float(rows.size()) / 4.0)
+	draw_button(achievements_page_rect(-1), "‹  WCZEŚNIEJ", achievements_page > 0, 11)
+	draw_button(achievements_page_rect(1), "DALEJ  ›", achievements_page < page_count - 1, 11)
+	draw_string(font, Vector2(screen.x * 0.5 - 18.0, screen.y - 178.0), "%d/%d" % [achievements_page + 1, page_count], HORIZONTAL_ALIGNMENT_CENTER, 36.0, 12, Color("#ffe5a4"))
+	var unlocked := int(balance_stats.get("best_cascade", 0)) >= 3
+	var label := ("KASKADA: MIĘTOWA" if cascade_cosmetic else "KASKADA: ZŁOTA") if unlocked else "MIĘTOWY EFEKT: KASKADA 3×"
+	draw_button(achievements_cosmetic_rect(), label, unlocked, 13)
 
 func draw_mission_row(mission: Dictionary, top: float, weekly: bool) -> void:
 	var row := Rect2(28.0, top, get_viewport_rect().size.x - 56.0, mission_row_stride() - 2.0)
@@ -3328,24 +3817,41 @@ func draw_mission_divider(y: float, weekly: bool, screen_width: float) -> void:
 	draw_circle(Vector2(left, y), 1.4, Color(tint, 0.8))
 	draw_circle(Vector2(right, y), 1.4, Color(tint, 0.8))
 
-func grant_boss_spark() -> bool:
+func grant_boss_spark() -> int:
 	var level: Dictionary = levels[level_index]
 	var level_id := int(level.get("id", level_index + 1))
-	if not is_boss_level(level) or bool(claimed_boss_sparks.get(level_id, false)):
-		return false
-	perun_sparks += 1
+	# Znaki są walutą legend; przyznajemy je wyłącznie za kamienie milowe.
+	var claim_key := 10000 + level_id
+	if not LEGENDARY_SPARK_MILESTONES.has(level_id) or bool(claimed_boss_sparks.get(claim_key, false)):
+		return 0
+	var reward := int(LEGENDARY_SPARK_MILESTONES[level_id])
+	event_marks += reward
 	queue_audio_event("resource_perun", 2.5)
-	claimed_boss_sparks[level_id] = true
-	return true
+	claimed_boss_sparks[claim_key] = true
+	return reward
 
 func grant_event_mark() -> bool:
-	var level_id := int(levels[level_index].get("id", level_index + 1))
-	# Co piąty etap daje znak wyprawy; Iskra Peruna pozostaje nagrodą za bossa.
-	if level_id % 5 == 0 and not bool(claimed_boss_sparks.get(-level_id, false)):
-		event_marks += 1
-		claimed_boss_sparks[-level_id] = true
-		return true
 	return false
+
+func next_legend_milestone() -> int:
+	for milestone in LEGENDARY_SPARK_MILESTONES:
+		if not bool(claimed_boss_sparks.get(10000 + int(milestone), false)):
+			return int(milestone)
+	return 0
+
+func legend_milestone_reward_label(level_id: int) -> String:
+	if not LEGENDARY_SPARK_MILESTONES.has(level_id) or bool(claimed_boss_sparks.get(10000 + level_id, false)):
+		return ""
+	return "+%d ZNAKÓW" % int(LEGENDARY_SPARK_MILESTONES[level_id])
+
+func legend_milestone_hint() -> String:
+	var milestone := next_legend_milestone()
+	if milestone == 0:
+		return "Wszystkie nagrody za Znaki zostały odebrane."
+	var amount := int(LEGENDARY_SPARK_MILESTONES[milestone])
+	if milestone < unlocked_level:
+		return "Znaki +%d: wróć i wygraj poziom %d." % [amount, milestone]
+	return "Znaki +%d: ukończ poziom %d." % [amount, milestone]
 
 func is_boss_level(level: Dictionary) -> bool:
 	var level_id := int(level.get("id", 0))
@@ -3369,6 +3875,12 @@ func grant_hero_experience(amount: int) -> void:
 func grant_training_reward() -> void:
 	var reward: Dictionary = training_battle.get("rewards", {})
 	var expedition := bool(training_battle.get("expedition", false))
+	if bool(training_battle.get("weekly_challenge", false)):
+		var battle_week := str(training_battle.get("week", ""))
+		if battle_week == weekly_challenge_claimed or battle_week != str(mission_period_keys().week):
+			reward = {"coins": 0, "experience": 0}
+		else:
+			weekly_challenge_claimed = battle_week
 	if expedition:
 		var mission_id := str(training_battle.get("id", ""))
 		var day := Time.get_date_string_from_system()
@@ -3426,6 +3938,9 @@ func current_turn_hero() -> String:
 
 func active_synergy_pairs() -> Array:
 	var active_pairs: Array = []
+	for pair in [["lada", "brun"], ["mieta", "zywia"]]:
+		if active_heroes.has(pair[0]) and active_heroes.has(pair[1]):
+			active_pairs.append(pair)
 	for pair in HERO_SYNERGY_PAIRS:
 		if active_heroes.has(str(pair[0])) and active_heroes.has(str(pair[1])):
 			active_pairs.append(pair)
@@ -3433,6 +3948,10 @@ func active_synergy_pairs() -> Array:
 
 func synergy_portrait_ids(hero_id: String) -> Array[String]:
 	var partners: Array[String] = []
+	if hero_id == "lada": partners.append("brun")
+	elif hero_id == "brun": partners.append("lada")
+	elif hero_id == "mieta": partners.append("zywia")
+	elif hero_id == "zywia": partners.append("mieta")
 	for pair in HERO_SYNERGY_PAIRS:
 		if str(pair[0]) == hero_id:
 			partners.append(str(pair[1]))
@@ -3459,7 +3978,7 @@ func find_matches() -> Dictionary:
 		for col in range(1, BOARD_SIZE + 1):
 			if col < BOARD_SIZE and board[row][col] == board[row][run_start]:
 				continue
-			if col - run_start >= 3:
+			if col - run_start >= 3 and int(board[row][run_start]) >= 0:
 				for mark in range(run_start, col):
 					found[Vector2i(mark, row)] = true
 			run_start = col
@@ -3468,7 +3987,7 @@ func find_matches() -> Dictionary:
 		for row in range(1, BOARD_SIZE + 1):
 			if row < BOARD_SIZE and board[row][col] == board[run_start][col]:
 				continue
-			if row - run_start >= 3:
+			if row - run_start >= 3 and int(board[run_start][col]) >= 0:
 				for mark in range(run_start, row):
 					found[Vector2i(col, mark)] = true
 			run_start = row
@@ -3498,6 +4017,9 @@ func refresh_move_preview() -> void:
 		var candidate: Vector2i = selected_cell + direction
 		if candidate.x < 0 or candidate.y < 0 or candidate.x >= BOARD_SIZE or candidate.y >= BOARD_SIZE:
 			continue
+		# Dotknięcie specjalnego kafelka uruchamia go zamiast zamiany.
+		if int(special_tiles[candidate.y][candidate.x]) > 0:
+			continue
 		swap_tiles(selected_cell, candidate)
 		var matches := find_matches()
 		if matches.size() > best_count:
@@ -3525,7 +4047,7 @@ func refresh_move_preview() -> void:
 		effects.append("bursztyn ×%d: obrażenia" % best_counts[3])
 	if best_counts[4] > 0:
 		effects.append("runy ×%d: obrażenia i osłabienie" % best_counts[4])
-	move_preview_text = "Podgląd: %d znaków • %s" % [best_count, " • ".join(effects)]
+	move_preview_text = "Możliwy ruch: %d znaków • %s" % [best_count, " • ".join(effects)]
 
 func collapse_board() -> void:
 	# Zachowaj pozycje istniejących kafelków, aby mogły płynnie opaść na wolne miejsca.
@@ -3563,8 +4085,8 @@ func swap_tiles(a: Vector2i, b: Vector2i) -> void:
 	special_tiles[b.y][b.x] = saved_special
 
 func board_rect() -> Rect2:
-	var width := minf(get_viewport_rect().size.x - 120.0, 400.0)
-	return Rect2((get_viewport_rect().size.x - width) / 2.0, 350.0, width, width)
+	var width := minf(get_viewport_rect().size.x - 36.0, 440.0)
+	return Rect2((get_viewport_rect().size.x - width) / 2.0, 320.0, width, width)
 
 func enemy_card_rect(index: int) -> Rect2:
 	var enemy_count := maxi(1, enemies.size())
@@ -3650,6 +4172,21 @@ func result_modal_rect() -> Rect2:
 func victory_continue_rect() -> Rect2:
 	var screen := get_viewport_rect().size
 	return Rect2(screen.x * 0.5 - 150.0, screen.y - 76.0, 300.0, 62.0)
+
+func victory_reward_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x * 0.5 - 150.0, screen.y - 126.0, 300.0, 42.0)
+
+func victory_reward_available() -> bool:
+	return state == "won" and campaign_ads_unlocked() and ad_bonus_available_today() and int(last_reward.get("coins", 0)) > 0 and ads_manager != null and ads_manager.rewarded_ready
+
+func show_victory_interstitial() -> void:
+	refresh_ad_day()
+	if pending_victory_interstitial or campaign_wins_since_interstitial < WINS_BETWEEN_INTERSTITIALS or ad_interstitials_today >= MAX_INTERSTITIALS_PER_DAY or ads_manager == null:
+		return
+	pending_victory_interstitial = true
+	if not ads_manager.show_interstitial():
+		pending_victory_interstitial = false
 
 func previous_rect() -> Rect2:
 	return Rect2(24.0, 902.0, 160.0, 42.0)
@@ -3926,6 +4463,29 @@ func map_close_rect() -> Rect2:
 	var button_size := Vector2(248.0, 64.0)
 	return Rect2(Vector2((screen.x - button_size.x) / 2.0, screen.y - button_size.y - 24.0), button_size)
 
+func map_shrine_button_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2((screen.x - 230.0) * 0.5, 155.0, 230.0, 30.0)
+
+func map_shrine_choice_rect(index: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x * 0.5 - 124.0, screen.y * 0.5 + 10.0 + index * 54.0, 248.0, 44.0)
+
+func map_shrine_available() -> bool:
+	return unlocked_level >= 11 and not map_shrine_claimed
+
+func claim_map_shrine(choice: int) -> void:
+	if not map_shrine_available() or choice < 0 or choice > 1:
+		return
+	if choice == 0:
+		coins += 500
+	else:
+		wood += 150
+	map_shrine_claimed = true
+	map_shrine_open = false
+	save_progress()
+	queue_redraw()
+
 func map_previous_page_rect() -> Rect2:
 	var screen := get_viewport_rect().size
 	var button_width := minf(189.0, screen.x - 16.0)
@@ -4108,7 +4668,12 @@ func help_button_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 72.0, 120.0, 62.0, 62.0)
 
 func settings_button_rect() -> Rect2:
-	return Rect2(14.0, 248.0, 160.0, 44.0)
+	return Rect2(10.0, help_button_rect().position.y, help_button_rect().size.x, help_button_rect().size.y)
+
+func settings_panel_rect() -> Rect2:
+	var screen := get_viewport_rect().size
+	var size := Vector2(minf(464.0, screen.x - 24.0), minf(572.0, screen.y - 80.0))
+	return Rect2((screen - size) * 0.5, size)
 
 func bestiary_button_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x - 74.0, 184.0, 64.0, 68.0)
@@ -4138,7 +4703,8 @@ func bestiary_page_count(region_id: String) -> int:
 
 func help_close_rect() -> Rect2:
 	if settings_open:
-		return Rect2(get_viewport_rect().size.x * .5 - 135.0, get_viewport_rect().size.y * .5 + 180.0, 270.0, 48.0)
+		var panel := settings_panel_rect()
+		return Rect2(panel.get_center().x - 124.0, panel.end.y - 85.0, 248.0, 56.0)
 	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 764.0, 240.0, 48.0)
 
 func sound_toggle_rect() -> Rect2:
@@ -4147,9 +4713,8 @@ func sound_toggle_rect() -> Rect2:
 	return Rect2(get_viewport_rect().size.x / 2.0 - 120.0, 702.0, 240.0, 46.0)
 
 func audio_setting_rect(index: int) -> Rect2:
-	var screen := get_viewport_rect().size
-	var width := minf(330.0, screen.x - 48.0)
-	return Rect2((screen.x - width) * .5, screen.y * .5 - 100.0 + index * 60.0, width, 46.0)
+	var panel := settings_panel_rect()
+	return Rect2(panel.position + Vector2(36.0, 150.0 + index * 78.0), Vector2(panel.size.x - 72.0, 70.0))
 
 func music_toggle_rect() -> Rect2:
 	return audio_setting_rect(1)
@@ -4158,7 +4723,9 @@ func vibration_toggle_rect() -> Rect2:
 	return audio_setting_rect(2)
 
 func settings_guide_rect() -> Rect2:
-	return Rect2(get_viewport_rect().size.x * .5 - 135.0, get_viewport_rect().size.y * .5 + 122.0, 270.0, 46.0)
+	var panel := settings_panel_rect()
+	var width := minf(294.0, panel.size.x - 72.0)
+	return Rect2(panel.get_center().x - width * 0.5, panel.position.y + 408.0, width, 50.0)
 
 func training_close_rect() -> Rect2:
 	if forest_catalog_open:
@@ -4177,7 +4744,18 @@ func training_scroll_max() -> float:
 	return maxf(0.0, float(training_catalog().size() * 118) - (get_viewport_rect().size.y - 240.0))
 
 func training_catalog() -> Array:
-	return ForestExpeditions.catalog(building_levels) if forest_catalog_open else TRAINING_BATTLES
+	if forest_catalog_open:
+		return ForestExpeditions.catalog(building_levels)
+	var week := str(mission_period_keys().week)
+	var variant := posmod(week.hash(), 3)
+	var modifiers := ["water", "leaf", "rune"]
+	var descriptions := ["Woda leczy 2×", "Liście dają dodatkową tarczę", "Runy wzmacniają atak"]
+	var opponents := ["Topielec źródlany", "Korzeniowy strażnik", "Kruczy rycerz"]
+	var weekly := {"required_level": 10, "name": "Wyzwanie tygodnia", "weekly_challenge": true, "weekly_modifier": modifiers[variant], "week": week, "goal_type": "defeat_enemy", "mechanic": descriptions[variant] + "  •  nagroda raz w tygodniu", "enemies": [{"name": opponents[variant], "health": 300, "attack": 12}], "obstacles": {"root": 3, "stone": 2}, "rewards": {"coins": 500 if weekly_challenge_claimed != week else 0, "experience": 150 if weekly_challenge_claimed != week else 0}}
+	var result: Array = [weekly]
+	result.append({"required_level": 15, "name": "Nieskończona wyprawa", "endless": true, "goal_type": "defeat_enemy", "mechanic": "Kolejne walki i wybór nagrody", "enemies": [{"name": "Cień mchu", "health": 160, "attack": 8}], "rewards": {"coins": 0, "experience": 0}})
+	result.append_array(TRAINING_BATTLES)
+	return result
 
 func training_choice_locked(battle: Dictionary) -> bool:
 	return int(battle.get("hall", 0)) > int(building_levels.get("dwor_wiecowy", 0)) if bool(battle.get("expedition", false)) else int(battle.get("required_level", 1)) > unlocked_level
@@ -4378,7 +4956,7 @@ func handle_roster_upgrade(hero_id: String) -> void:
 			sync_party_battle_health()
 			message = "%s dołącza do drużyny!" % hero_name(hero_id)
 		else:
-			var currency_label := "Znaków Wydarzenia" if currency == "marks" else ("Iskier Peruna" if currency == "sparks" else "monet")
+			var currency_label := "Znaków Wyprawy" if currency == "marks" else ("Iskier Peruna" if currency == "sparks" else "monet")
 			message = "Brakuje %d %s na rekrutację %s." % [recruit_cost - available, currency_label, hero_name(hero_id)]
 		save_progress()
 		queue_redraw()
@@ -4579,6 +5157,19 @@ func handle_village_input(position: Vector2) -> void:
 func handle_map_input(position: Vector2) -> void:
 	if map_transition_time < MAP_TRANSITION_DURATION:
 		return
+	if map_shrine_open:
+		for choice in 2:
+			if is_in_button(position, map_shrine_choice_rect(choice)):
+				claim_map_shrine(choice)
+				return
+		if is_in_button(position, map_shrine_choice_rect(2)):
+			map_shrine_open = false
+			queue_redraw()
+		return
+	if map_shrine_available() and is_in_button(position, map_shrine_button_rect()):
+		map_shrine_open = true
+		queue_redraw()
+		return
 	if is_in_button(position, map_previous_page_rect()) and map_page > 0:
 		start_map_page_transition(-1)
 		return
@@ -4685,10 +5276,67 @@ func handle_training_input(position: Vector2) -> void:
 			training_battle = catalog[index].duplicate(true)
 			training_mode = true
 			training_open = false
+			if bool(training_battle.get("endless", false)):
+				endless_stage = 1
+				training_battle = endless_battle(endless_stage)
 			start_level(level_index, training_battle)
 			return
 
+func endless_battle(stage: int) -> Dictionary:
+	var tier := maxi(1, stage)
+	var names := ["Cień mchu", "Topielec źródlany", "Cierniowy wilk", "Korzeniowy strażnik"]
+	return {"endless": true, "name": "Wyprawa • fala %d" % tier, "goal_type": "defeat_enemy", "mechanic": "Wybierz dar po zwycięstwie", "enemies": [{"name": names[(tier - 1) % names.size()], "health": 130 + tier * 30, "attack": 5 + tier * 2}], "rewards": {"coins": 0, "experience": 0}}
+
+func endless_choice_rect(index: int) -> Rect2:
+	var screen := get_viewport_rect().size
+	return Rect2(screen.x * 0.5 - 145.0, screen.y * 0.5 - 40.0 + index * 55.0, 290.0, 45.0)
+
+func handle_endless_choice(position: Vector2) -> void:
+	for index in 4:
+		if not is_in_button(position, endless_choice_rect(index)):
+			continue
+		if index == 3:
+			endless_choice_open = false
+			training_mode = false
+			main_menu_open = true
+			save_progress()
+			queue_redraw()
+			return
+		if index == 0:
+			heal_all_living_heroes(35)
+		elif index == 1:
+			coins += 150 + endless_stage * 25
+		else:
+			grant_hero_experience(80 + endless_stage * 10)
+		var saved_health := hero_health.duplicate(true)
+		endless_stage += 1
+		training_battle = endless_battle(endless_stage)
+		endless_choice_open = false
+		start_level(level_index, training_battle)
+		for hero_id in active_heroes:
+			hero_health[hero_id] = int(saved_health.get(hero_id, 0))
+			displayed_hero_health[hero_id] = int(hero_health[hero_id])
+		refresh_party_health()
+		save_progress()
+		queue_redraw()
+		return
+
 func handle_missions_input(position: Vector2) -> void:
+	if is_in_button(position, achievements_tab_rect()):
+		achievements_open = not achievements_open
+		achievements_page = 0
+		return
+	if achievements_open:
+		if is_in_button(position, achievements_page_rect(-1)):
+			achievements_page = maxi(0, achievements_page - 1)
+			return
+		if is_in_button(position, achievements_page_rect(1)):
+			achievements_page = mini(ceili(float(achievement_rows().size()) / 4.0) - 1, achievements_page + 1)
+			return
+		if int(balance_stats.get("best_cascade", 0)) >= 3 and is_in_button(position, achievements_cosmetic_rect()):
+			cascade_cosmetic = not cascade_cosmetic
+			save_progress()
+		return
 	var row_top := 193.0
 	for index in daily_missions.size():
 		var mission: Dictionary = daily_missions[index]
@@ -4920,6 +5568,15 @@ func reset_progress() -> void:
 	daily_reward_popup_loot.clear()
 	pending_daily_chest_bonus = false
 	claimed_boss_sparks.clear()
+	map_shrine_open = false
+	map_shrine_claimed = false
+	weekly_challenge_claimed = ""
+	endless_choice_open = false
+	endless_stage = 0
+	achievements_open = false
+	cascade_cosmetic = false
+	seen_boss_tutorials.clear()
+	active_boss_tutorial_id = 0
 	level_stars.clear()
 	bestiary_seen.clear()
 	bestiary_kills.clear()
@@ -5260,6 +5917,7 @@ func _draw() -> void:
 	if side_objective_level_id > 0 and not training_mode:
 		var reward_text := "NAGRODA ODEBRANA" if bool(claimed_side_objectives.get(str(side_objective_level_id), false)) else "+150 MONET"
 		var objective_complete := side_objective_succeeded()
+		var objective_waits_for_victory := side_objective_kind(side_objective_level_id) == "no_booster" and not battle_booster_used and state == "playing"
 		var objective_panel := Rect2(14.0, -10.0, screen.x - 88.0, 90.0)
 		if tutorial_tooltip_banner != null:
 			draw_texture_rect(tutorial_tooltip_banner, objective_panel, false)
@@ -5267,7 +5925,8 @@ func _draw() -> void:
 			draw_style_box(make_panel(Color("#10271ff5"), Color("#d9b75e")), objective_panel)
 		draw_string(font, Vector2(objective_panel.position.x + 8.0, objective_panel.position.y + 27.0), "CEL DODATKOWY", HORIZONTAL_ALIGNMENT_CENTER, objective_panel.size.x - 16.0, 11, Color("#ffe5a4"))
 		draw_string(font, Vector2(objective_panel.position.x + 8.0, objective_panel.position.y + 41.0), side_objective_description(side_objective_level_id), HORIZONTAL_ALIGNMENT_CENTER, objective_panel.size.x - 16.0, 14, Color("#f0ecd9"))
-		var objective_status := "%s  •  %s  •  %s" % [side_objective_progress_text(), "UKOŃCZONY" if objective_complete else "W TRAKCIE", reward_text]
+		var status_label := "NIEUDANY" if side_objective_kind(side_objective_level_id) == "no_booster" and battle_booster_used else ("UKOŃCZONY" if objective_complete and not objective_waits_for_victory else "W TRAKCIE")
+		var objective_status := "%s  •  %s  •  %s" % [side_objective_progress_text(), status_label, reward_text]
 		draw_string(font, Vector2(objective_panel.position.x + 8.0, objective_panel.position.y + 55.0), objective_status, HORIZONTAL_ALIGNMENT_CENTER, objective_panel.size.x - 16.0, 10, Color("#c9f0a8") if objective_complete else Color("#f1dfb4"))
 	if enemies.is_empty():
 		draw_string(font, Vector2(140, 111), "CEL: %s" % goal_label(), HORIZONTAL_ALIGNMENT_CENTER, 250, 12, Color("#b9e7ca"))
@@ -5282,12 +5941,15 @@ func _draw() -> void:
 	var turn_banner := "RUCH PRZECIWNIKA" if enemy_turn_active else "TWÓJ RUCH"
 	var turn_banner_color := Color("#ff9b72") if enemy_turn_active else Color("#b9e58a")
 	if not enemies.is_empty():
-		var banner_rect := Rect2(screen.x / 2.0 - 126.0, 288.0, 252.0, 48.0)
+		var banner_rect := Rect2(screen.x / 2.0 - 126.0, 288.0, 252.0, 28.0)
+		var boss_hint := boss_turn_hint() if not enemy_turn_active else ""
+		if boss_hint != "":
+			turn_banner = boss_hint
 		if turn_banner_oak != null:
 			draw_texture_rect(turn_banner_oak, banner_rect.grow(10.0), false)
 		else:
 			draw_style_box(make_panel(Color("#102a22f2"), Color("#d9b45d")), banner_rect)
-		draw_string(font, Vector2(banner_rect.position.x, banner_rect.position.y + 28.0), turn_banner, HORIZONTAL_ALIGNMENT_CENTER, banner_rect.size.x, 16, turn_banner_color)
+		draw_string(font, Vector2(banner_rect.position.x, banner_rect.position.y + 19.0), turn_banner, HORIZONTAL_ALIGNMENT_CENTER, banner_rect.size.x, 12 if boss_hint != "" else 16, turn_banner_color)
 		for enemy_index in enemies.size():
 			var enemy: Dictionary = enemies[enemy_index]
 			var card := enemy_card_rect(enemy_index)
@@ -5366,14 +6028,14 @@ func _draw() -> void:
 				var selected_center := tile_rect.get_center()
 				var active_hero := current_turn_hero()
 				var selection_color := hero_selection_color(active_hero)
-				var accent_texture: Texture2D = hero_accent_textures.get(active_hero, null)
-				if accent_texture != null:
-					draw_texture_rect(accent_texture, tile_rect.grow(9), false, Color(1.0, 1.0, 1.0, 0.84))
-				draw_circle(selected_center, tile_rect.size.x * 0.48, Color(selection_color, 0.32), true)
-				draw_circle(selected_center, tile_rect.size.x * 0.46, selection_color, false, 3.0)
-				var mark := hero_selection_mark(active_hero)
-				var mark_width := font.get_string_size(mark, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
-				draw_string(font, Vector2(selected_center.x - mark_width / 2.0, selected_center.y + 7), mark, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#fff4d4"))
+				var selection_pulse := 0.82 + 0.18 * (0.5 + 0.5 * sin(ui_anim_time * 4.2))
+				# Ozdobna ramka zastępuje techniczne koło i symbol bohatera, które
+				# tworzyły jasny, kwadratowy artefakt na wybranym kafelku.
+				draw_circle(selected_center, tile_rect.size.x * 0.42, Color(selection_color, 0.10 * selection_pulse), true)
+				if board_hint_frame != null:
+					draw_texture_rect(board_hint_frame, tile_rect.grow(5.0), false, Color(1.0, 1.0, 1.0, selection_pulse))
+				else:
+					draw_rect(tile_rect.grow(2.0), selection_color, false, 2.0, true)
 			var tile_icon: Texture2D = null
 			if board[row][col] == 0:
 				tile_icon = fire_tile_icon
@@ -5413,6 +6075,8 @@ func _draw() -> void:
 					obstacle_icon = obstacle_curse_icon if obstacle_health >= 3 else (obstacle_curse_damaged_icon if obstacle_health == 2 else obstacle_curse_critical_icon)
 				if obstacle_icon != null:
 					draw_texture_rect(obstacle_icon, tile_rect.grow(-2), false)
+			if move_preview_target == tile_cell and not player_cascade_active and not enemy_turn_active:
+				draw_rect(tile_rect.grow(2.0), Color("#ffe18c"), false, 3.0, true)
 	if not training_mode and level_index == 0 and not tutorial_completed and player_opening.tutorial_moves == 0:
 		var first_tutorial_cells: Array[Vector2i] = [FIRST_TUTORIAL_MOVE_FROM, FIRST_TUTORIAL_MOVE_TO, Vector2i(3, 1), Vector2i(3, 2)]
 		for row in BOARD_SIZE:
@@ -5508,6 +6172,10 @@ func _draw() -> void:
 		draw_rect(rect, Color(0.06, 0.24, 0.18, alpha))
 		draw_string(font, Vector2(rect.position.x, rect.get_center().y - 8), "PRZETASOWANIE GAJU", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 22, Color("#ffe19a"))
 		draw_string(font, Vector2(rect.position.x, rect.get_center().y + 17), "Powstaje nowa ścieżka kombinacji", HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 13, Color("#e3efc9"))
+	if cascade_display_time > 0.0 and not enemy_turn_active:
+		var cascade_alpha := clampf(cascade_display_time / 0.3, 0.0, 1.0)
+		var cascade_color := Color(0.62, 1.0, 0.83, cascade_alpha) if cascade_cosmetic else Color(1.0, 0.9, 0.54, cascade_alpha)
+		draw_string(font, Vector2(rect.position.x, rect.position.y + 28.0), "KASKADA ×%d" % cascade_display_count, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 22, cascade_color)
 	# Popup rysujemy nad planszą, żeby większa rama nie była przez nią zasłaniana.
 	if defender_help_open and not enemies.is_empty():
 		draw_enemy_guard_help()
@@ -5713,11 +6381,24 @@ func _draw() -> void:
 			draw_string(font, Vector2(0.0, screen.y * 0.63), "DOTKNIJ, ABY WYRUSZYĆ", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 14, Color("#f5d36f"))
 	if victory_screen_open:
 		draw_victory_screen(screen)
+	if endless_choice_open:
+		draw_endless_choice(screen)
 	if not main_menu_open and not roster_open and not village_open and not map_open and not booster_open and not training_open and not region_intro_open:
 		if pause_button_oak != null:
 			draw_texture_rect(pause_button_oak, pause_rect(), false)
 		else:
 			draw_button(pause_rect(), "II", true, 14)
+
+func draw_endless_choice(screen: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511e8"))
+	var panel := Rect2(screen.x * 0.5 - 175.0, screen.y * 0.5 - 150.0, 350.0, 355.0)
+	draw_style_box(make_panel(Color("#123329"), Color("#d6b166")), panel)
+	draw_string(font, Vector2(panel.position.x, panel.position.y + 44.0), "FALA %d POKONANA" % endless_stage, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 21, Color("#ffe5a1"))
+	draw_string(font, Vector2(panel.position.x, panel.position.y + 72.0), "Wybierz dar i ruszaj dalej", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 14, Color("#e5efd7"))
+	draw_button(endless_choice_rect(0), "LECZENIE +35", true, 14)
+	draw_button(endless_choice_rect(1), "%d MONET" % (150 + endless_stage * 25), true, 14)
+	draw_button(endless_choice_rect(2), "%d PD DRUŻYNY" % (80 + endless_stage * 10), true, 14)
+	draw_button(endless_choice_rect(3), "ZAKOŃCZ WYPRAWĘ", true, 13)
 
 func draw_victory_screen(screen: Vector2) -> void:
 	var fade := clampf(ui_anim_time - victory_open_time, 0.0, 1.0)
@@ -5735,6 +6416,7 @@ func draw_victory_screen(screen: Vector2) -> void:
 		draw_style_box(make_panel(Color("#14372ded"), Color("#d8b45e")), Rect2(22.0, 210.0, screen.x - 44.0, 420.0))
 	draw_star_rating(Vector2(screen.x * 0.5, 350.0), last_stars, 36.0)
 	draw_string(font, Vector2(0.0, 410.0), "ZWYCIĘSTWO!", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 34, Color("#ffe7a3"))
+	draw_string(font, Vector2(0.0, 455.0), "NAJLEPSZA KASKADA  ×%d" % battle_best_cascade, HORIZONTAL_ALIGNMENT_CENTER, screen.x, 15, Color("#e3efc6"))
 	draw_string(font, Vector2(0.0, 214.0), "POWRACA NADZIEJA", HORIZONTAL_ALIGNMENT_CENTER, screen.x, 13, Color("#d8e2bd"))
 	draw_string(font, Vector2(35.0, 730.0), "ZDOBYTE NAGRODY", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 70.0, 18, Color("#ffe7a3"))
 	var reward_kinds: Array[String] = ["coins", "wood", "experience"]
@@ -5750,8 +6432,10 @@ func draw_victory_screen(screen: Vector2) -> void:
 		var slot := Rect2(26.0 + slot_width * reward_index, 744.0, slot_width - 8.0, 76.0)
 		var amount_width := resource_amount_width(reward_values[reward_index], 34.0, 20)
 		draw_resource_amount(Vector2(slot.get_center().x - amount_width * 0.5, slot.position.y + 20.0), reward_kinds[reward_index], reward_values[reward_index], 34.0, 20, Color("#fff0c7"))
-	var message_y := 838.0
+	var message_y := 660.0
 	draw_multiline_string(font, Vector2(52.0, message_y), message, HORIZONTAL_ALIGNMENT_CENTER, screen.x - 104.0, 15, 21, Color("#e1e8d3"))
+	if victory_reward_available():
+		draw_button(victory_reward_rect(), "OBEJRZYJ • +50% MONET", true, 13)
 	draw_button(victory_continue_rect(), "DALEJ", true, 20)
 
 func draw_campaign_story_dialogue(screen: Vector2) -> void:
@@ -5957,6 +6641,8 @@ func draw_roster_overlay(screen: Vector2) -> void:
 		draw_texture_rect(roster_arrow_right, roster_next_page_rect(), false, Color.WHITE if filtered.size() > 1 else Color(0.42, 0.44, 0.40, 0.75))
 	else:
 		draw_button(roster_next_page_rect(), "▶", filtered.size() > 1, 18)
+	if not owned and currency == "marks" and not roster_swap_open:
+		draw_string(font, Vector2(18.0, 852.0), legend_milestone_hint(), HORIZONTAL_ALIGNMENT_CENTER, screen.x - 36.0, 13, Color("#f4d894"))
 	draw_roster_action_button(roster_close_rect(), "WRÓĆ", true)
 	if roster_swap_open:
 		draw_roster_swap_popup(screen)
@@ -6231,7 +6917,7 @@ func draw_village_overlay(screen: Vector2) -> void:
 			draw_string(font, Vector2(mastery_text_x, mastery_panel.position.y + 29.0), rank_name, HORIZONTAL_ALIGNMENT_CENTER, mastery_text_width, 13, Color("#ffe5a8"))
 			draw_string(font, Vector2(mastery_text_x, mastery_panel.position.y + 45.0), "%d mistrzostw" % mastered, HORIZONTAL_ALIGNMENT_CENTER, mastery_text_width, 11, Color("#eee0bd"))
 		else:
-			draw_string(font, Vector2(medallion.position.x + 15.0, medallion.get_center().y + 3.0), "%d/5" % mastered, HORIZONTAL_ALIGNMENT_CENTER, medallion.size.x, 14, Color("#ffe5a8"))
+			draw_string(font, Vector2(medallion.position.x + 30.0, medallion.get_center().y - 2.0), "%d/5" % mastered, HORIZONTAL_ALIGNMENT_CENTER, medallion.size.x, 14, Color("#ffe5a8"))
 			draw_string(font, Vector2(mastery_text_x, mastery_panel.position.y + 29.0), "MISTRZOSTWA", HORIZONTAL_ALIGNMENT_CENTER, mastery_text_width, 12, Color("#ffe5a8"))
 			draw_string(font, Vector2(mastery_text_x, mastery_panel.position.y + 45.0), "Nagroda: Wieniec Dębu", HORIZONTAL_ALIGNMENT_CENTER, mastery_text_width, 11, Color("#eee0bd"))
 	if village_selected_id != "":
@@ -6240,6 +6926,8 @@ func draw_village_overlay(screen: Vector2) -> void:
 		draw_village_tutorial(screen)
 
 func village_illustration(building_id: String, level: int) -> Texture2D:
+	if level <= 0 and village_unbuilt_plot != null:
+		return village_unbuilt_plot
 	if building_id == "tartak" and village_sawmill_stages.size() == 3:
 		return village_sawmill_stages[0 if level <= 6 else (1 if level < 26 else 2)]
 	if building_id in ["domostwa", "swiety_gaj", "wieza_peruna", "kuznia", "chata_zielarki", "spichlerz"]:
@@ -6284,6 +6972,10 @@ func village_art_rect(rect: Rect2, level: int) -> Rect2:
 		# Stała podstawa na polanie; rozwój nie wypycha budynku na ścieżkę.
 		var plot_scale := 0.92 + clampf(float(level), 0.0, 10.0) * 0.008
 		var plot_size := rect.size * plot_scale
+		# Ilustracje wieży mają kwadratowe płótno; rozciąganie go do
+		# wąskiego prostokąta działki zniekształcało samą budowlę.
+		if building_id == "wieza_peruna" and level > 0:
+			plot_size.x = plot_size.y
 		var label_top := village_building_label_rect(building_id).position.y
 		return Rect2(Vector2(rect.get_center().x - plot_size.x * 0.5, label_top - plot_size.y + 8.0), plot_size)
 	# Podglądy TERAZ/DALEJ mieszczą się w swoim kadrze na każdym poziomie.
@@ -6323,6 +7015,10 @@ func draw_village_building(building_id: String) -> void:
 		draw_village_upgrade_alert(building_id, rect)
 	if not animating and sprite != null:
 		var display_rect := village_art_rect(rect, level)
+		if level <= 0 and village_unbuilt_plot != null:
+			var fitted := texture_aspect_fit_rect(sprite, display_rect)
+			fitted.position.y = display_rect.end.y - fitted.size.y
+			display_rect = fitted
 		draw_texture_rect(sprite, display_rect, false)
 	if upgrade_ready and building_id == "domostwa":
 		# Domostwa mają niższy znacznik, rysowany na wierzchu ich ilustracji.
@@ -6381,6 +7077,21 @@ func village_bonus_label(building_id: String) -> String:
 		"dwor_wiecowy": return "Limit budynków: %d" % maxi(1, int(building_levels.get("dwor_wiecowy", 0)))
 	return ""
 
+func village_current_state_label(building_id: String) -> String:
+	var level := int(building_levels.get(building_id, 0))
+	if level <= 0:
+		return "NIEAKTYWNE — ZBUDUJ BUDYNEK"
+	match building_id:
+		"domostwa": return "+%d HP wszystkim bohaterom" % (level * 8)
+		"kuznia": return "+%d%% obrażeń drużyny" % level
+		"chata_zielarki": return "+%d HP, +%d%% leczenia" % [level * 4, level * 2]
+		"swiety_gaj": return "+%d tarczy z liści" % level
+		"spichlerz": return "+%d monet za wygraną" % (level * 10)
+		"wieza_peruna": return "+%d%% mocy zdolności" % (level * 2)
+		"tartak": return "+%d drewna / godz.  •  zapas: %d" % [int(round(float(level) * SAWMILL_WOOD_PER_HOUR_PER_LEVEL)), sawmill_stored_wood]
+		"dwor_wiecowy": return "Limit budynków: %d" % maxi(1, level)
+	return ""
+
 func draw_village_tutorial(screen: Vector2) -> void:
 	var buy_step: bool = player_opening.home_tutorial_step == "buy_sawmill"
 	var panel := Rect2(18.0, 132.0, screen.x - 36.0, 142.0)
@@ -6434,6 +7145,8 @@ func draw_village_inspector() -> void:
 	var current_art := village_illustration(building_id, level)
 	if current_art != null:
 		var current_art_rect := village_art_rect(current_rect, level)
+		if level <= 0 and village_unbuilt_plot != null:
+			current_art_rect = texture_aspect_fit_rect(current_art, current_art_rect)
 		draw_texture_rect(current_art, current_art_rect, false)
 	if not max_level:
 		var next_art := village_illustration(building_id, level + 1)
@@ -6441,14 +7154,18 @@ func draw_village_inspector() -> void:
 			var next_art_rect := village_art_rect(next_rect, level + 1)
 			draw_texture_rect(next_art, next_art_rect, false, Color("#8f9b8c") if progression_locked else Color.WHITE)
 		draw_string(font, Vector2(panel.get_center().x - 18.0, preview_y + preview_size * 0.64), "→", HORIZONTAL_ALIGNMENT_CENTER, 36.0, 25, Color("#f9cd7c"))
-	draw_string(font, Vector2(current_rect.position.x, preview_y + preview_size + 17.0), "TERAZ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#c9d9b8"))
+	draw_string(font, Vector2(current_rect.position.x, preview_y + preview_size + 17.0), "PLAC BUDOWY" if level <= 0 else "TERAZ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#c9d9b8"))
 	if not max_level:
 		draw_string(font, Vector2(next_rect.position.x, preview_y + preview_size + 17.0), "DALEJ", HORIZONTAL_ALIGNMENT_CENTER, preview_size, 12, Color("#f5d18c"))
 	if building_id == "tartak" and level > 0:
 		var can_collect := sawmill_stored_wood > 0 and wood < 999999999 and village_upgrade_time <= 0.0
 		draw_button(village_collect_wood_rect(), "ODBIERZ DREWNO • %d" % sawmill_stored_wood, can_collect, 14)
 	draw_line(Vector2(panel.position.x + 44.0, panel.end.y - 152.0), Vector2(panel.end.x - 44.0, panel.end.y - 152.0), Color("#a98851"), 1.0)
-	draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 126.0), "PREMIA: %s" % village_bonus_label(building_id), HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 14, Color("#e5edcb"))
+	var current_state := "AKTUALNIE: %s" % village_current_state_label(building_id)
+	var current_state_size := 13
+	while current_state_size > 10 and font.get_string_size(current_state, HORIZONTAL_ALIGNMENT_LEFT, -1, current_state_size).x > panel.size.x - 96.0:
+		current_state_size -= 1
+	draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 126.0), current_state, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, current_state_size, Color("#e5edcb"))
 	if max_level:
 		draw_string(font, Vector2(panel.position.x + 48.0, panel.end.y - 96.0), "Budynek w pełni rozbudowany", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 96.0, 13, Color("#f5d18c"))
 		draw_button(village_upgrade_rect(), "MAKS. POZIOM", false, 13)
@@ -6503,6 +7220,8 @@ func draw_map_overlay(screen: Vector2, include_background := true, include_chrom
 		if frontier < unlocked_level and frontier < levels.size() and is_boss_level(levels[frontier]):
 			var gate := boss_star_gate_status(frontier)
 			draw_string(font, Vector2(18.0, 151.0), "UKOŃCZ WCZEŚNIEJSZE ETAPY  •  GWIAZDKI: %d / %d" % [int(gate.get("earned", 0)), int(gate.get("required", 0))], HORIZONTAL_ALIGNMENT_CENTER, screen.x - 36.0, 10, Color("#ffd27a"))
+		if map_shrine_available():
+			draw_button(map_shrine_button_rect(), "KAPLICZKA  •  WYDARZENIE", true, 11)
 		if map_page > 0:
 			draw_button(map_previous_page_rect(), "POPRZEDNI", true, 12)
 		if map_has_unlocked_next_page():
@@ -6549,11 +7268,24 @@ func draw_map_overlay(screen: Vector2, include_background := true, include_chrom
 			if boss_mission and not unlocked and index < unlocked_level:
 				var gate_status := boss_star_gate_status(index)
 				mission_kind = "GWIAZDKI %d / %d" % [int(gate_status.get("earned", 0)), int(gate_status.get("required", 0))]
+			elif unlocked:
+				var legend_reward := legend_milestone_reward_label(int(level.get("id", index + 1)))
+				if legend_reward != "":
+					mission_kind = "BOSS  •  %s" % legend_reward if boss_mission else legend_reward
 			var kind_color := Color("#ffd27a") if boss_mission else (level_kind_color(level) if unlocked else Color("#96978c"))
 			draw_string(font, Vector2(text_x, center.y + 5.0), mission_kind, HORIZONTAL_ALIGNMENT_CENTER, text_width, 10, kind_color)
 			var stars := int(level_stars.get(int(level.id), 0))
 			draw_star_rating(Vector2(text_x + text_width * 0.5, center.y + 20.0), stars, 21.0)
-	if include_chrome:
+	if include_chrome and map_shrine_open:
+		draw_rect(Rect2(Vector2.ZERO, screen), Color("#061511d9"))
+		var shrine_panel := Rect2(screen.x * 0.5 - 170.0, screen.y * 0.5 - 160.0, 340.0, 340.0)
+		draw_style_box(make_panel(Color("#123329"), Color("#d6b166")), shrine_panel)
+		draw_string(font, Vector2(shrine_panel.position.x, shrine_panel.position.y + 48.0), "OPUSZCZONA KAPLICZKA", HORIZONTAL_ALIGNMENT_CENTER, shrine_panel.size.x, 19, Color("#ffe5a1"))
+		draw_multiline_string(font, Vector2(shrine_panel.position.x + 25.0, shrine_panel.position.y + 88.0), "Duch gaju dziękuje za opiekę. Wybierz jeden dar:", HORIZONTAL_ALIGNMENT_CENTER, shrine_panel.size.x - 50.0, 15, 21, Color("#e5efd7"))
+		draw_button(map_shrine_choice_rect(0), "500 MONET", true, 15)
+		draw_button(map_shrine_choice_rect(1), "150 DREWNA", true, 15)
+		draw_button(map_shrine_choice_rect(2), "PÓŹNIEJ", true, 14)
+	if include_chrome and not map_shrine_open:
 		var close_rect := map_close_rect()
 		if map_ui_frames != null:
 			var frame_size := map_ui_frames.get_size()
@@ -7062,7 +7794,8 @@ func draw_main_menu(screen: Vector2) -> void:
 	draw_resource_amount(Vector2(317.0, 71.0), "experience", experience, 27.0, 12, Color("#8fe8df"))
 	draw_resource_amount(Vector2(417.0, 71.0), "sparks", perun_sparks, 27.0, 12, Color("#f6d779"))
 	draw_game_logo(Vector2(screen.x / 2.0, 184.0), Vector2(190.0, 125.0))
-	draw_button(settings_button_rect(), "USTAWIENIA", true, 13)
+	if home_settings_icon != null:
+		draw_texture_rect(home_settings_icon, texture_aspect_fit_rect(home_settings_icon, settings_button_rect()), false)
 	if unlocked_level >= 2:
 		draw_bestiary_button()
 	if home_help_icon != null:
@@ -7119,14 +7852,14 @@ func draw_help_overlay(screen: Vector2) -> void:
 	var content := Rect2((screen.x - 430.0) * 0.5, 22, 430, 650)
 	draw_string(font, Vector2(content.position.x, content.position.y + 30), "JAK GRAĆ", HORIZONTAL_ALIGNMENT_CENTER, content.size.x, 30, Color("#ffe6a4"))
 	var guide := [
-		["1. ŁĄCZ KAFELKI", "Trójki zadają bazowe obrażenia. Czwórka: +20 obrażeń i kafelek wybuchowy (kliknij: pole 5×5, 1,2× obrażeń i punktów). Piątka: +60 obrażeń i kafelek globalny (usuwa żywioł, 2× obrażeń i punktów). Czwórka i piątka dają dodatkowy ruch. Kwadrat 2×2: +35 obrażeń."],
+		["1. ŁĄCZ KAFELKI", "Czwórka i piątka tworzą specjalne kafelki oraz dają dodatkowy ruch. T/L usuwa otaczające znaki. Przeciągnij dwa specjalne kafelki na siebie, aby połączyć ich moc."],
 		["2. WYKORZYSTAJ ŻYWIOŁY", "Każde dopasowanie zadaje obrażenia. Ogień, bursztyn i runy wzmacniają atak; woda leczy, a liście dają tarczę."],
 		["3. WYBIERAJ CELE", "Dotknij karty wroga, by go wybrać. Obrońcy osłaniają pozostałych wrogów — pokonaj ich jako pierwszych."],
 		["4. ŁADUJ UMIEJĘTNOŚCI", "Każdy bohater zbiera energię ze swoich znaków żywiołu, także poza swoją turą. Dotknij jego umiejętności, gdy będzie gotowa."],
 		["5. ROZWIJAJ DRUŻYNĘ", "Walki i trening dają PD. Misje dzienne i tygodniowe nagradzają monetami. W DRUŻYNA rozwijaj bohaterów."],
-		["6. MAPA ŚWIATA", "Zwycięstwo wystarcza, by iść dalej. Trzy gwiazdki: cały skład, minimum 70% zdrowia i cel dodatkowy. Pierwsze mistrzostwo daje monety i Znak Wyprawy."],
+		["6. MAPA ŚWIATA", "Trzy gwiazdki wymagają całego składu, 70% zdrowia i celu dodatkowego. Mistrzostwo daje monety. Znaki na legendy zdobędziesz na poziomach 25, 175, 325, 475 i 625."],
 		["7. OSADA", "Dwór wyznacza limit budynków; jego awans wymaga rozwoju wybranych obiektów. Drewno: tartak i wyprawy leśne. Dotknij celu osady, by zobaczyć następny krok."],
-		["8. BOHATEROWIE", "W DRUŻYNA zmieniaj aktywny skład. W walce dotknij portretu bohatera, by podejrzeć jego umiejętność."]
+		["8. WIĘZI BOHATERÓW", "Lada i Brun: ogień z liśćmi daje +10 ataku. Mięta i Żywia: woda z liśćmi daje +4 tarczy. Para musi być w składzie."]
 	]
 	var icon_indices := [0, 4, 2, 1, 5, 6, 3, 7]
 	var icon_cell := Vector2.ZERO
@@ -7151,16 +7884,41 @@ func draw_help_overlay(screen: Vector2) -> void:
 	draw_button(help_close_rect(), "ROZUMIEM", true, 16)
 
 func draw_audio_settings(screen: Vector2) -> void:
-	draw_rect(Rect2(Vector2.ZERO, screen), Color("#081b15f5"))
-	var panel := Rect2(20.0, screen.y * .5 - 210.0, screen.x - 40.0, 460.0)
-	draw_style_box(make_panel(Color("#102b23"), Color("#ac8a50")), panel)
-	draw_string(font, Vector2(20.0, screen.y * .5 - 152.0), "USTAWIENIA", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 40.0, 28, Color("#ffe6a4"))
-	draw_button(sound_toggle_rect(), "DŹWIĘKI: WŁĄCZONE" if sfx_enabled else "DŹWIĘKI: WYŁĄCZONE", true, 16)
-	draw_button(music_toggle_rect(), "MUZYKA: WŁĄCZONA" if music_enabled else "MUZYKA: WYŁĄCZONA", true, 16)
-	draw_button(vibration_toggle_rect(), "WIBRACJE: WŁĄCZONE" if vibration_enabled else "WIBRACJE: WYŁĄCZONE", true, 16)
-	draw_multiline_string(font, Vector2(40.0, screen.y * .5 + 88.0), "Krótka wibracja przy połączeniu, które nie tworzy dopasowania.", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 80.0, 12, 16, Color("#cfe1c2"))
-	draw_button(settings_guide_rect(), "PORADNIK", true, 15)
-	draw_button(help_close_rect(), "GOTOWE", true, 16)
+	draw_rect(Rect2(Vector2.ZERO, screen), Color("#04120cdb"))
+	var panel := settings_panel_rect()
+	if settings_panel_art != null:
+		draw_texture_rect(settings_panel_art, panel, false)
+	else:
+		draw_style_box(make_panel(Color("#102b23"), Color("#ac8a50")), panel)
+	if home_settings_icon != null:
+		draw_texture_rect(home_settings_icon, Rect2(panel.get_center().x - 28.0, panel.position.y + 27.0, 56.0, 56.0), false)
+	draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 109.0), "USTAWIENIA", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 27, Color("#ffe6a4"))
+	draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 131.0), "Dźwięk i wygoda gry", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 13, Color("#cbd9ba"))
+	draw_audio_setting_row(0, "Dźwięki", "Efekty walki i przycisków", sfx_enabled)
+	draw_audio_setting_row(1, "Muzyka", "Muzyka w tle", music_enabled)
+	draw_audio_setting_row(2, "Wibracje", "Przy ruchu bez dopasowania", vibration_enabled)
+	draw_roster_action_button(settings_guide_rect(), "PORADNIK", true)
+	draw_roster_action_button(help_close_rect(), "GOTOWE", true)
+
+func draw_audio_setting_row(index: int, title: String, description: String, enabled: bool) -> void:
+	var row := audio_setting_rect(index)
+	var text_width := row.size.x - 116.0
+	var description_size := 12
+	while description_size > 9 and font.get_string_size(description, HORIZONTAL_ALIGNMENT_LEFT, -1, description_size).x > text_width:
+		description_size -= 1
+	draw_string(font, row.position + Vector2(6.0, 26.0), title, HORIZONTAL_ALIGNMENT_LEFT, text_width, 19, Color("#ffe4ab"))
+	draw_string(font, row.position + Vector2(6.0, 47.0), description, HORIZONTAL_ALIGNMENT_LEFT, text_width, description_size, Color("#c6d4b8"))
+	var toggle := Rect2(row.end.x - 102.0, row.position.y + 6.0, 96.0, 40.0)
+	var art := settings_toggle_on_art if enabled else settings_toggle_off_art
+	if art != null:
+		draw_texture_rect(art, toggle, false)
+	else:
+		draw_button(toggle, "WŁ." if enabled else "WYŁ.", true, 12)
+	draw_string(font, Vector2(toggle.position.x, row.position.y + 62.0), "WŁĄCZONE" if enabled else "WYŁĄCZONE", HORIZONTAL_ALIGNMENT_CENTER, toggle.size.x, 10, Color("#b6e6ae") if enabled else Color("#c3bda7"))
+	var divider_y := row.end.y + 2.0
+	draw_line(Vector2(row.position.x + 6.0, divider_y), Vector2(row.end.x - 6.0, divider_y), Color("#b19a513b"), 1.0, true)
+	var center := Vector2(row.get_center().x, divider_y)
+	draw_colored_polygon(PackedVector2Array([center + Vector2(-3.0, 0.0), center + Vector2(0.0, -2.0), center + Vector2(3.0, 0.0), center + Vector2(0.0, 2.0)]), Color("#bfa264"))
 
 func draw_bestiary_button() -> void:
 	var button := bestiary_button_rect()
@@ -7253,8 +8011,9 @@ func draw_training_overlay(screen: Vector2) -> void:
 	var content_width := screen.x - 48.0
 	draw_string(font, Vector2(24, 92), "KRĄG TRENINGOWY", HORIZONTAL_ALIGNMENT_CENTER, content_width, 27, Color("#f5d998"))
 	draw_string(font, Vector2(36, 120), "Ćwicz bez energii i bez ryzyka utraty postępu.", HORIZONTAL_ALIGNMENT_CENTER, screen.x - 72.0, 14, Color("#d4e2c5"))
-	for slot in TRAINING_BATTLES.size():
-		var training: Dictionary = TRAINING_BATTLES[slot]
+	var catalog := training_catalog()
+	for slot in catalog.size():
+		var training: Dictionary = catalog[slot]
 		var card := training_choice_rect(slot)
 		if card.end.y < 154.0 or card.position.y > 870.0:
 			continue
@@ -7287,6 +8046,9 @@ func draw_forest_expeditions_overlay(screen: Vector2) -> void:
 	forest_expeditions_view.draw(self, screen)
 
 func load_reward_claims(data: ConfigFile) -> void:
+	for milestone in LEGENDARY_SPARK_MILESTONES:
+		var claim_key := 10000 + int(milestone)
+		claimed_boss_sparks[claim_key] = bool(data.get_value("bosses", "spark_%d" % claim_key, false))
 	for level in levels:
 		var level_id := int(level.get("id", 0))
 		claimed_boss_sparks[level_id] = bool(data.get_value("bosses", "spark_%d" % level_id, false))
@@ -7299,6 +8061,11 @@ func load_progress() -> void:
 		expedition_bonus_claims = data.get_value("expeditions", "bonus_claims", {})
 		mastery_claims = data.get_value("mastery", "claims", {})
 		balance_stats = data.get_value("balance", "stats", {})
+		map_shrine_claimed = bool(data.get_value("map_events", "shrine_claimed", false))
+		weekly_challenge_claimed = str(data.get_value("challenges", "weekly_claimed", ""))
+		cascade_cosmetic = bool(data.get_value("cosmetics", "mint_cascade", false))
+		var saved_boss_lessons: Variant = data.get_value("boss_tutorials", "seen", {})
+		seen_boss_tutorials = saved_boss_lessons if saved_boss_lessons is Dictionary else {}
 		unlocked_level = clampi(int(data.get_value("progress", "unlocked_level", 1)), 1, levels.size())
 		coins = int(data.get_value("wallet", "coins", 0))
 		wood = int(data.get_value("wallet", "wood", 0))
@@ -7403,6 +8170,10 @@ func save_progress() -> void:
 	data.set_value("expeditions", "bonus_claims", expedition_bonus_claims)
 	data.set_value("mastery", "claims", mastery_claims)
 	data.set_value("balance", "stats", balance_stats)
+	data.set_value("map_events", "shrine_claimed", map_shrine_claimed)
+	data.set_value("challenges", "weekly_claimed", weekly_challenge_claimed)
+	data.set_value("cosmetics", "mint_cascade", cascade_cosmetic)
+	data.set_value("boss_tutorials", "seen", seen_boss_tutorials)
 	last_wood_production_unix = int(Time.get_unix_time_from_system())
 	player_opening.save_profile(data)
 	data.set_value("progress", "unlocked_level", unlocked_level)
