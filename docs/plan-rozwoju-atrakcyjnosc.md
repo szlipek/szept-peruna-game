@@ -1,4 +1,4 @@
-# Szept Peruna — plan rozwoju atrakcyjności gry
+a j# Szept Peruna — plan rozwoju atrakcyjności gry
 
 Dokument roboczy do dalszego rozwoju po wersji 1.0. Priorytetem jest zwiększenie satysfakcji z pojedynczej walki i różnorodności poziomów, a dopiero później dokładanie kolejnych setek etapów.
 
