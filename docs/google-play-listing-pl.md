@@ -8,6 +8,12 @@ Szept Peruna
 
 Łącz znaki, prowadź słowiańskich bohaterów i odkrywaj krainy Peruna.
 
+## Dane kontaktowe
+
+SP-Media Przemysław Szliep, ul. Sienkiewicza 76, 89-400 Sępólno Krajeńskie
+
+E-mail pomocy: biuro@spmedia.pl
+
 ## Pełny opis
 
 Szept Peruna to baśniowa gra logiczna match‑3 z walką turową i rozwojem drużyny.
@@ -28,21 +34,29 @@ Najważniejsze cechy:
 - lokalny zapis, tryb offline i brak wymagania konta;
 - polski interfejs oraz opcjonalne efekty dźwiękowe.
 
-Gra zapisuje postęp lokalnie. Wersja testowa używa wyłącznie demonstracyjnych reklam Google; dostępność reklam w wydaniu produkcyjnym zależy od konfiguracji AdMob. Gra nie wymaga konta. Zakupy w aplikacji nie są obecnie aktywne.
+Gra zapisuje postęp na urządzeniu i nie wymaga zakładania konta. Część nagród można zdobyć przez obejrzenie reklamy; ich dostępność zależy od połączenia internetowego.
 
-## Zrzuty ekranu — plan
+## Zrzuty ekranu
 
-1. Walka na planszy: wybrany wróg, pełna drużyna i widoczne znaki na planszy.
-2. Ekran zwycięstwa: nagrody, gwiazdki oraz przyciski dalszej wyprawy.
-3. Drużyna: portrety bohaterów, poziomy i pasek doświadczenia.
-4. Mapa: aktualny poziom i przejście do kolejnej krainy.
-5. Osada: budynki oraz ich ulepszenia.
+1. Walka na planszy.
+2. Drużyna i rozwój bohaterów.
+3. Mapa świata.
+4. Osada i budynki.
+5. Menu główne i wybrany skład.
 
-Zrzuty należy wykonać dopiero na finalnym buildzie Androida i bez danych testowych zasłaniających interfejs.
+Przygotowano pięć wstępnych zrzutów 1080 × 1920 RGB w `docs/google-play-zrzuty-hd/`. Pokazują rzeczywisty interfejs gry uruchomionej w Godot na komputerze, z przykładowym postępem w pamięci. Przed publikacją trzeba je porównać z finalną wersją Androida, w szczególności sprawdzić widoczność elementów i ewentualnie zastąpić zrzutami z telefonu.
+
+## Grafiki sklepu
+
+- Ikona: `docs/google-play-grafika/szept-peruna-ikona-512.png` — 512 × 512, PNG RGBA.
+- Grafika promocyjna: `docs/google-play-grafika/szept-peruna-feature-1024x500.png` — 1024 × 500, PNG RGB.
+- Zalecana kolejność zrzutów: `02-walka.png`, `03-druzyna.png`, `04-mapa.png`, `05-osada.png`, `01-menu.png`.
 
 ## Dane do uzupełnienia przez właściciela
 
-- adres e-mail pomocy;
+- adres e-mail pomocy: `biuro@spmedia.pl`;
 - adres polityki prywatności;
 - unikalny identyfikator pakietu;
 - potwierdzona kategoria sklepu i klasyfikacja wiekowa.
+
+Zamierzona grupa odbiorców: nastolatki i dorośli, według decyzji wydawcy. Grupa docelowa i ocena treści to osobne deklaracje; właściwe przedziały wiekowe należy wybrać zgodnie z rzeczywistym charakterem gry i krajami dystrybucji, a klasyfikację ustalić w ankiecie Play Console.

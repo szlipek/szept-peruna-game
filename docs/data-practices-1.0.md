@@ -20,9 +20,13 @@ Po dodaniu własnych identyfikatorów AdMob SDK będzie wysyłać żądania rekl
 
 Nagroda z reklamy przyznawana jest wyłącznie po sygnale SDK potwierdzającym obejrzenie reklamy. Lokalny postęp nadal jest zapisywany w `user://progress.cfg`; gra nie ma własnego konta gracza ani własnego serwera.
 
+## Firebase — integracja przygotowana do testów
+
+W projekcie przygotowano Google Analytics for Firebase i Crashlytics dla Androida. W tej konfiguracji zbieranie statystyk oraz automatyczne raportowanie awarii są domyślnie wyłączone; gracz może osobno włączyć je w ustawieniach gry. Analytics może przetwarzać identyfikatory instancji aplikacji oraz dane o urządzeniu i aktywności. Przy włączonej opcji gra przekazuje m.in. zdarzenia dotyczące walk, rozwoju bohaterów i osady, bez nazwy gracza lub całej zawartości zapisu. Crashlytics może przetwarzać diagnostykę awarii oraz dane urządzenia i aplikacji. Integracja wymaga jeszcze sprawdzenia na urządzeniu, a przed publikacją także zaktualizowania polityki prywatności i deklaracji Google Play zgodnie z rzeczywistym działaniem SDK.
+
 ## Pozostałe dane
 
-Gra nie wymaga e-maila i nie zbiera lokalizacji, kontaktów, zdjęć ani dźwięku z mikrofonu. Nie ma własnej analityki ani logowania.
+Gra nie wymaga e-maila ani logowania i nie ma zapisu w chmurze. Gra nie żąda dostępu do lokalizacji, kontaktów, zdjęć ani mikrofonu.
 
 ## Kontrola gracza
 

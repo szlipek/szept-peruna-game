@@ -10,6 +10,14 @@ var provider: Node
 var interstitial_ready := false
 var rewarded_ready := false
 var initialized := false
+var suspended_for_privacy := false
+
+func suspend_for_privacy() -> void:
+	# Reklamy pobrane przed zmianą wyboru nie mogą zostać pokazane.
+	suspended_for_privacy = true
+	interstitial_ready = false
+	rewarded_ready = false
+	ad_availability_changed.emit()
 
 func initialize(admob_node: Node) -> void:
 	provider = admob_node
@@ -35,14 +43,14 @@ func initialize(admob_node: Node) -> void:
 	provider.update_consent_info()
 
 func show_interstitial() -> bool:
-	if not initialized or not interstitial_ready:
+	if suspended_for_privacy or not initialized or not interstitial_ready:
 		return false
 	interstitial_ready = false
 	provider.show_interstitial_ad()
 	return true
 
 func show_rewarded() -> bool:
-	if not initialized or not rewarded_ready:
+	if suspended_for_privacy or not initialized or not rewarded_ready:
 		return false
 	rewarded_ready = false
 	ad_availability_changed.emit()
@@ -78,16 +86,20 @@ func _on_consent_form_failed_to_load(_error) -> void:
 	push_warning("AdMob consent form could not be loaded; ads will remain disabled this session.")
 
 func _initialize_sdk() -> void:
-	if initialized:
+	if initialized or suspended_for_privacy:
 		return
 	provider.initialize()
 
 func _on_initialization_completed(_status) -> void:
 	initialized = true
+	if suspended_for_privacy:
+		return
 	provider.load_interstitial_ad()
 	provider.load_rewarded_ad()
 
 func _on_interstitial_loaded(_ad_info, _response_info) -> void:
+	if suspended_for_privacy:
+		return
 	interstitial_ready = true
 	ad_availability_changed.emit()
 
@@ -100,15 +112,19 @@ func _on_interstitial_shown(_ad_info) -> void:
 
 func _on_interstitial_dismissed(_ad_info) -> void:
 	interstitial_ready = false
-	provider.load_interstitial_ad()
+	if not suspended_for_privacy:
+		provider.load_interstitial_ad()
 	interstitial_closed.emit()
 
 func _on_interstitial_failed_to_show(_ad_info, _error) -> void:
 	interstitial_ready = false
-	provider.load_interstitial_ad()
+	if not suspended_for_privacy:
+		provider.load_interstitial_ad()
 	interstitial_closed.emit()
 
 func _on_rewarded_loaded(_ad_info, _response_info) -> void:
+	if suspended_for_privacy:
+		return
 	rewarded_ready = true
 	ad_availability_changed.emit()
 
@@ -118,12 +134,14 @@ func _on_rewarded_failed_to_load(_ad_info, _error) -> void:
 
 func _on_rewarded_dismissed(_ad_info) -> void:
 	rewarded_ready = false
-	provider.load_rewarded_ad()
+	if not suspended_for_privacy:
+		provider.load_rewarded_ad()
 	rewarded_ad_closed.emit()
 
 func _on_rewarded_failed_to_show(_ad_info, _error) -> void:
 	rewarded_ready = false
-	provider.load_rewarded_ad()
+	if not suspended_for_privacy:
+		provider.load_rewarded_ad()
 	rewarded_ad_closed.emit()
 
 func _on_rewarded_earned(_ad_info, _reward_data) -> void:

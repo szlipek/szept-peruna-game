@@ -19,7 +19,9 @@ config/icon="res://art/ui/app_icon_szept_peruna_v01.png"
 [boot_splash]
 
 bg_color=Color(0.027451, 0.0980392, 0.0862745, 1)
-show_image=false
+image="res://art/ui/boot_splash_szept_peruna_v01.png"
+show_image=true
+fullsize=true
 
 [display]
 

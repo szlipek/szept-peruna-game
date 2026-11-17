@@ -7,10 +7,12 @@ tools/*.zip
 
 # Lokalne modele i środowisko generatorów audio (wiele GB)
 .local-audio/
+/.local-signing/
 
 # Szablon eksportu Androida instalowany przez Godot i wyniki Gradle
 /android/build/
 /android/.build_version
+/android/firebase/google-services.json
 
 # Gotowe paczki gry
 *.apk
@@ -19,5 +21,8 @@ tools/*.zip
 # Lokalne cache, podglądy, logi i kopie postępu
 /.cache/
 /tmp/
+/docs/google-play-zrzuty/*.import
+/docs/google-play-zrzuty-hd/*.import
+/docs/google-play-grafika/*.import
 __pycache__/
 *.pyc

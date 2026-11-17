@@ -2,6 +2,12 @@ extends Node2D
 
 const SkillTree = preload("res://scripts/hero_skill_tree.gd")
 const GameAudio = preload("res://scripts/game_audio.gd")
+const GameAnalytics = preload("res://scripts/game_analytics.gd")
+var game_analytics = GameAnalytics.new()
+var firebase_provider: Object
+var analytics_enabled := false
+var crash_reporting_enabled := false
+var analytics_ready := false
 const VillageProgression = preload("res://scripts/village_progression.gd")
 const ForestExpeditions = preload("res://scripts/forest_expeditions.gd")
 var forest_expeditions_view = preload("res://scripts/forest_expeditions_view.gd").new()
@@ -889,10 +895,16 @@ func _ready() -> void:
 	levels = load_levels()
 	build_bestiary_catalog()
 	load_progress()
+	if Engine.has_singleton("GameFirebase"):
+		firebase_provider = Engine.get_singleton("GameFirebase")
+	game_analytics.initialize(firebase_provider, analytics_enabled)
+	if firebase_provider != null:
+		firebase_provider.setCrashReportingEnabled(crash_reporting_enabled)
 	update_sawmill_production(0.0)
 	refresh_ad_day()
 	setup_ads_manager()
 	start_level(0)
+	analytics_ready = true
 	main_menu_open = not talent_tutorial_active()
 	if village_tutorial_active():
 		main_menu_open = false
@@ -1129,12 +1141,16 @@ func update_game_audio() -> void:
 	game_audio.update_context(in_battle, sfx_enabled, music_enabled)
 
 func load_audio_settings(data: ConfigFile) -> void:
+	analytics_enabled = bool(data.get_value("privacy", "analytics_enabled", false))
+	crash_reporting_enabled = bool(data.get_value("privacy", "crash_reporting_enabled", false))
 	sfx_enabled = bool(data.get_value("settings", "sfx_enabled", true))
 	# Stary przełącznik wyciszał całość: zachowaj to dla starych zapisów.
 	music_enabled = bool(data.get_value("settings", "music_enabled", sfx_enabled))
 	vibration_enabled = bool(data.get_value("settings", "vibration_enabled", true))
 
 func save_audio_settings(data: ConfigFile) -> void:
+	data.set_value("privacy", "analytics_enabled", analytics_enabled)
+	data.set_value("privacy", "crash_reporting_enabled", crash_reporting_enabled)
 	data.set_value("settings", "sfx_enabled", sfx_enabled)
 	data.set_value("settings", "music_enabled", music_enabled)
 	data.set_value("settings", "vibration_enabled", vibration_enabled)
@@ -1211,6 +1227,8 @@ func start_level(index: int, level_override: Dictionary = {}) -> void:
 	if not training_mode:
 		training_battle.clear()
 	var level: Dictionary = level_override if not level_override.is_empty() else levels[level_index]
+	if analytics_ready:
+		game_analytics.event("level_start", {"level_name": str(level.get("id", level_index + 1)), "mode": "training" if training_mode else "campaign"})
 	current_battle = level.duplicate(true)
 	battle_moves = 0
 	wolf_charge = 0
@@ -2015,6 +2033,7 @@ func try_swap(a: Vector2i, b: Vector2i) -> void:
 	advance_turn()
 	if party_health <= 0:
 		state = "lost"
+		track_battle_end(false)
 		play_audio_event("defeat_sting", 180.0, 0.3, 0.15)
 		main_menu_open = true
 		message = "Drużyna została pokonana przez %s." % enemy_name
@@ -2200,6 +2219,7 @@ func finish_special_turn(success_message: String) -> void:
 	advance_turn()
 	if party_health <= 0:
 		state = "lost"
+		track_battle_end(false)
 		play_audio_event("defeat_sting", 180.0, 0.3, 0.15)
 		main_menu_open = true
 		message = "Drużyna została pokonana przez wrogów."
@@ -2632,6 +2652,7 @@ func expedition_move_limit_reached() -> bool:
 	if limit <= 0 or battle_moves < limit or is_level_complete():
 		return false
 	state = "lost"
+	track_battle_end(false)
 	play_audio_event("defeat_sting", 180.0, 0.3, 0.15)
 	main_menu_open = true
 	message = "Koniec ruchów wyprawy. Zmień taktykę i spróbuj ponownie — bez utraty zasobów."
@@ -2658,12 +2679,23 @@ func goal_label() -> String:
 		return "Oczyść przeszkody: %d / %d" % [goal_progress, goal_target]
 	return "Punkty: %d / %d" % [score, goal_target]
 
+func track_battle_end(success: bool) -> void:
+	game_analytics.event("level_end", {
+		"level_name": str(current_battle.get("id", level_index + 1)),
+		"mode": "training" if training_mode else "campaign",
+		"success": 1 if success else 0,
+		"duration_seconds": maxi(0, int((Time.get_ticks_msec() - battle_started_ms) / 1000)),
+		"moves": battle_moves,
+		"stars": last_stars if success else 0,
+	})
+
 func finish_level(success_message: String) -> void:
 	if state == "won":
 		return
 	state = "won"
 	play_audio_event("victory_sting", 880.0, 0.32, 0.24)
 	last_stars = calculate_stars()
+	track_battle_end(true)
 	balance_stats["best_cascade"] = maxi(int(balance_stats.get("best_cascade", 0)), battle_best_cascade)
 	if bool(current_battle.get("endless", false)):
 		balance_stats["endless_best"] = maxi(int(balance_stats.get("endless_best", 0)), endless_stage)
@@ -2732,7 +2764,10 @@ func finish_level(success_message: String) -> void:
 	var mission_rewards := advance_missions()
 	coins += int(mission_rewards.get("coins", 0))
 	last_reward["coins"] = int(last_reward.get("coins", 0)) + int(mission_rewards.get("coins", 0))
+	var tutorial_was_complete := tutorial_completed
 	player_opening.on_victory(self, level_id, first_campaign_clear)
+	if not tutorial_was_complete and tutorial_completed:
+		game_analytics.event("tutorial_complete", {"tutorial_id": "first_battle"})
 	save_progress()
 	message = success_message
 	if bool(last_reward.get("mastery", false)):
@@ -4672,7 +4707,7 @@ func settings_button_rect() -> Rect2:
 
 func settings_panel_rect() -> Rect2:
 	var screen := get_viewport_rect().size
-	var size := Vector2(minf(464.0, screen.x - 24.0), minf(572.0, screen.y - 80.0))
+	var size := Vector2(minf(464.0, screen.x - 24.0), minf(780.0, screen.y - 80.0))
 	return Rect2((screen - size) * 0.5, size)
 
 func bestiary_button_rect() -> Rect2:
@@ -4722,10 +4757,24 @@ func music_toggle_rect() -> Rect2:
 func vibration_toggle_rect() -> Rect2:
 	return audio_setting_rect(2)
 
+func analytics_toggle_rect() -> Rect2:
+	return audio_setting_rect(3)
+
+func crash_toggle_rect() -> Rect2:
+	return audio_setting_rect(4)
+
 func settings_guide_rect() -> Rect2:
 	var panel := settings_panel_rect()
 	var width := minf(294.0, panel.size.x - 72.0)
-	return Rect2(panel.get_center().x - width * 0.5, panel.position.y + 408.0, width, 50.0)
+	return Rect2(panel.get_center().x - width * 0.5, panel.position.y + 564.0, width, 50.0)
+
+func ad_privacy_rect() -> Rect2:
+	var panel := settings_panel_rect()
+	var width := minf(294.0, panel.size.x - 72.0)
+	return Rect2(panel.get_center().x - width * 0.5, panel.position.y + 618.0, width, 42.0)
+
+func ad_privacy_required() -> bool:
+	return firebase_provider != null and firebase_provider.has_method("isAdPrivacyOptionsRequired") and firebase_provider.isAdPrivacyOptionsRequired()
 
 func training_close_rect() -> Rect2:
 	if forest_catalog_open:
@@ -4834,6 +4883,7 @@ func try_upgrade_building(building_id: String) -> bool:
 	balance_stats["coins_buildings"] = int(balance_stats.get("coins_buildings", 0)) + int(cost["coins"])
 	balance_stats["wood_buildings"] = int(balance_stats.get("wood_buildings", 0)) + int(cost["wood"])
 	building_levels[building_id] = int(building_levels[building_id]) + 1
+	game_analytics.event("building_upgrade", {"building_id": building_id, "building_level": int(building_levels[building_id])})
 	sync_party_battle_health()
 	balance_stats["building_upgrades"] = int(balance_stats.get("building_upgrades", 0)) + 1
 	balance_stats["last_upgrade_active_seconds"] = int(balance_stats.get("active_seconds", 0))
@@ -4913,6 +4963,7 @@ func handle_roster_input(position: Vector2) -> void:
 		queue_redraw()
 		return
 	if is_in_button(position, roster_team_toggle_rect()) and bool(owned_heroes[hero_id]):
+		var previous_party := active_heroes.duplicate()
 		if active_heroes.has(hero_id):
 			if active_heroes.size() > 1:
 				active_heroes.erase(hero_id)
@@ -4927,6 +4978,8 @@ func handle_roster_input(position: Vector2) -> void:
 			roster_swap_return_hero_id = hero_id
 			roster_swap_open = true
 		sync_party_battle_health()
+		if previous_party != active_heroes:
+			track_party_changed()
 		save_progress()
 		queue_redraw()
 		return
@@ -4949,10 +5002,13 @@ func handle_roster_upgrade(hero_id: String) -> void:
 			elif currency == "sparks": perun_sparks -= recruit_cost
 			else: coins -= recruit_cost
 			owned_heroes[hero_id] = true
+			game_analytics.event("hero_recruited", {"hero_id": hero_id})
 			hero_levels[hero_id] = maxi(1, int(hero_levels[hero_id]))
 			hero_experience[hero_id] = 0
 			hero_trees[hero_id] = {}
-			if active_heroes.size() < 3: active_heroes.append(hero_id)
+			if active_heroes.size() < 3:
+				active_heroes.append(hero_id)
+				track_party_changed()
 			sync_party_battle_health()
 			message = "%s dołącza do drużyny!" % hero_name(hero_id)
 		else:
@@ -4973,6 +5029,7 @@ func handle_roster_upgrade(hero_id: String) -> void:
 		coins -= cost
 		hero_experience[hero_id] = int(hero_experience[hero_id]) - required_experience
 		hero_levels[hero_id] = int(hero_levels[hero_id]) + 1
+		game_analytics.event("hero_upgrade", {"hero_id": hero_id, "hero_level": int(hero_levels[hero_id])})
 		sync_party_battle_health()
 		save_progress()
 		message = "%s osiąga poziom %d." % [hero_name(hero_id), hero_levels[hero_id]]
@@ -4992,6 +5049,7 @@ func handle_roster_swap_input(position: Vector2) -> void:
 		var choice_rect := roster_swap_choice_rect(index)
 		if is_in_button(position, choice_rect):
 			active_heroes[index] = roster_swap_hero_id
+			track_party_changed()
 			sync_party_battle_health()
 			roster_swap_open = false
 			message = "%s zastępuje bohatera w składzie." % hero_name(roster_swap_hero_id)
@@ -5006,6 +5064,12 @@ func handle_roster_swap_input(position: Vector2) -> void:
 			save_progress()
 			queue_redraw()
 			return
+
+func track_party_changed() -> void:
+	var members := ["none", "none", "none"]
+	for index in mini(active_heroes.size(), members.size()):
+		members[index] = active_heroes[index]
+	game_analytics.event("party_changed", {"hero_1": members[0], "hero_2": members[1], "hero_3": members[2]})
 
 func restore_roster_selection(hero_id: String) -> void:
 	if hero_id == "":
@@ -5038,6 +5102,7 @@ func handle_skill_tree_input(position: Vector2) -> void:
 			var tree: Dictionary = hero_trees.get(hero_id, {})
 			if SkillTree.invest(tree, int(hero_levels[hero_id]), skill_tree_selected_branch, skill_tree_selected_tier):
 				hero_trees[hero_id] = tree
+				game_analytics.event("talent_upgrade", {"hero_id": hero_id, "branch": skill_tree_selected_branch, "tier": skill_tree_selected_tier})
 				if skill_tree_selected_branch == 1 and skill_tree_selected_tier == 2 and active_heroes.has(hero_id) and state == "playing":
 					hero_max_health[hero_id] = int(hero_max_health.get(hero_id, 0)) + 3
 					hero_health[hero_id] = int(hero_health.get(hero_id, 0)) + 3
@@ -5489,6 +5554,12 @@ func handle_main_menu_input(position: Vector2) -> void:
 		queue_redraw()
 
 func handle_help_input(position: Vector2) -> void:
+	if settings_open and ad_privacy_required() and is_in_button(position, ad_privacy_rect()):
+		if ads_manager != null and ads_manager.has_method("suspend_for_privacy"):
+			ads_manager.suspend_for_privacy()
+		firebase_provider.showAdPrivacyOptions()
+		queue_redraw()
+		return
 	if not settings_open and is_in_button(position, sound_toggle_rect()):
 		settings_open = true
 		play_audio_event("ui_click")
@@ -5497,6 +5568,18 @@ func handle_help_input(position: Vector2) -> void:
 	if settings_open and is_in_button(position, settings_guide_rect()):
 		settings_open = false
 		play_audio_event("ui_back")
+		queue_redraw()
+		return
+	if settings_open and firebase_provider != null and is_in_button(position, analytics_toggle_rect()):
+		analytics_enabled = not analytics_enabled
+		game_analytics.set_enabled(analytics_enabled)
+		save_progress()
+		queue_redraw()
+		return
+	if settings_open and firebase_provider != null and is_in_button(position, crash_toggle_rect()):
+		crash_reporting_enabled = not crash_reporting_enabled
+		firebase_provider.setCrashReportingEnabled(crash_reporting_enabled)
+		save_progress()
 		queue_redraw()
 		return
 	if settings_open and is_in_button(position, music_toggle_rect()):
@@ -7893,11 +7976,17 @@ func draw_audio_settings(screen: Vector2) -> void:
 	if home_settings_icon != null:
 		draw_texture_rect(home_settings_icon, Rect2(panel.get_center().x - 28.0, panel.position.y + 27.0, 56.0, 56.0), false)
 	draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 109.0), "USTAWIENIA", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 27, Color("#ffe6a4"))
-	draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 131.0), "Dźwięk i wygoda gry", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 13, Color("#cbd9ba"))
+	draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 131.0), "Dźwięk i prywatność", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 13, Color("#cbd9ba"))
 	draw_audio_setting_row(0, "Dźwięki", "Efekty walki i przycisków", sfx_enabled)
 	draw_audio_setting_row(1, "Muzyka", "Muzyka w tle", music_enabled)
 	draw_audio_setting_row(2, "Wibracje", "Przy ruchu bez dopasowania", vibration_enabled)
+	draw_audio_setting_row(3, "Statystyki gry", "Dane rozgrywki do Google" if firebase_provider != null else "Niedostępne w tej wersji", analytics_enabled and firebase_provider != null)
+	draw_audio_setting_row(4, "Raporty awarii", "Dane awarii do Google" if firebase_provider != null else "Niedostępne w tej wersji", crash_reporting_enabled and firebase_provider != null)
 	draw_roster_action_button(settings_guide_rect(), "PORADNIK", true)
+	if ad_privacy_required():
+		draw_roster_action_button(ad_privacy_rect(), "PRYWATNOŚĆ REKLAM", true)
+	if ads_manager != null and ads_manager.has_method("suspend_for_privacy") and bool(ads_manager.get("suspended_for_privacy")):
+		draw_string(font, Vector2(panel.position.x + 20.0, panel.position.y + 675.0), "Reklamy wrócą po ponownym uruchomieniu gry.", HORIZONTAL_ALIGNMENT_CENTER, panel.size.x - 40.0, 11, Color("#cbd9ba"))
 	draw_roster_action_button(help_close_rect(), "GOTOWE", true)
 
 func draw_audio_setting_row(index: int, title: String, description: String, enabled: bool) -> void:

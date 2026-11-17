@@ -6,7 +6,7 @@ Ikona aplikacji jest ustawiona w `project.godot` jako `art/ui/app_icon_szept_per
 
 ## Stan lokalnego środowiska
 
-Próba eksportu z 25 września 2026 potwierdziła, że preset jest widoczny dla Godot. Zatrzymała się jednak przed budowaniem, ponieważ lokalne środowisko nie ma szablonów `android_debug.apk` i `android_release.apk` dla Godot 4.5.2 oraz nie ma skonfigurowanej ścieżki Java SDK. To zależność środowiska, nie błąd projektu.
+Środowisko zawiera SDK Android 36 i szablon Gradle Godot 4.5.2. Skrypt `tools/setup_firebase_android.ps1` ustawia w lokalnym szablonie `compileSdk` i `targetSdk` na 36, Android Gradle Plugin 8.9.1 oraz zależności Firebase. Preset Godota również wymusza target SDK 36. Testowy eksport APK został zweryfikowany pod kątem API 36 i zasobów; nie zastępuje to testu na telefonie ani podpisanego AAB.
 
 ## Jednorazowe ustawienie właściciela
 
@@ -25,7 +25,7 @@ Po konfiguracji podpisu uruchom w katalogu projektu:
 & '.\tools\Godot\Godot_v4.5.2-stable_win64_console.exe' --headless --path . --export-release Android 'builds\SzeptPeruna-1.0.0.apk'
 ```
 
-Do Google Play preferowany jest pakiet AAB. Jeśli wybrany workflow tego wymaga, zmień format eksportu w Godot na Android App Bundle, zbuduj plik `.aab` i przetestuj go w zamkniętym teście Play.
+Do wydania nowej gry w Google Play użyj presetu `Android AAB`, skonfiguruj podpis wydawniczy i wyeksportuj plik `.aab`. Testowy APK ani AAB podpisany kluczem debug nie są artefaktami wydawniczymi.
 
 ## Kontrola artefaktu
 

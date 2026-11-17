@@ -5,22 +5,22 @@
 - Gra używa przykładowego identyfikatora aplikacji AdMob i testowych jednostek. `is_real = false`; nie są to reklamy produkcyjne.
 - Reklama za nagrodę po zwycięstwie daje 50% monet z nagrody; nagroda zostaje przyznana tylko po sygnale SDK. Dzieli dzienny limit z reklamą skrzyni premium.
 - Reklama pełnoekranowa jest dostępna po czterech zwycięstwach kampanii od poziomu 6, maksymalnie dwa razy dziennie. Licznik zużywa się po potwierdzeniu wyświetlenia.
-- Firebase nie jest zintegrowany: brak projektu konfiguracyjnego, natywnego SDK i mostu Godot. Postęp jest lokalny; synchronizacja w chmurze wymaga osobnego wdrożenia.
+- Aplikacja Android `org.szeptperuna.game` została zarejestrowana w projekcie Firebase **Spmedia Games** (`dig-deeper-515de`). Pobrany plik konfiguracji znajduje się lokalnie w `android/firebase/google-services.json` i nie jest zapisywany w Git. Przygotowano most SDK Analytics i Crashlytics oraz zdarzenia gry; uruchomienie i raporty na telefonie wymagają jeszcze weryfikacji. Postęp pozostaje wyłącznie lokalny, bez logowania i chmury.
 
 ## AdMob przed publikacją
 
 1. W AdMob zarejestrować aplikację Android i przygotować jednostki **Interstitial** i **Rewarded**. Potwierdzić nazwę pakietu `org.szeptperuna.game` przed pierwszą publikacją.
 2. W scenie `scenes/puzzle_level.tscn`, na węźle `Admob`, uzupełnić `android_real_application_id`, `android_real_interstitial_id` i `android_real_rewarded_id`. Włączyć `is_real` dopiero dla kontrolowanego przygotowania wydania. To ustawienie dotyczy węzła, więc przed testowaniem zwrócić szczególną uwagę na konfigurację trybu testowego i urządzeń testowych. Identyfikator aplikacji musi być uwzględniony również w manifeście generowanym przy eksporcie; zweryfikować gotowy pakiet.
 3. W AdMob skonfigurować komunikaty prywatności, politykę prywatności i odpowiedzi w Google Play zgodnie z faktycznym działaniem aplikacji i jej odbiorcami.
-4. **Blokada publikacji:** obecna wtyczka `AdmobPlugin` udostępnia podstawowy formularz zgody, ale w jej interfejsie nie znaleziono funkcji wyświetlania opcji prywatności UMP. Zaktualizować lub rozszerzyć natywną wtyczkę o sprawdzenie `privacyOptionsRequirementStatus` i `showPrivacyOptionsForm`, a następnie dodać przycisk do ustawień gry, widoczny wtedy, gdy jest wymagany. Nie zastępować go resetowaniem zgody.
+4. Przygotowano natywny most `privacyOptionsRequirementStatus` i `showPrivacyOptionsForm` oraz przycisk widoczny w ustawieniach, gdy UMP go wymaga. Po jego użyciu reklamy pozostają wyłączone do ponownego uruchomienia, aby nie wyświetlić reklamy pobranej przed zmianą wyboru. **Przed publikacją sprawdzić na urządzeniu**, że przycisk i formularz działają w wymaganym regionie i przy zmianie wyboru.
 5. Na telefonie z usługami Google Play sprawdzić formularz, odmowę, zmianę wyboru, brak internetu, powrót do gry, dzienny limit, zamknięcie reklamy bez nagrody, poprawną nagrodę i nieudane wyświetlenie. Podczas prac używać wyłącznie reklam testowych lub urządzeń testowych: https://developers.google.com/admob/android/test-ads
 
 ## Firebase
 
-1. Wybrać usługi i zakres danych. Rozsądny pierwszy etap to Analytics i/lub Crashlytics; żadna z tych usług nie jest jeszcze wbudowana. Zapis w chmurze wymaga osobnej decyzji, logowania, reguł dostępu i obsługi konfliktów z lokalnym zapisem.
-2. Utworzyć lub wybrać projekt Firebase, zarejestrować aplikację Android z ostatecznym identyfikatorem `org.szeptperuna.game` i pobrać `google-services.json`. Instrukcja Google: https://firebase.google.com/docs/android/setup
-3. Dobrać zgodny z Godot 4.5.2 natywny most Android, podłączyć wybrane SDK i plik konfiguracji do rzeczywistego procesu Gradle, a następnie sprawdzić pakiet i urządzenie. Samo dodanie pliku JSON nie uruchamia usług Firebase.
-4. Przed włączeniem zbierania danych ustalić wymagane zgody i wprowadzić odpowiednią obsługę; nie wysyłać postępu lub identyfikatorów gracza bez zaprojektowania tej funkcji. Sprawdzić raport zdarzeń/błędów na urządzeniu testowym oraz zaktualizować politykę prywatności i deklarację danych w Play Console.
+1. Wybrany zakres to Analytics i Crashlytics, bez kont i synchronizacji chmurowej. Obie usługi są domyślnie wyłączone i mają osobne przełączniki w ustawieniach gry.
+2. Rejestracja aplikacji i pobranie `google-services.json` są wykonane. Przy odtwarzaniu środowiska pobrać aktualny plik z ustawień projektu Firebase. Instrukcja Google: https://firebase.google.com/docs/android/setup
+3. Po instalacji lub odtworzeniu szablonu Gradle Godota uruchomić z katalogu projektu `powershell -File tools/setup_firebase_android.ps1`. Skrypt modyfikuje lokalny, ignorowany przez Git szablon i kopiuje do niego konfigurację. Następnie wyeksportować APK przez Godot. Jeśli w Windows Norton filtruje HTTPS i Java nie ufa jego certyfikatowi, użyć magazynu zaufania z certyfikatem pochodzącym z systemowego magazynu Windows; nie wyłączać sprawdzania certyfikatów.
+4. Na urządzeniu sprawdzić domyślne wyłączenie, włączanie i cofanie obu ustawień, zdarzenia w DebugView oraz testową awarię po ponownym uruchomieniu aplikacji. Zweryfikować też czytelność raportów natywnych i symboli Godota. Przed publikacją uzupełnić politykę prywatności i deklarację danych w Play Console. Samo dodanie pliku JSON lub pomyślna kompilacja nie potwierdzają działania usług.
 
 ## Test lokalnej logiki
 

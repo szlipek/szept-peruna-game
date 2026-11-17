@@ -29,6 +29,16 @@ func _initialize() -> void:
 	call_deferred("run_tests")
 
 func run_tests() -> void:
+	var privacy_ads := preload("res://scripts/game_ads.gd").new()
+	privacy_ads.initialized = true
+	privacy_ads.interstitial_ready = true
+	privacy_ads.rewarded_ready = true
+	privacy_ads.suspend_for_privacy()
+	assert(not privacy_ads.show_interstitial() and not privacy_ads.show_rewarded())
+	privacy_ads._on_interstitial_loaded(null, null)
+	privacy_ads._on_rewarded_loaded(null, null)
+	assert(not privacy_ads.interstitial_ready and not privacy_ads.rewarded_ready)
+	privacy_ads.free()
 	root.size = Vector2i(540, 960)
 	var game := Fixture.new()
 	root.add_child(game)
